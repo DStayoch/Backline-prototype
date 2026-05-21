@@ -1,0 +1,9 @@
+{
+  "name": "backline-prototype",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Static prototype for an AI-first missed-call recovery dashboard for small trade contractors.",
+  "scripts": {
+    "test": "node --check app.js && node tests/smoke-test.mjs"
+  }
+}

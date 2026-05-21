@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Backline Prototype</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="Primary">
+        <div class="brand">
+          <div class="brand-mark">B</div>
+          <div>
+            <div class="brand-name">Backline</div>
+            <div class="brand-subtitle">Field back office</div>
+          </div>
+        </div>
+
+        <nav class="nav-list">
+          <button class="nav-item active" type="button" data-view="inbox" title="Inbox">
+            <span class="nav-icon">I</span>
+            <span>Inbox</span>
+          </button>
+          <button class="nav-item" type="button" data-view="schedule" title="Schedule">
+            <span class="nav-icon">S</span>
+            <span>Schedule</span>
+          </button>
+          <button class="nav-item" type="button" data-view="automation" title="Automation">
+            <span class="nav-icon">A</span>
+            <span>Automation</span>
+          </button>
+          <button class="nav-item" type="button" data-view="metrics" title="Metrics">
+            <span class="nav-icon">M</span>
+            <span>Metrics</span>
+          </button>
+        </nav>
+
+        <div class="sidebar-footer">
+          <div class="signal">
+            <span class="signal-dot"></span>
+            <span>SMS active</span>
+          </div>
+          <button class="ghost-button" type="button">Settings</button>
+        </div>
+      </aside>
+
+      <main class="workspace">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Thursday, May 21</p>
+            <h1>Missed-call recovery</h1>
+          </div>
+          <div class="topbar-actions">
+            <button class="icon-button" type="button" title="Search" aria-label="Search">/</button>
+            <button class="primary-button" type="button" id="newJobButton">New job</button>
+          </div>
+        </header>
+
+        <section class="view active" id="view-inbox" aria-label="Inbox">
+          <div class="stats-strip">
+            <div class="stat">
+              <span class="stat-label">Missed calls</span>
+              <strong>18</strong>
+              <span class="stat-note">this week</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">Recovered</span>
+              <strong>11</strong>
+              <span class="stat-note">61% reply rate</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">Booked</span>
+              <strong>7</strong>
+              <span class="stat-note">$4.8k est.</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">Needs owner</span>
+              <strong>3</strong>
+              <span class="stat-note">before 4 PM</span>
+            </div>
+          </div>
+
+          <div class="work-grid">
+            <section class="panel inbox-panel" aria-label="Recovered calls">
+              <div class="panel-header">
+                <div>
+                  <h2>Recovered calls</h2>
+                  <p>AI-qualified requests waiting for action</p>
+                </div>
+                <div class="segmented" role="tablist" aria-label="Filter jobs">
+                  <button class="segment active" type="button" data-filter="all">All</button>
+                  <button class="segment" type="button" data-filter="urgent">Urgent</button>
+                  <button class="segment" type="button" data-filter="unbooked">Open</button>
+                </div>
+              </div>
+              <div class="job-list" id="jobList"></div>
+            </section>
+
+            <section class="panel detail-panel" aria-label="Job detail">
+              <div id="jobDetail"></div>
+            </section>
+          </div>
+        </section>
+
+        <section class="view" id="view-schedule" aria-label="Schedule">
+          <div class="calendar-board">
+            <div class="panel schedule-panel">
+              <div class="panel-header">
+                <div>
+                  <h2>Today</h2>
+                  <p>Dispatch board</p>
+                </div>
+                <button class="secondary-button" type="button">Send confirmations</button>
+              </div>
+              <div class="timeline">
+                <div class="time-row">
+                  <span>9:00</span>
+                  <div class="appointment confirmed">AC not cooling - Maria Lopez</div>
+                </div>
+                <div class="time-row">
+                  <span>11:30</span>
+                  <div class="appointment pending">Water heater leak - Ethan Park</div>
+                </div>
+                <div class="time-row">
+                  <span>2:00</span>
+                  <div class="appointment confirmed">Panel inspection - Sam Reed</div>
+                </div>
+                <div class="time-row">
+                  <span>4:30</span>
+                  <div class="appointment open">Open emergency slot</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="view" id="view-automation" aria-label="Automation">
+          <div class="automation-layout">
+            <section class="panel">
+              <div class="panel-header">
+                <div>
+                  <h2>Automations</h2>
+                  <p>Live customer follow-up rules</p>
+                </div>
+              </div>
+              <div class="automation-list">
+                <label class="toggle-row">
+                  <span>
+                    <strong>Missed-call text-back</strong>
+                    <small>Send within 30 seconds</small>
+                  </span>
+                  <input type="checkbox" checked>
+                </label>
+                <label class="toggle-row">
+                  <span>
+                    <strong>Appointment reminder</strong>
+                    <small>Evening before and 45 minutes before arrival</small>
+                  </span>
+                  <input type="checkbox" checked>
+                </label>
+                <label class="toggle-row">
+                  <span>
+                    <strong>Estimate follow-up</strong>
+                    <small>24 hours and 72 hours after quote</small>
+                  </span>
+                  <input type="checkbox" checked>
+                </label>
+                <label class="toggle-row">
+                  <span>
+                    <strong>Invoice follow-up</strong>
+                    <small>48 hours after unpaid invoice</small>
+                  </span>
+                  <input type="checkbox">
+                </label>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <section class="view" id="view-metrics" aria-label="Metrics">
+          <div class="metrics-grid">
+            <div class="metric-block">
+              <span>Recovered revenue</span>
+              <strong>$4,820</strong>
+            </div>
+            <div class="metric-block">
+              <span>Avg. reply time</span>
+              <strong>22 sec</strong>
+            </div>
+            <div class="metric-block">
+              <span>Booked from SMS</span>
+              <strong>7 jobs</strong>
+            </div>
+            <div class="metric-block">
+              <span>Unpaid invoices</span>
+              <strong>$1,140</strong>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
