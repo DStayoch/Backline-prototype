@@ -1,6 +1,6 @@
 # Backline Prototype
 
-Backline is a static prototype for an AI-first missed-call recovery dashboard for small trade contractors.
+Backline is a local-first MVP for an AI-first missed-call recovery dashboard for small trade contractors.
 
 The first wedge is simple:
 
@@ -8,11 +8,14 @@ The first wedge is simple:
 
 ## What Is Included
 
-- Missed-call recovery inbox
-- AI-qualified job detail view
-- Schedule board
-- Automation toggles
-- Basic recovered-revenue metrics
+- Create and manage real recovered-call jobs
+- Save data in browser local storage
+- Search and filter the job inbox
+- Book jobs, send estimate/invoice status changes, and mark paid
+- Add notes, outbound SMS entries, and customer replies
+- Toggle follow-up automations
+- Export and import workspace data
+- View live schedule and pipeline metrics
 - Product brief, MVP spec, and validation plan
 
 ## Local Preview
@@ -37,7 +40,7 @@ http://127.0.0.1:8765
 npm test
 ```
 
-The test script checks JavaScript syntax and verifies that the static prototype files are wired together.
+The test script checks JavaScript syntax and verifies that the MVP files are wired together.
 
 ## GitHub Pages
 
