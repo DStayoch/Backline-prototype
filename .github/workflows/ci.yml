@@ -19,5 +19,8 @@ jobs:
         with:
           node-version: 24
 
+      - name: Prepare local test config
+        run: cp supabase-config.example.js supabase-config.js
+
       - name: Test
         run: npm test
