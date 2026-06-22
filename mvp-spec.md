@@ -12,6 +12,10 @@ Owner-operator or office admin at a small HVAC/plumbing shop.
 
 - Capture customers when calls are missed
 - Turn vague requests into schedulable job cards
+- Give field techs a fast job-completion flow on mobile
+- Make customer history searchable from the job page
+- Get customer approval for estimates and change orders quickly
+- Track parts used without forcing a full inventory system
 - Reduce manual follow-up
 - Get customers from request to booking to payment faster
 - Show the owner which recovered jobs created revenue
@@ -28,8 +32,11 @@ Fields:
 - Phone number
 - Address
 - Trade type
+- Job type
 - Issue summary
 - Urgency
+- Site contact
+- Likely parts/tools
 - Preferred time
 - Source
 - AI confidence
@@ -60,12 +67,43 @@ Single view of customer, issue, appointment, notes, estimate, invoice, and follo
 
 Actions:
 
+- Start job
+- Complete job
 - Add note
 - Upload photo
+- Capture signature
+- Log parts used
+- Send approval link
+- Send change order
 - Send estimate
 - Send invoice
 - Send payment link
 - Request review
+
+### Field Workflow
+
+Mobile-first completion flow for the technician.
+
+Fields:
+
+- Started at
+- Completed at
+- Diagnosis captured
+- Photos captured
+- Customer signature captured
+- Parts used
+- Truck-stock/source note
+- Scope changes
+
+Actions:
+
+- Start
+- Mark diagnosis
+- Mark photos captured
+- Mark signature captured
+- Log parts
+- Complete
+- Invoice
 
 ### Automations
 
@@ -89,6 +127,28 @@ Small dashboard showing:
 
 ## Data Model
 
+Backline stores operating data in browser IndexedDB for the static prototype, with localStorage retained as a migration/export fallback. For secure mode, Backline uses Supabase Auth, Postgres, and Row Level Security. The secure database has these primary tables:
+
+- `organizations`
+- `organization_members`
+- `customers`
+- `jobs`
+- `approval_links`
+
+Customer records are rebuilt and kept in sync whenever jobs are created or updated, so past and present jobs can be searched and grouped by customer.
+
+Secure mode requires login. RLS policies scope customers, jobs, and approval links to the authenticated user's organization.
+
+Role-based views keep the app practical for a real crew:
+
+- `owner` and `admin`: full workspace, exports, job creation, approvals, money, insights
+- `dispatcher`: schedule, inbox, follow-ups, customers, booking, approval links
+- `tech`: assigned schedule/inbox only, field start/complete, checklist, photos/files, parts
+
+Team management adds pending email invites, role changes, member removal, and technician assignment suggestions. Invited users join by signing in with the invited email, which the secure database connects through `accept_team_invite()`.
+
+The Jobs database view shows active past, present, and future jobs plus a deleted-job archive. Deletes are soft-deletes from this point forward, with restore support and optional secure sync through the `deleted_jobs` table.
+
 ### Customer
 
 - id
@@ -96,7 +156,13 @@ Small dashboard showing:
 - phone
 - email
 - address
+- lastJobId
+- lastJobStatus
+- lastJobAt
+- totalValue
+- jobCount
 - createdAt
+- updatedAt
 
 ### Job
 
@@ -106,9 +172,16 @@ Small dashboard showing:
 - issue
 - urgency
 - status
+- jobType
 - scheduledStart
 - scheduledEnd
 - technicianId
+- siteContact
+- partsNote
+- approvalStatus
+- fieldChecklist
+- parts
+- scopeChanges
 - source
 - estimatedValue
 - createdAt

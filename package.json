@@ -4,6 +4,8 @@
   "private": true,
   "description": "Static prototype for an AI-first missed-call recovery dashboard for small trade contractors.",
   "scripts": {
-    "test": "node --check app.js && node tests/smoke-test.mjs"
+    "start": "node server.js",
+    "deploy:preflight": "node tests/deploy-preflight.mjs",
+    "test": "node --check app.js && node tests/smoke-test.mjs && node tests/debug-sweep.mjs && node tests/role-workflow-test.mjs && node tests/security-isolation-test.mjs && node tests/customer-facing-flow-test.mjs && node tests/demo-workflow-test.mjs && node tests/real-shop-workflow-test.mjs && node tests/mobile-readiness-test.mjs && node tests/deploy-preflight.mjs && node tests/pages-artifact-test.mjs && node tests/beta-seed-test.mjs"
   }
 }

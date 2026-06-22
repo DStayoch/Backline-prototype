@@ -1,0 +1,786 @@
+{
+  "meta": {
+    "app": "Backline",
+    "format": "backline-export",
+    "version": 2,
+    "exportedAt": "2026-06-17T09:00:00.000Z",
+    "secureMode": false,
+    "organizationId": null,
+    "companyName": "Junk in Our Trunk",
+    "exportedBy": "Backline beta seed"
+  },
+  "jobs": [
+    {
+      "id": "seed-job-open-001",
+      "customerId": "seed-customer-rivera",
+      "name": "Maya Rivera",
+      "phone": "(813)555-0101",
+      "email": "maya.rivera@example.com",
+      "address": "128 Palm Ridge Drive, Tampa, FL 33602",
+      "siteContact": "Maya Rivera",
+      "trade": "HVAC",
+      "jobType": "repair",
+      "urgency": "urgent",
+      "issue": "AC is blowing warm air and the thermostat is flashing.",
+      "scheduleDate": "",
+      "startTime": "",
+      "endTime": "",
+      "durationMinutes": 90,
+      "technician": "To Be Determined",
+      "templateKey": "hvac-diagnostic",
+      "status": "open",
+      "value": 0,
+      "window": "",
+      "partsNote": "Customer says outdoor unit is making a loud buzz.",
+      "parts": [],
+      "equipment": [
+        {
+          "id": "seed-eq-rivera-001",
+          "type": "AC condenser",
+          "brand": "Carrier",
+          "model": "24ABC636A003",
+          "serial": "CRR-2021-8831",
+          "location": "Back patio",
+          "installedAt": "2021-05-12",
+          "lastServiceDate": "2025-08-10",
+          "nextServiceDate": "2026-07-15",
+          "notes": "Customer reports weak cooling during afternoon heat."
+        }
+      ],
+      "files": [],
+      "notifications": [],
+      "tasks": [
+        {
+          "id": "seed-task-rivera-001",
+          "title": "Confirm thermostat error and outdoor unit condition",
+          "phase": "field",
+          "role": "tech",
+          "done": false
+        },
+        {
+          "id": "seed-task-rivera-002",
+          "title": "Capture data plate and capacitor readings",
+          "phase": "field",
+          "role": "tech",
+          "done": false
+        }
+      ],
+      "assignmentSeenBy": {},
+      "approvalStatus": "not_sent",
+      "estimate": {
+        "amount": 0,
+        "packageName": "Custom",
+        "depositRequested": 0,
+        "status": "draft"
+      },
+      "estimateHistory": [],
+      "invoice": {
+        "number": "BL-SEED01",
+        "lineItems": [],
+        "payments": [],
+        "depositRequested": 0,
+        "paymentMethod": "",
+        "status": "draft"
+      },
+      "paymentRequests": [],
+      "scopeChanges": [],
+      "fieldChecklist": {
+        "diagnosis": false,
+        "photos": false,
+        "signature": false
+      },
+      "portalToken": "portal-seed-rivera",
+      "createdAt": "2026-06-17T09:00:00.000Z",
+      "messages": [
+        {
+          "id": "seed-msg-rivera-001",
+          "direction": "out",
+          "body": "Sorry we missed you. Backline captured this request so the team can follow up.",
+          "createdAt": "6/17/2026, 9:00 AM",
+          "createdBy": "Backline",
+          "customerVisible": true
+        },
+        {
+          "id": "seed-msg-rivera-002",
+          "direction": "in",
+          "body": "Please come today if possible. The house is getting hot.",
+          "createdAt": "6/17/2026, 9:04 AM",
+          "createdBy": "Maya Rivera",
+          "customerVisible": true,
+          "readBy": {}
+        }
+      ]
+    },
+    {
+      "id": "seed-job-booked-001",
+      "customerId": "seed-customer-bennett",
+      "name": "Evan Bennett",
+      "phone": "(813)555-0102",
+      "email": "evan.bennett@example.com",
+      "address": "4408 Cypress Lake Way, Tampa, FL 33618",
+      "siteContact": "Homeowner",
+      "trade": "Plumbing",
+      "jobType": "repair",
+      "urgency": "normal",
+      "issue": "Kitchen sink drain is backing up and leaking under the cabinet.",
+      "scheduleDate": "2026-06-18",
+      "startTime": "09:00",
+      "endTime": "10:30",
+      "durationMinutes": 90,
+      "technician": "tech.test",
+      "templateKey": "plumbing-service",
+      "status": "booked",
+      "value": 325,
+      "window": "",
+      "partsNote": "Bring trap kit, supply lines, and drain cleaning tools.",
+      "parts": [
+        {
+          "id": "seed-part-bennett-001",
+          "name": "1 1/2 in. tubular trap kit",
+          "qty": "1",
+          "source": "On Hand",
+          "cost": 11,
+          "createdAt": "2026-06-17T09:10:00.000Z",
+          "createdBy": "Backline beta seed",
+          "pricebookItemId": "seed-pb-trap-kit"
+        }
+      ],
+      "equipment": [],
+      "files": [],
+      "notifications": [],
+      "tasks": [
+        {
+          "id": "seed-task-bennett-001",
+          "title": "Start job on arrival",
+          "phase": "prep",
+          "role": "tech",
+          "done": false
+        },
+        {
+          "id": "seed-task-bennett-002",
+          "title": "Photo cabinet before repair",
+          "phase": "field",
+          "role": "tech",
+          "done": false
+        },
+        {
+          "id": "seed-task-bennett-003",
+          "title": "Customer signature before leaving",
+          "phase": "closeout",
+          "role": "tech",
+          "done": false
+        }
+      ],
+      "assignmentSeenBy": {},
+      "approvalStatus": "not_sent",
+      "estimate": {
+        "amount": 325,
+        "packageName": "Custom",
+        "depositRequested": 0,
+        "status": "draft"
+      },
+      "estimateHistory": [],
+      "invoice": {
+        "number": "BL-SEED02",
+        "lineItems": [],
+        "payments": [],
+        "depositRequested": 0,
+        "paymentMethod": "",
+        "status": "draft"
+      },
+      "paymentRequests": [],
+      "scopeChanges": [],
+      "fieldChecklist": {
+        "diagnosis": false,
+        "photos": false,
+        "signature": false
+      },
+      "portalToken": "portal-seed-bennett",
+      "createdAt": "2026-06-17T09:10:00.000Z",
+      "messages": [
+        {
+          "id": "seed-msg-bennett-001",
+          "direction": "out",
+          "body": "Hi Evan, your plumbing visit is booked for Thu, Jun 18, 2026 at 9:00 AM-10:30 AM. Reply here if anything changes.",
+          "createdAt": "6/17/2026, 9:12 AM",
+          "createdBy": "Backline",
+          "customerVisible": true
+        }
+      ]
+    },
+    {
+      "id": "seed-job-estimated-001",
+      "customerId": "seed-customer-walsh",
+      "name": "Nora Walsh",
+      "phone": "(813)555-0103",
+      "email": "nora.walsh@example.com",
+      "address": "7812 Orange Blossom Trail, Tampa, FL 33625",
+      "siteContact": "Nora Walsh",
+      "trade": "Electrical",
+      "jobType": "install",
+      "urgency": "normal",
+      "issue": "Install dedicated circuit for garage freezer and add GFCI protection.",
+      "scheduleDate": "2026-06-20",
+      "startTime": "13:00",
+      "endTime": "15:00",
+      "durationMinutes": 120,
+      "technician": "To Be Determined",
+      "templateKey": "electrical-service",
+      "status": "estimated",
+      "value": 950,
+      "partsNote": "Panel is in garage. Customer has photos available.",
+      "parts": [],
+      "equipment": [],
+      "files": [],
+      "notifications": [],
+      "tasks": [
+        {
+          "id": "seed-task-walsh-001",
+          "title": "Verify panel capacity and breaker type",
+          "phase": "prep",
+          "role": "tech",
+          "done": false
+        }
+      ],
+      "assignmentSeenBy": {},
+      "approvalStatus": "sent",
+      "estimate": {
+        "id": "seed-est-walsh-001",
+        "amount": 950,
+        "packageName": "Custom",
+        "depositRequested": 238,
+        "status": "sent",
+        "expiresAt": "2026-07-01",
+        "introText": "Thank you for the opportunity to earn your business. Please review the recommended work below.",
+        "warrantyText": "Warranty coverage follows manufacturer terms plus written labor warranty provided by the shop.",
+        "disclaimer": "Final pricing may change if hidden conditions or customer-requested scope changes are discovered.",
+        "updatedAt": "2026-06-17T09:20:00.000Z",
+        "updatedBy": "Backline beta seed"
+      },
+      "estimateHistory": [
+        {
+          "id": "seed-est-walsh-001",
+          "revision": 1,
+          "amount": 950,
+          "packageName": "Custom",
+          "depositRequested": 238,
+          "status": "sent",
+          "createdAt": "2026-06-17T09:20:00.000Z",
+          "updatedAt": "2026-06-17T09:20:00.000Z",
+          "updatedBy": "Backline beta seed"
+        }
+      ],
+      "invoice": {
+        "number": "BL-SEED03",
+        "lineItems": [],
+        "payments": [],
+        "depositRequested": 0,
+        "paymentMethod": "",
+        "status": "draft"
+      },
+      "paymentRequests": [],
+      "scopeChanges": [],
+      "fieldChecklist": {
+        "diagnosis": false,
+        "photos": false,
+        "signature": false
+      },
+      "portalToken": "portal-seed-walsh",
+      "createdAt": "2026-06-17T09:20:00.000Z",
+      "messages": [
+        {
+          "id": "seed-msg-walsh-001",
+          "direction": "out",
+          "body": "Hi Nora Walsh, please review and approve your $950 custom estimate from Backline.",
+          "createdAt": "6/17/2026, 9:20 AM",
+          "createdBy": "Backline",
+          "customerVisible": true
+        }
+      ]
+    },
+    {
+      "id": "seed-job-invoiced-001",
+      "customerId": "seed-customer-kim",
+      "name": "Daniel Kim",
+      "phone": "(813)555-0104",
+      "email": "daniel.kim@example.com",
+      "address": "221 Bayview Court, Tampa, FL 33606",
+      "siteContact": "Daniel Kim",
+      "trade": "HVAC",
+      "jobType": "maintenance",
+      "urgency": "normal",
+      "issue": "Annual maintenance plan visit and filter replacement.",
+      "scheduleDate": "2026-06-16",
+      "startTime": "11:00",
+      "endTime": "12:00",
+      "durationMinutes": 60,
+      "technician": "tech.test",
+      "templateKey": "hvac-maintenance",
+      "status": "invoiced",
+      "value": 425,
+      "partsNote": "Filter size 20x25x1.",
+      "parts": [
+        {
+          "id": "seed-part-kim-001",
+          "name": "20x25x1 pleated filter",
+          "qty": "1",
+          "source": "On Hand",
+          "cost": 8,
+          "createdAt": "2026-06-16T15:30:00.000Z",
+          "createdBy": "tech.test",
+          "pricebookItemId": "seed-pb-filter"
+        }
+      ],
+      "equipment": [
+        {
+          "id": "seed-eq-kim-001",
+          "type": "Air handler",
+          "brand": "Trane",
+          "model": "TEM6A0B30H21",
+          "serial": "TRN-2019-5520",
+          "location": "Hall closet",
+          "installedAt": "2019-09-18",
+          "lastServiceDate": "2026-06-16",
+          "nextServiceDate": "2026-12-16",
+          "notes": "Maintenance plan customer. Replace filter every visit."
+        }
+      ],
+      "files": [],
+      "notifications": [],
+      "tasks": [
+        {
+          "id": "seed-task-kim-001",
+          "title": "Maintenance checklist complete",
+          "phase": "closeout",
+          "role": "tech",
+          "done": true,
+          "completedAt": "2026-06-16T15:45:00.000Z",
+          "completedBy": "tech.test"
+        }
+      ],
+      "assignmentSeenBy": {},
+      "approvalStatus": "approved",
+      "approvedAt": "2026-06-16T15:00:00.000Z",
+      "estimate": {
+        "id": "seed-est-kim-001",
+        "amount": 425,
+        "packageName": "Custom",
+        "depositRequested": 0,
+        "status": "approved",
+        "expiresAt": "2026-06-30",
+        "updatedAt": "2026-06-16T15:00:00.000Z",
+        "updatedBy": "Customer"
+      },
+      "estimateHistory": [
+        {
+          "id": "seed-est-kim-001",
+          "revision": 1,
+          "amount": 425,
+          "packageName": "Custom",
+          "depositRequested": 0,
+          "status": "approved",
+          "createdAt": "2026-06-16T14:40:00.000Z",
+          "approvedAt": "2026-06-16T15:00:00.000Z",
+          "updatedAt": "2026-06-16T15:00:00.000Z",
+          "updatedBy": "Customer"
+        }
+      ],
+      "invoice": {
+        "number": "BL-SEED04",
+        "lineItems": [
+          {
+            "id": "seed-line-kim-001",
+            "description": "Annual maintenance visit",
+            "category": "Maintenance",
+            "qty": 1,
+            "unit": "visit",
+            "unitPrice": 325,
+            "taxable": false,
+            "source": "estimate",
+            "sourceId": "seed-est-kim-001",
+            "createdAt": "2026-06-16T15:10:00.000Z",
+            "createdBy": "Backline beta seed"
+          },
+          {
+            "id": "seed-line-kim-002",
+            "pricebookItemId": "seed-pb-filter",
+            "description": "20x25x1 pleated filter",
+            "category": "Maintenance",
+            "qty": 1,
+            "unit": "each",
+            "unitPrice": 100,
+            "taxable": false,
+            "source": "part",
+            "sourceId": "seed-part-kim-001",
+            "createdAt": "2026-06-16T15:12:00.000Z",
+            "createdBy": "Backline beta seed"
+          }
+        ],
+        "payments": [
+          {
+            "id": "seed-payment-kim-001",
+            "amount": 200,
+            "kind": "payment",
+            "method": "card",
+            "note": "Partial payment collected during beta seed setup.",
+            "paidAt": "2026-06-16",
+            "createdAt": "2026-06-16T15:20:00.000Z",
+            "createdBy": "Backline beta seed"
+          }
+        ],
+        "depositRequested": 0,
+        "paymentMethod": "card",
+        "status": "partial",
+        "updatedAt": "2026-06-16T15:20:00.000Z",
+        "updatedBy": "Backline beta seed"
+      },
+      "paymentRequests": [
+        {
+          "id": "seed-payreq-kim-001",
+          "amount": 225,
+          "dueDate": "2026-06-24",
+          "note": "Remaining balance from beta seed invoice.",
+          "status": "requested",
+          "createdAt": "2026-06-16T15:25:00.000Z",
+          "createdBy": "Backline beta seed"
+        }
+      ],
+      "scopeChanges": [],
+      "fieldChecklist": {
+        "diagnosis": true,
+        "photos": true,
+        "signature": true
+      },
+      "portalToken": "portal-seed-kim",
+      "createdAt": "2026-06-16T14:30:00.000Z",
+      "messages": [
+        {
+          "id": "seed-msg-kim-001",
+          "direction": "note",
+          "body": "Technician completed annual maintenance visit.",
+          "createdAt": "6/16/2026, 3:45 PM",
+          "createdBy": "tech.test",
+          "customerVisible": false
+        },
+        {
+          "id": "seed-msg-kim-002",
+          "direction": "out",
+          "body": "Hi Daniel, your maintenance visit is complete. Your remaining balance is $225.",
+          "createdAt": "6/16/2026, 3:50 PM",
+          "createdBy": "Backline",
+          "customerVisible": true
+        }
+      ]
+    }
+  ],
+  "deletedJobs": [],
+  "activityEvents": [
+    {
+      "id": "seed-activity-001",
+      "type": "created",
+      "label": "Job created",
+      "detail": "Seed job: AC is blowing warm air and the thermostat is flashing.",
+      "job": {
+        "id": "seed-job-open-001",
+        "name": "Maya Rivera",
+        "status": "open"
+      },
+      "actor": {
+        "name": "Backline beta seed",
+        "role": "Owner"
+      },
+      "changes": [],
+      "createdAt": "2026-06-17T09:00:00.000Z"
+    },
+    {
+      "id": "seed-activity-002",
+      "type": "updated",
+      "label": "Job booked",
+      "detail": "Evan Bennett booked for Thu, Jun 18, 2026 at 9:00 AM.",
+      "job": {
+        "id": "seed-job-booked-001",
+        "name": "Evan Bennett",
+        "status": "booked"
+      },
+      "actor": {
+        "name": "Backline beta seed",
+        "role": "Dispatcher"
+      },
+      "changes": [],
+      "createdAt": "2026-06-17T09:12:00.000Z"
+    },
+    {
+      "id": "seed-activity-003",
+      "type": "updated",
+      "label": "Invoice payment recorded",
+      "detail": "Daniel Kim paid $200 toward BL-SEED04.",
+      "job": {
+        "id": "seed-job-invoiced-001",
+        "name": "Daniel Kim",
+        "status": "invoiced"
+      },
+      "actor": {
+        "name": "Backline beta seed",
+        "role": "Owner"
+      },
+      "changes": [],
+      "createdAt": "2026-06-16T15:20:00.000Z"
+    }
+  ],
+  "customers": [
+    {
+      "id": "seed-customer-rivera",
+      "name": "Maya Rivera",
+      "phone": "(813)555-0101",
+      "email": "maya.rivera@example.com",
+      "address": "128 Palm Ridge Drive, Tampa, FL 33602",
+      "siteContact": "Maya Rivera",
+      "customerType": "residential",
+      "tags": ["HVAC", "urgent"],
+      "accountFlag": "Hot lead",
+      "notes": "Prefers text. AC issue is urgent during heat wave.",
+      "preferredContact": "sms",
+      "lastJobId": "seed-job-open-001",
+      "lastJobStatus": "open",
+      "lastJobAt": "2026-06-17T09:00:00.000Z",
+      "firstJobAt": "2026-06-17T09:00:00.000Z",
+      "nextVisitAt": "",
+      "unpaidBalance": 0,
+      "totalValue": 0,
+      "jobCount": 1,
+      "createdAt": "2026-06-17T09:00:00.000Z",
+      "updatedAt": "2026-06-17T09:04:00.000Z"
+    },
+    {
+      "id": "seed-customer-bennett",
+      "name": "Evan Bennett",
+      "phone": "(813)555-0102",
+      "email": "evan.bennett@example.com",
+      "address": "4408 Cypress Lake Way, Tampa, FL 33618",
+      "siteContact": "Homeowner",
+      "customerType": "residential",
+      "tags": ["Plumbing"],
+      "accountFlag": "",
+      "notes": "Booked beta test plumbing job.",
+      "preferredContact": "sms",
+      "lastJobId": "seed-job-booked-001",
+      "lastJobStatus": "booked",
+      "lastJobAt": "2026-06-17T09:10:00.000Z",
+      "firstJobAt": "2026-06-17T09:10:00.000Z",
+      "nextVisitAt": "2026-06-18",
+      "unpaidBalance": 0,
+      "totalValue": 325,
+      "jobCount": 1,
+      "createdAt": "2026-06-17T09:10:00.000Z",
+      "updatedAt": "2026-06-17T09:12:00.000Z"
+    },
+    {
+      "id": "seed-customer-walsh",
+      "name": "Nora Walsh",
+      "phone": "(813)555-0103",
+      "email": "nora.walsh@example.com",
+      "address": "7812 Orange Blossom Trail, Tampa, FL 33625",
+      "siteContact": "Nora Walsh",
+      "customerType": "residential",
+      "tags": ["Electrical", "estimate"],
+      "accountFlag": "Estimate pending",
+      "notes": "Needs dedicated circuit estimate approved.",
+      "preferredContact": "email",
+      "lastJobId": "seed-job-estimated-001",
+      "lastJobStatus": "estimated",
+      "lastJobAt": "2026-06-17T09:20:00.000Z",
+      "firstJobAt": "2026-06-17T09:20:00.000Z",
+      "nextVisitAt": "2026-06-20",
+      "unpaidBalance": 950,
+      "totalValue": 950,
+      "jobCount": 1,
+      "createdAt": "2026-06-17T09:20:00.000Z",
+      "updatedAt": "2026-06-17T09:20:00.000Z"
+    },
+    {
+      "id": "seed-customer-kim",
+      "name": "Daniel Kim",
+      "phone": "(813)555-0104",
+      "email": "daniel.kim@example.com",
+      "address": "221 Bayview Court, Tampa, FL 33606",
+      "siteContact": "Daniel Kim",
+      "customerType": "residential",
+      "tags": ["Maintenance plan", "balance due"],
+      "accountFlag": "Balance due",
+      "notes": "Maintenance plan customer with remaining balance.",
+      "preferredContact": "sms",
+      "lastJobId": "seed-job-invoiced-001",
+      "lastJobStatus": "invoiced",
+      "lastJobAt": "2026-06-16T14:30:00.000Z",
+      "firstJobAt": "2026-06-16T14:30:00.000Z",
+      "nextVisitAt": "2026-12-16",
+      "unpaidBalance": 225,
+      "totalValue": 425,
+      "jobCount": 1,
+      "createdAt": "2026-06-16T14:30:00.000Z",
+      "updatedAt": "2026-06-16T15:50:00.000Z"
+    }
+  ],
+  "pricebookItems": [
+    {
+      "id": "seed-pb-capacitor",
+      "name": "Dual run capacitor",
+      "description": "Common HVAC capacitor replacement",
+      "category": "Repair",
+      "unit": "each",
+      "unitPrice": 225,
+      "taxable": false,
+      "active": true,
+      "preferredSupplier": "Coastal HVAC Supply",
+      "defaultCost": 42,
+      "truckStock": 3,
+      "reorderPoint": 2,
+      "usageCount": 0,
+      "orders": [],
+      "movements": [],
+      "createdAt": "2026-06-17T08:30:00.000Z",
+      "updatedAt": ""
+    },
+    {
+      "id": "seed-pb-filter",
+      "name": "20x25x1 pleated filter",
+      "description": "Standard maintenance filter",
+      "category": "Maintenance",
+      "unit": "each",
+      "unitPrice": 100,
+      "taxable": false,
+      "active": true,
+      "preferredSupplier": "Coastal HVAC Supply",
+      "defaultCost": 8,
+      "truckStock": 12,
+      "reorderPoint": 6,
+      "lastUsedAt": "2026-06-16T15:30:00.000Z",
+      "usageCount": 1,
+      "orders": [],
+      "movements": [
+        {
+          "id": "seed-move-filter-001",
+          "type": "usage",
+          "qty": -1,
+          "beforeQty": 13,
+          "afterQty": 12,
+          "note": "Used on Daniel Kim maintenance visit",
+          "jobId": "seed-job-invoiced-001",
+          "jobName": "Daniel Kim",
+          "createdAt": "2026-06-16T15:30:00.000Z",
+          "createdBy": "tech.test"
+        }
+      ],
+      "createdAt": "2026-06-17T08:35:00.000Z",
+      "updatedAt": "2026-06-16T15:30:00.000Z"
+    },
+    {
+      "id": "seed-pb-trap-kit",
+      "name": "1 1/2 in. tubular trap kit",
+      "description": "Kitchen sink tubular trap kit",
+      "category": "Repair",
+      "unit": "each",
+      "unitPrice": 125,
+      "taxable": false,
+      "active": true,
+      "preferredSupplier": "Home Depot",
+      "defaultCost": 11,
+      "truckStock": 2,
+      "reorderPoint": 2,
+      "usageCount": 0,
+      "orders": [
+        {
+          "id": "seed-order-trap-001",
+          "purchaseOrderId": "seed-po-001",
+          "purchaseOrderNumber": "PO-SEED-001",
+          "supplier": "Home Depot",
+          "qty": 4,
+          "unitCost": 11,
+          "expectedDate": "2026-06-21",
+          "status": "ordered",
+          "note": "Seed reorder test",
+          "orderedAt": "2026-06-17T08:45:00.000Z",
+          "orderedBy": "Backline beta seed",
+          "receivedQty": 0
+        }
+      ],
+      "movements": [],
+      "createdAt": "2026-06-17T08:40:00.000Z",
+      "updatedAt": "2026-06-17T08:45:00.000Z"
+    }
+  ],
+  "suppliers": [
+    {
+      "id": "coastal-hvac-supply",
+      "name": "Coastal HVAC Supply",
+      "phone": "(813)555-0201",
+      "email": "orders@coastalhvac.example",
+      "website": "https://coastalhvac.example",
+      "accountNumber": "HVAC-1042",
+      "preferredContact": "email",
+      "deliveryNotes": "Call ahead for condenser fan motors and capacitors.",
+      "createdAt": "2026-06-17T08:00:00.000Z",
+      "createdBy": "Backline beta seed"
+    },
+    {
+      "id": "home-depot",
+      "name": "Home Depot",
+      "phone": "(813)555-0202",
+      "email": "",
+      "website": "https://homedepot.com",
+      "accountNumber": "",
+      "preferredContact": "phone",
+      "deliveryNotes": "Use nearby store pickup for plumbing supplies.",
+      "createdAt": "2026-06-17T08:05:00.000Z",
+      "createdBy": "Backline beta seed"
+    }
+  ],
+  "companySettings": {
+    "companyName": "Junk in Our Trunk",
+    "companySlogan": "Fast help, clean handoff.",
+    "phone": "(813)555-0199",
+    "email": "office@junkinourtrunk.example",
+    "address": "2507 Rustic Ridge Loop, Lutz, FL 33559",
+    "serviceArea": "Tampa Bay, Lutz, Wesley Chapel, and nearby suburbs",
+    "timeZone": "America/New_York",
+    "invoiceTerms": "Payment is due upon receipt unless otherwise agreed in writing.",
+    "defaultTaxRate": 0,
+    "defaultDepositPercent": 25,
+    "defaultLaborCostRate": 85,
+    "targetMarginPercent": 45,
+    "estimateExpirationDays": 14,
+    "estimateIntroText": "Thank you for the opportunity to earn your business. Please review the recommended work below.",
+    "estimateWarrantyText": "Warranty coverage follows the manufacturer's terms plus any written labor warranty provided by the shop.",
+    "estimateDisclaimer": "Final pricing may change if hidden conditions, code requirements, or customer-requested scope changes are discovered.",
+    "defaultDepositWording": "Deposit may be requested before work begins.",
+    "approvalWording": "By approving, you authorize the described work and acknowledge the estimate total.",
+    "pdfFooter": "Keep this document with your service records. Contact the shop with any questions.",
+    "reviewLink": "https://example.com/review",
+    "templateSettings": {},
+    "roleOverrides": {},
+    "customRoles": [
+      {
+        "slug": "field-lead",
+        "name": "Field Lead",
+        "description": "Can run field work, update customers, and close assigned jobs.",
+        "views": ["schedule", "inbox", "customers"],
+        "actions": ["start", "complete", "portal-update", "parts", "task-toggle", "check-diagnosis", "check-photos", "check-signature", "close"],
+        "createJob": false,
+        "uploadFiles": true,
+        "exportData": false,
+        "manageTeam": false,
+        "createdAt": "2026-06-17T08:00:00.000Z",
+        "updatedAt": "2026-06-17T08:00:00.000Z"
+      }
+    ],
+    "settingsUpdatedAt": "2026-06-17T08:00:00.000Z"
+  },
+  "automations": {
+    "missedCall": true,
+    "estimateFollowup": true,
+    "paymentReminder": true,
+    "reviewRequest": true,
+    "maintenanceReminder": true
+  },
+  "themePreference": "light"
+}
