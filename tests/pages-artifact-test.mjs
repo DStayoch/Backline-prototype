@@ -24,7 +24,7 @@ try {
   if (document.querySelector('link[href^="field-polish.css"]')) return;
   var polish = document.createElement("link");
   polish.rel = "stylesheet";
-  polish.href = "field-polish.css?v=20260624-flat-labels";
+  polish.href = "field-polish.css?v=20260624-flat-meta-labels";
   document.head.appendChild(polish);
 })();
 `);
@@ -62,7 +62,7 @@ try {
   assert.match(index, /<script src="app\.js\?v=/, "Artifact index should load the cache-tagged app bundle.");
   assert.match(index, /assets\/backline-icon-transparent\.png/, "Artifact index should reference included favicon asset.");
   assert.match(config, /environment:\s*"production"/, "Generated config should identify production.");
-  assert.match(config, /field-polish\.css\?v=20260624-flat-labels/, "Generated config should load the field polish stylesheet.");
+  assert.match(config, /field-polish\.css\?v=20260624-flat-meta-labels/, "Generated config should load the field polish stylesheet.");
   assert.match(config, new RegExp(fakeProductionUrl.replace(/\./g, "\\.")), "Generated config should include production Supabase URL.");
   assert.match(config, new RegExp(fakeProductionAnonKey), "Generated config should include production Supabase anon key.");
   assert.doesNotMatch(config, /YOUR-PRODUCTION-PROJECT|YOUR-PROJECT|uwgklcnwjsmmwndoqdam|sb_publishable_/i, "Generated config should not contain placeholders or development values.");
