@@ -1,0 +1,188 @@
+/*
+  Backline section polish
+  Small deployable override for clearer scan targets without replacing the full app stylesheet.
+*/
+
+:root {
+  --scan-card-bg: #f8fbff;
+  --scan-card-border: #8aa6c4;
+  --scan-card-accent: #2563eb;
+  --scan-card-label: #ffffff;
+  --scan-card-label-bg: #315f91;
+  --scan-card-shadow: 0 12px 28px rgba(16, 42, 67, 0.1);
+  --section-header-bg: linear-gradient(90deg, #eaf2ff 0%, #f8fbff 70%);
+  --section-header-border: #b7c9dd;
+  --section-title: #0f2b46;
+}
+
+body.dark {
+  --scan-card-bg: #111e2f;
+  --scan-card-border: #48617c;
+  --scan-card-accent: #6fb1ff;
+  --scan-card-label: #06111f;
+  --scan-card-label-bg: #9bc8ff;
+  --scan-card-shadow: 0 16px 34px rgba(0, 0, 0, 0.26);
+  --section-header-bg: linear-gradient(90deg, #17345a 0%, #132237 72%);
+  --section-header-border: #49627e;
+  --section-title: #f3f8ff;
+}
+
+.collapsible-field-summary {
+  margin: -16px -16px 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid color-mix(in srgb, var(--section-header-border) 76%, var(--line));
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  background: var(--section-header-bg);
+}
+
+.collapsible-field-summary > span:first-child {
+  display: grid;
+  gap: 4px;
+}
+
+.collapsible-field-summary strong {
+  color: var(--section-title);
+  font-size: 1.08rem;
+  letter-spacing: 0;
+}
+
+.collapsible-field-summary small {
+  color: color-mix(in srgb, var(--text-muted) 82%, var(--section-title));
+  font-weight: 600;
+}
+
+.section-heading {
+  margin: -16px -16px 16px;
+  padding: 14px 16px;
+  border-bottom: 1px solid color-mix(in srgb, var(--section-header-border) 76%, var(--line));
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  background: var(--section-header-bg);
+}
+
+.section-heading h3 {
+  color: var(--section-title);
+  font-size: 1.08rem;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+.section-heading p {
+  margin-top: 3px;
+  color: color-mix(in srgb, var(--text-muted) 82%, var(--section-title));
+  font-weight: 600;
+}
+
+.job-summary-card,
+.invoice-summary-card,
+.dispatch-brief-card,
+.field-card,
+.summary-card,
+.insight-card,
+.metric-card,
+.stat-card,
+.setup-card,
+.health-card,
+.foundry-card,
+.portal-card,
+.customer-card,
+.inventory-card,
+.supplier-card,
+.pricebook-card,
+.role-card,
+.template-card,
+.meta,
+.detail-card {
+  border: 1px solid var(--scan-card-border);
+  border-left: 4px solid var(--scan-card-accent);
+  background: var(--scan-card-bg);
+  box-shadow: var(--scan-card-shadow);
+}
+
+.job-summary-card .label,
+.invoice-summary-card .label,
+.dispatch-brief-card .label,
+.field-card .label,
+.summary-card .label,
+.insight-card .label,
+.metric-card .label,
+.stat-card .label,
+.setup-card .label,
+.health-card .label,
+.foundry-card .label,
+.portal-card .label,
+.customer-card .label,
+.inventory-card .label,
+.supplier-card .label,
+.pricebook-card .label,
+.role-card .label,
+.template-card .label,
+.meta .label,
+.detail-card .label,
+.job-summary-card small:first-child,
+.invoice-summary-card small:first-child,
+.dispatch-brief-card small:first-child,
+.field-card small:first-child,
+.summary-card small:first-child,
+.insight-card small:first-child,
+.metric-card small:first-child,
+.stat-card small:first-child,
+.setup-card small:first-child,
+.health-card small:first-child,
+.foundry-card small:first-child,
+.portal-card small:first-child,
+.customer-card small:first-child,
+.inventory-card small:first-child,
+.supplier-card small:first-child,
+.pricebook-card small:first-child,
+.role-card small:first-child,
+.template-card small:first-child,
+.meta small:first-child,
+.detail-card small:first-child {
+  display: inline-flex;
+  width: fit-content;
+  max-width: 100%;
+  margin-bottom: 7px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  color: var(--scan-card-label);
+  background: var(--scan-card-label-bg);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  line-height: 1.25;
+  text-transform: uppercase;
+}
+
+.job-summary-card strong,
+.invoice-summary-card strong,
+.dispatch-brief-card strong,
+.field-card strong,
+.summary-card strong,
+.insight-card strong,
+.metric-card strong,
+.stat-card strong,
+.setup-card strong,
+.health-card strong,
+.foundry-card strong,
+.portal-card strong,
+.customer-card strong,
+.inventory-card strong,
+.supplier-card strong,
+.pricebook-card strong,
+.role-card strong,
+.template-card strong,
+.meta strong,
+.detail-card strong {
+  color: var(--text);
+  font-weight: 800;
+}
+
+@media (max-width: 720px) {
+  .collapsible-field-summary,
+  .section-heading {
+    margin-right: -12px;
+    margin-left: -12px;
+    padding-right: 12px;
+    padding-left: 12px;
+  }
+}
