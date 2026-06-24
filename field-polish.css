@@ -9,6 +9,7 @@
   --scan-card-accent: #2563eb;
   --scan-card-label: #ffffff;
   --scan-card-label-bg: #315f91;
+  --scan-card-label-text: #315f91;
   --scan-card-shadow: 0 12px 28px rgba(16, 42, 67, 0.1);
   --section-header-bg: linear-gradient(90deg, #eaf2ff 0%, #f8fbff 70%);
   --section-header-border: #b7c9dd;
@@ -21,6 +22,7 @@ body.dark {
   --scan-card-accent: #6fb1ff;
   --scan-card-label: #06111f;
   --scan-card-label-bg: #9bc8ff;
+  --scan-card-label-text: #9bc8ff;
   --scan-card-shadow: 0 16px 34px rgba(0, 0, 0, 0.26);
   --section-header-bg: linear-gradient(90deg, #17345a 0%, #132237 72%);
   --section-header-border: #49627e;
@@ -142,13 +144,13 @@ body.dark {
   width: fit-content;
   max-width: 100%;
   margin-bottom: 7px;
-  padding: 3px 8px;
-  border-radius: 999px;
-  color: var(--scan-card-label);
-  background: var(--scan-card-label-bg);
+  padding: 0;
+  border-radius: 0;
+  color: var(--scan-card-label-text);
+  background: transparent;
   font-size: 0.68rem;
   font-weight: 800;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.04em;
   line-height: 1.25;
   text-transform: uppercase;
 }
