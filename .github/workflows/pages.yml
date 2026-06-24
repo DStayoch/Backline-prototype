@@ -49,7 +49,7 @@ jobs:
             if (document.querySelector('link[href^="field-polish.css"]')) return;
             var polish = document.createElement("link");
             polish.rel = "stylesheet";
-            polish.href = "field-polish.css?v=20260624-section-polish";
+            polish.href = "field-polish.css?v=20260624-flat-labels";
             document.head.appendChild(polish);
           })();
           EOF
