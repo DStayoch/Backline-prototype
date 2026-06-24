@@ -4,7 +4,7 @@ import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 
-const rootFiles = ["index.html", "styles.css", "app.js"];
+const rootFiles = ["index.html", "styles.css", "field-polish.css", "app.js"];
 const fakeProductionUrl = "https://production-example.supabase.co";
 const fakeProductionAnonKey = "production-anon-key-placeholder";
 
@@ -20,6 +20,13 @@ try {
   url: "${fakeProductionUrl}",
   anonKey: "${fakeProductionAnonKey}"
 };
+(function () {
+  if (document.querySelector('link[href^="field-polish.css"]')) return;
+  var polish = document.createElement("link");
+  polish.rel = "stylesheet";
+  polish.href = "field-polish.css?v=20260624-section-polish";
+  document.head.appendChild(polish);
+})();
 `);
 
   for (const file of [...rootFiles, "supabase-config.js"]) {
@@ -55,6 +62,7 @@ try {
   assert.match(index, /<script src="app\.js\?v=/, "Artifact index should load the cache-tagged app bundle.");
   assert.match(index, /assets\/backline-icon-transparent\.png/, "Artifact index should reference included favicon asset.");
   assert.match(config, /environment:\s*"production"/, "Generated config should identify production.");
+  assert.match(config, /field-polish\.css\?v=20260624-section-polish/, "Generated config should load the field polish stylesheet.");
   assert.match(config, new RegExp(fakeProductionUrl.replace(/\./g, "\\.")), "Generated config should include production Supabase URL.");
   assert.match(config, new RegExp(fakeProductionAnonKey), "Generated config should include production Supabase anon key.");
   assert.doesNotMatch(config, /YOUR-PRODUCTION-PROJECT|YOUR-PROJECT|uwgklcnwjsmmwndoqdam|sb_publishable_/i, "Generated config should not contain placeholders or development values.");
