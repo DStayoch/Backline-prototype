@@ -120,6 +120,14 @@ body.dark {
 .template-card .label,
 .meta .label,
 .detail-card .label,
+.job-summary-card > span:first-child,
+.dispatch-brief-card > span:first-child,
+.activity-detail-grid span,
+.approval-meta-grid span,
+.portal-access-grid span,
+.portal-payment-grid span,
+.schedule-health-grid span,
+.supplier-contact-grid span,
 .job-summary-card small:first-child,
 .invoice-summary-card small:first-child,
 .dispatch-brief-card small:first-child,
@@ -144,15 +152,32 @@ body.dark {
   width: fit-content;
   max-width: 100%;
   margin-bottom: 7px;
-  padding: 0;
-  border-radius: 0;
-  color: var(--scan-card-label-text);
-  background: transparent;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  color: var(--scan-card-label-text) !important;
+  background: transparent !important;
   font-size: 0.68rem;
   font-weight: 800;
   letter-spacing: 0.04em;
   line-height: 1.25;
   text-transform: uppercase;
+}
+
+.job-summary-card .technician-picker-button span,
+.job-summary-card .backline-picker-button span,
+.dispatch-brief-card .backline-picker-button span {
+  width: auto;
+  max-width: 100%;
+  margin: 0;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  color: var(--ink) !important;
+  font-size: 0.9rem;
+  font-weight: 850;
+  letter-spacing: 0;
+  line-height: 1.1;
+  text-transform: none;
 }
 
 .job-summary-card strong,
