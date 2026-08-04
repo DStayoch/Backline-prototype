@@ -44,6 +44,7 @@ assert.doesNotMatch(pagesWorkflow, /path: \./, "Pages deploy should not upload t
 assert.match(fieldPolish, /html\[data-theme="dark"\],\s*body\.dark\s*\{/, "Polish overrides must follow the app's html[data-theme=dark] selector.");
 assert.match(fieldPolish, /--scan-card-bg:\s*#111e2f/, "Dark polish cards should use a dark surface.");
 assert.match(fieldPolish, /\.customer-card > span:first-child\s*\{[\s\S]*?display:\s*grid;[\s\S]*?gap:\s*6px;/, "Customer card contact info should stay stacked with readable spacing.");
+assert.match(fieldPolish, /\.customer-card strong\s*\{[\s\S]*?font-size:\s*0\.98rem;/, "Customer names should stay prominent in the customer list.");
 for (const alias of ["--text", "--text-muted", "--accent", "--primary", "--primary-soft", "--soft-blue", "--red", "--danger-soft", "--green-dark", "--amber-dark", "--radius-sm"]) {
   assert.match(css, new RegExp(`${alias}:`), `Theme CSS should define ${alias} for older shared UI rules.`);
 }

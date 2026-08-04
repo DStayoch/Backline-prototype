@@ -221,6 +221,7 @@ body.dark {
 }
 
 .customer-card strong {
+  font-size: 0.98rem;
   line-height: 1.22;
 }
 
