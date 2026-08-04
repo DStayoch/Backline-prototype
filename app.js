@@ -1901,6 +1901,7 @@ function receiptPdfLines(job, payment = {}) {
 const PDF_PAGE_WIDTH = 612;
 const PDF_PAGE_BOTTOM = 672;
 const PDF_FOOTER_TOP = 710;
+const APPROVAL_PDF_LAYOUT_VERSION = "2026-08-footer-band";
 
 function ensurePdfSpace(pdf, y, requiredHeight, margin = 48) {
   if (y + requiredHeight <= PDF_PAGE_BOTTOM) return y;
@@ -2288,6 +2289,7 @@ async function createApprovalPdfFile(job, options = {}) {
     url,
     note: "Approved estimate PDF with customer signature",
     source: "approval pdf",
+    layoutVersion: APPROVAL_PDF_LAYOUT_VERSION,
     customerVisible: true,
     createdAt: new Date().toISOString()
   };
@@ -5315,6 +5317,36 @@ function latestApprovalPdfFile(job = {}) {
   return [...(job.files || [])]
     .filter((file) => String(file.source || "").toLowerCase() === "approval pdf")
     .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))[0] || null;
+}
+
+function approvalPdfFileIsCurrent(file = {}) {
+  return String(file.source || "").toLowerCase() === "approval pdf"
+    && file.layoutVersion === APPROVAL_PDF_LAYOUT_VERSION;
+}
+
+function jobHasApprovedEstimate(job = {}) {
+  const estimate = normalizeEstimateRecord(job.estimate || {}, job);
+  return estimateRevisionStatus(estimate.status || job.approvalStatus) === "approved";
+}
+
+async function refreshCurrentApprovalPdfs(options = {}) {
+  if (!window.jspdf?.jsPDF || document.body.classList.contains("approval-mode")) return 0;
+  const company = options.companySettings || companySettings();
+  let refreshed = 0;
+  for (const job of state.jobs) {
+    ensureJobDefaults(job);
+    if (!jobHasApprovedEstimate(job)) continue;
+    if (latestApprovalPdfFile(job) && (job.files || []).some(approvalPdfFileIsCurrent)) continue;
+    const nextFile = await createApprovalPdfFile(job, { companySettings: company });
+    job.files = [
+      ...(job.files || []).filter((file) => String(file.source || "").toLowerCase() !== "approval pdf"),
+      nextFile
+    ];
+    refreshed += 1;
+  }
+  if (!refreshed) return 0;
+  await save();
+  return refreshed;
 }
 
 function createId() {
@@ -22575,6 +22607,18 @@ async function initApp() {
       elements.storageStatus.textContent = state.secureMode
         ? "Secure database ready"
         : state.databaseReady ? "Database ready" : "Fallback storage active";
+    }
+    try {
+      const refreshedApprovalPdfs = await refreshCurrentApprovalPdfs();
+      if (refreshedApprovalPdfs) {
+        showToast(
+          "Approval PDFs refreshed",
+          `${refreshedApprovalPdfs} existing approved job${refreshedApprovalPdfs === 1 ? "" : "s"} updated with the new approval letter layout.`,
+          "success"
+        );
+      }
+    } catch (error) {
+      showToast("Approval PDF refresh skipped", error?.message || "Existing approval PDFs will refresh the next time Backline opens.", "warning");
     }
     routeFromHash();
     openQueuedWorkspaceSettings();
