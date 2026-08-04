@@ -11757,6 +11757,21 @@ function customerPortalPaymentTimelineDetail(payment = {}, invoice = {}) {
   return `${method}${note}`;
 }
 
+function invoicePaidInFullTimelinePayment(invoice = {}) {
+  const record = normalizeInvoiceRecord(invoice);
+  if (record.amount <= 0) return null;
+  let collected = 0;
+  return paymentRecords(record)
+    .sort((a, b) => {
+      const diff = customerTimelineDate(a.paidAt || a.createdAt) - customerTimelineDate(b.paidAt || b.createdAt);
+      return diff || a.legacyOrder - b.legacyOrder;
+    })
+    .find((payment) => {
+      collected += payment.kind === "refund" ? -payment.amount : payment.amount;
+      return collected >= record.amount;
+    }) || null;
+}
+
 function customerPortalTimelineEvents(job = {}) {
   ensureJobDefaults(job);
   const events = [];
@@ -11840,6 +11855,17 @@ function customerPortalTimelineEvents(job = {}) {
       createdAt: payment.paidAt || payment.createdAt
     });
   });
+
+  const paidInFullPayment = invoicePaidInFullTimelinePayment(invoice);
+  if (paidInFullPayment) {
+    addEvent({
+      type: "paid-in-full",
+      tone: "paid",
+      title: "Invoice paid in full",
+      detail: `${formatMoney(invoice.amount)} total has been received.`,
+      createdAt: paidInFullPayment.paidAt || paidInFullPayment.createdAt
+    });
+  }
 
   if (job.completedAt) {
     addEvent({
@@ -17330,9 +17356,18 @@ function customerTimelineEvents(jobs = [], options = {}) {
         type: "payment",
         label: `${paymentKindLabel(payment.kind)} recorded`,
         detail: `${formatMoney(payment.amount)} by ${paymentMethodLabel(payment.method || invoice.paymentMethod)}`,
-        createdAt: payment.createdAt || payment.paidAt
+        createdAt: payment.paidAt || payment.createdAt
       });
     });
+    const paidInFullPayment = invoicePaidInFullTimelinePayment(invoice);
+    if (paidInFullPayment) {
+      pushCustomerTimelineEvent(events, job, {
+        type: "paid",
+        label: "Invoice paid in full",
+        detail: `${invoice.number} - ${formatMoney(invoice.amount)} total received`,
+        createdAt: paidInFullPayment.paidAt || paidInFullPayment.createdAt
+      });
+    }
     (job.files || []).forEach((file) => {
       const category = fileCategory(file);
       pushCustomerTimelineEvent(events, job, {
