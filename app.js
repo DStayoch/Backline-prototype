@@ -1785,8 +1785,7 @@ function approvalJobFromForm(form, overrides = {}) {
   });
 }
 
-function approvalPdfLines(job) {
-  const company = companySettings();
+function approvalPdfLines(job, company = companySettings()) {
   const estimate = normalizeEstimateRecord(job.estimate || {}, job);
   return [
     ["Company", company.companyName],
@@ -1889,8 +1888,7 @@ function addPdfLines(pdf, lines, margin, y, labelWidth = 128) {
   return y;
 }
 
-function addPdfBrandHeader(pdf, title, subtitle = "") {
-  const company = companySettings();
+function addPdfBrandHeader(pdf, title, subtitle = "", company = companySettings()) {
   const shopLine = company.companySlogan
     || company.serviceArea
     || [company.phone, company.email].filter(Boolean).join(" / ")
@@ -1982,7 +1980,7 @@ function createInvoicePdfFile(job) {
   const pdf = new JsPdf({ unit: "pt", format: "letter" });
   const margin = 48;
   const fileName = invoicePdfFileName(job);
-  let y = addPdfBrandHeader(pdf, "Invoice", `${invoice.number} - generated ${new Date().toLocaleDateString()}`);
+  let y = addPdfBrandHeader(pdf, "Invoice", `${invoice.number} - generated ${new Date().toLocaleDateString()}`, company);
 
   addPdfInfoPanel(pdf, margin, y, "Bill to", [
     job.name,
@@ -2097,7 +2095,7 @@ function createReceiptPdfFile(job, payment = {}) {
   const pdf = new JsPdf({ unit: "pt", format: "letter" });
   const margin = 48;
   const fileName = receiptPdfFileName(job, record);
-  let y = addPdfBrandHeader(pdf, "Payment Receipt", `${invoice.number} - ${formatMoney(record.amount)} received`);
+  let y = addPdfBrandHeader(pdf, "Payment Receipt", `${invoice.number} - ${formatMoney(record.amount)} received`, company);
 
   addPdfInfoPanel(pdf, margin, y, "Received from", [
     job.name,
@@ -2153,11 +2151,13 @@ async function createApprovalPdfFile(job, options = {}) {
   }
 
   const pdf = new JsPdf({ unit: "pt", format: "letter" });
-  const company = companySettings();
+  const company = options.companySettings
+    ? customerFacingCompanySettings(options.companySettings)
+    : companySettings();
   const margin = 48;
   const fileName = approvalPdfFileName(job);
   const estimate = normalizeEstimateRecord(job.estimate || {}, job);
-  let y = addPdfBrandHeader(pdf, "Approved Estimate", `${formatMoney(estimate.amount)} approved by ${job.customerSignature || job.name}`);
+  let y = addPdfBrandHeader(pdf, "Approved Estimate", `${formatMoney(estimate.amount)} approved by ${job.customerSignature || job.name}`, company);
 
   addPdfInfoPanel(pdf, margin, y, "Customer", [
     job.name,
@@ -2178,7 +2178,7 @@ async function createApprovalPdfFile(job, options = {}) {
     { label: "Status", value: "Approved" }
   ], margin, y);
 
-  y = addPdfLines(pdf, approvalPdfLines(job), margin, y);
+  y = addPdfLines(pdf, approvalPdfLines(job, company), margin, y);
 
   if (job.scopeChanges?.length) {
     y += 8;
@@ -21889,7 +21889,7 @@ document.addEventListener("submit", async (event) => {
         declineReason: ""
       });
       try {
-        approvalPdfFile = await createApprovalPdfFile(pdfJob);
+        approvalPdfFile = await createApprovalPdfFile(pdfJob, { companySettings: state.portalCompanySettings });
       } catch (error) {
         showApprovalError(error.message);
         return;

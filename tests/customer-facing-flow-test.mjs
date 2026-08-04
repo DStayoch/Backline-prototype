@@ -15,6 +15,11 @@ assert.match(app, /client\.rpc\("get_approval_by_token", \{ input_token: token \
 assert.match(app, /renderApprovalPage\(row\.job, \{ token, publicMode: true, linkStatus: row\.link_status, companySettings: row\.company_settings \}\)/);
 
 assert.match(app, /const decisionSent =[\s\S]*?options\.linkStatus === "used"/);
+assert.match(app, /function approvalPdfLines\(job, company = companySettings\(\)\)/);
+assert.match(app, /function addPdfBrandHeader\(pdf, title, subtitle = "", company = companySettings\(\)\)/);
+assert.match(app, /const company = options\.companySettings[\s\S]*?customerFacingCompanySettings\(options\.companySettings\)[\s\S]*?: companySettings\(\)/);
+assert.match(app, /createApprovalPdfFile\(pdfJob, \{ companySettings: state\.portalCompanySettings \}\)/);
+assert.match(app, /approvalPdfLines\(job, company\)/);
 assert.match(app, /Thank you\. Your approval has been sent\./);
 assert.match(app, /approvalPdfFile && !submittedJob\.files\.some/);
 assert.match(app, /renderApprovalPage\(submittedJob, \{ token, publicMode: true, linkStatus: "used", decision, approvalPdfFile, companySettings: state\.portalCompanySettings \}\)/);
