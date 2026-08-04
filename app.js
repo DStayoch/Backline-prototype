@@ -1899,8 +1899,8 @@ function receiptPdfLines(job, payment = {}) {
 }
 
 const PDF_PAGE_WIDTH = 612;
-const PDF_PAGE_BOTTOM = 708;
-const PDF_FOOTER_TOP = 724;
+const PDF_PAGE_BOTTOM = 672;
+const PDF_FOOTER_TOP = 710;
 
 function ensurePdfSpace(pdf, y, requiredHeight, margin = 48) {
   if (y + requiredHeight <= PDF_PAGE_BOTTOM) return y;
