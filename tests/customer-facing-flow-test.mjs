@@ -16,10 +16,23 @@ assert.match(app, /renderApprovalPage\(row\.job, \{ token, publicMode: true, lin
 
 assert.match(app, /const decisionSent =[\s\S]*?options\.linkStatus === "used"/);
 assert.match(app, /function approvalPdfLines\(job, company = companySettings\(\)\)/);
+assert.match(app, /function approvalPdfSections\(job, company = companySettings\(\)\)/);
+assert.match(app, /title: "Service provider"/);
+assert.match(app, /title: "Customer and job"/);
+assert.match(app, /title: "Estimate approval"/);
+assert.match(app, /title: "Terms and notes"/);
+assert.match(app, /const PDF_PAGE_WIDTH = 612/);
+assert.match(app, /const PDF_PAGE_BOTTOM = 708/);
+assert.match(app, /const PDF_FOOTER_TOP = 724/);
+assert.match(app, /function ensurePdfSpace\(pdf, y, requiredHeight, margin = 48\)/);
+assert.match(app, /function addPdfSectionTitle\(pdf, title, margin, y\)/);
+assert.match(app, /pdf\.splitTextToSize\(String\(footerText \|\| ""\), PDF_PAGE_WIDTH - margin \* 2\)\.slice\(0, 3\)/);
 assert.match(app, /function addPdfBrandHeader\(pdf, title, subtitle = "", company = companySettings\(\)\)/);
 assert.match(app, /const company = options\.companySettings[\s\S]*?customerFacingCompanySettings\(options\.companySettings\)[\s\S]*?: companySettings\(\)/);
 assert.match(app, /createApprovalPdfFile\(pdfJob, \{ companySettings: state\.portalCompanySettings \}\)/);
 assert.match(app, /approvalPdfLines\(job, company\)/);
+assert.match(app, /approvalPdfSections\(job, company\)\.forEach/);
+assert.match(app, /y = ensurePdfSpace\(pdf, y, 164, margin\)/);
 assert.match(app, /Thank you\. Your approval has been sent\./);
 assert.match(app, /approvalPdfFile && !submittedJob\.files\.some/);
 assert.match(app, /renderApprovalPage\(submittedJob, \{ token, publicMode: true, linkStatus: "used", decision, approvalPdfFile, companySettings: state\.portalCompanySettings \}\)/);

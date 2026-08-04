@@ -1788,30 +1788,53 @@ function approvalJobFromForm(form, overrides = {}) {
 function approvalPdfLines(job, company = companySettings()) {
   const estimate = normalizeEstimateRecord(job.estimate || {}, job);
   return [
-    ["Company", company.companyName],
-    ["Legal business name", customerFacingLegalName(company)],
+    ["Provider", customerFacingLegalName(company)],
     ["Company phone", company.phone || "Not provided"],
     ["Company email", company.email || "Not provided"],
-    ["Support contact", customerFacingContactLine(company)],
     ["Customer", job.name],
-    ["Phone", job.phone || "Not provided"],
+    ["Customer phone", job.phone || "Not provided"],
     ["Service address", job.address],
-    ["Trade", `${job.trade} / ${jobTypeLabel(job)}`],
-    ["Scheduled", scheduleText(job)],
+    ["Service type", `${job.trade} / ${jobTypeLabel(job)}`],
+    ["Scheduled service", scheduleText(job)],
     ["Technician", normalizeTechnician(job.technician)],
-    ["Issue", job.issue],
+    ["Requested work", job.issue],
     ["Estimate package", estimate.packageName],
     ["Estimate expires", estimate.expiresAt ? new Date(`${estimate.expiresAt}T12:00:00`).toLocaleDateString() : "Not set"],
-    ["Approved total", formatMoney(estimate.amount)],
+    ["Approval total", formatMoney(estimate.amount)],
     ["Deposit requested", formatMoney(estimate.depositRequested)],
     ["Deposit collected", job.depositCollected ? "Yes" : "No"],
     ["Approval terms", company.approvalWording],
-    ["Approval disclaimer", company.approvalDisclaimerText],
+    ["Important note", company.approvalDisclaimerText],
     ["Service policy", company.servicePolicyText || "Not provided"],
     ["Warranty", estimate.warrantyText],
-    ["Disclaimer", estimate.disclaimer],
-    ["Typed legal name", job.customerSignature || job.name],
-    ["Approved at", job.approvedAt ? new Date(job.approvedAt).toLocaleString() : new Date().toLocaleString()]
+    ["Estimate disclaimer", estimate.disclaimer],
+    ["Typed approval name", job.customerSignature || job.name],
+    ["Approved date", job.approvedAt ? new Date(job.approvedAt).toLocaleString() : new Date().toLocaleString()]
+  ];
+}
+
+function approvalPdfSections(job, company = companySettings()) {
+  const valuesByLabel = new Map(approvalPdfLines(job, company));
+  const pick = (labels) => labels
+    .map((label) => [label, valuesByLabel.get(label)])
+    .filter(([, value]) => value !== undefined);
+  return [
+    {
+      title: "Service provider",
+      lines: pick(["Provider", "Company phone", "Company email"])
+    },
+    {
+      title: "Customer and job",
+      lines: pick(["Customer", "Customer phone", "Service address", "Service type", "Scheduled service", "Technician", "Requested work"])
+    },
+    {
+      title: "Estimate approval",
+      lines: pick(["Estimate package", "Estimate expires", "Approval total", "Deposit requested", "Deposit collected", "Typed approval name", "Approved date"])
+    },
+    {
+      title: "Terms and notes",
+      lines: pick(["Approval terms", "Important note", "Service policy", "Warranty", "Estimate disclaimer"])
+    }
   ];
 }
 
@@ -1875,17 +1898,50 @@ function receiptPdfLines(job, payment = {}) {
   ];
 }
 
-function addPdfLines(pdf, lines, margin, y, labelWidth = 128) {
-  pdf.setFontSize(11);
+const PDF_PAGE_WIDTH = 612;
+const PDF_PAGE_BOTTOM = 708;
+const PDF_FOOTER_TOP = 724;
+
+function ensurePdfSpace(pdf, y, requiredHeight, margin = 48) {
+  if (y + requiredHeight <= PDF_PAGE_BOTTOM) return y;
+  pdf.addPage();
+  return margin;
+}
+
+function addPdfLines(pdf, lines, margin, y, labelWidth = 132, options = {}) {
+  const pageWidth = options.pageWidth || PDF_PAGE_WIDTH;
+  const valueX = margin + labelWidth;
+  const valueWidth = options.valueWidth || pageWidth - valueX - margin;
+  const labelColor = options.labelColor || [71, 85, 105];
+  const valueColor = options.valueColor || [15, 23, 42];
+  pdf.setFontSize(10);
   lines.forEach(([label, value]) => {
+    const wrapped = pdf.splitTextToSize(String(value || "Not provided"), valueWidth);
+    const rowHeight = Math.max(24, wrapped.length * 13 + 8);
+    y = ensurePdfSpace(pdf, y, rowHeight, margin);
     pdf.setFont("helvetica", "bold");
+    pdf.setTextColor(...labelColor);
     pdf.text(`${label}:`, margin, y);
     pdf.setFont("helvetica", "normal");
-    const wrapped = pdf.splitTextToSize(String(value || "Not provided"), 380);
-    pdf.text(wrapped, margin + labelWidth, y);
-    y += Math.max(18, wrapped.length * 14);
+    pdf.setTextColor(...valueColor);
+    pdf.text(wrapped, valueX, y);
+    y += rowHeight;
   });
+  pdf.setTextColor(0);
   return y;
+}
+
+function addPdfSectionTitle(pdf, title, margin, y) {
+  y = ensurePdfSpace(pdf, y, 60, margin);
+  pdf.setFont("helvetica", "bold");
+  pdf.setFontSize(9);
+  pdf.setTextColor(37, 99, 235);
+  pdf.text(String(title || "").toUpperCase(), margin, y);
+  y += 10;
+  pdf.setDrawColor(226, 232, 240);
+  pdf.line(margin, y, PDF_PAGE_WIDTH - margin, y);
+  pdf.setTextColor(0);
+  return y + 18;
 }
 
 function addPdfBrandHeader(pdf, title, subtitle = "", company = companySettings()) {
@@ -1965,7 +2021,10 @@ function addPdfFooter(pdf, margin, footerText) {
   pdf.setFont("helvetica", "normal");
   pdf.setFontSize(9);
   pdf.setTextColor(95);
-  pdf.text(footerText, margin, 744);
+  pdf.setDrawColor(226, 232, 240);
+  pdf.line(margin, PDF_FOOTER_TOP, PDF_PAGE_WIDTH - margin, PDF_FOOTER_TOP);
+  const wrapped = pdf.splitTextToSize(String(footerText || ""), PDF_PAGE_WIDTH - margin * 2).slice(0, 3);
+  pdf.text(wrapped, margin, PDF_FOOTER_TOP + 14);
   pdf.setTextColor(0);
 }
 
@@ -2178,9 +2237,14 @@ async function createApprovalPdfFile(job, options = {}) {
     { label: "Status", value: "Approved" }
   ], margin, y);
 
-  y = addPdfLines(pdf, approvalPdfLines(job, company), margin, y);
+  approvalPdfSections(job, company).forEach((section) => {
+    y = addPdfSectionTitle(pdf, section.title, margin, y);
+    y = addPdfLines(pdf, section.lines, margin, y, 122, { valueWidth: 382 });
+    y += 8;
+  });
 
   if (job.scopeChanges?.length) {
+    y = ensurePdfSpace(pdf, y, 48, margin);
     y += 8;
     pdf.setFont("helvetica", "bold");
     pdf.text("Approved changes:", margin, y);
@@ -2189,11 +2253,13 @@ async function createApprovalPdfFile(job, options = {}) {
     job.scopeChanges.forEach((change) => {
       const text = `${change.description} - ${formatMoney(change.amount)}`;
       const lines = pdf.splitTextToSize(text, 500);
+      y = ensurePdfSpace(pdf, y, Math.max(18, lines.length * 14), margin);
       pdf.text(lines, margin + 14, y);
       y += Math.max(16, lines.length * 14);
     });
   }
 
+  y = ensurePdfSpace(pdf, y, 164, margin);
   y += 22;
   pdf.setFont("helvetica", "bold");
   pdf.text("Customer drawn signature:", margin, y);
@@ -2207,7 +2273,10 @@ async function createApprovalPdfFile(job, options = {}) {
 
   pdf.setFont("helvetica", "normal");
   pdf.setFontSize(9);
-  pdf.text("This approval record includes the typed customer name and attached drawn signature captured at approval time.", margin, y);
+  pdf.setTextColor(71, 85, 105);
+  const confirmationNote = "This approval record includes the typed customer name and drawn signature captured at the time of approval.";
+  pdf.text(pdf.splitTextToSize(confirmationNote, 500), margin, y);
+  pdf.setTextColor(0);
   addPdfFooter(pdf, margin, customerDocumentFooter(company));
 
   const url = pdf.output("datauristring");
