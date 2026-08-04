@@ -45,6 +45,12 @@ assert.match(app, /renderApprovalPage\(submittedJob, \{ token, publicMode: true,
 
 assert.match(app, /function customerPortalMessages\(job = \{\}\)[\s\S]*?filter\(isCustomerPortalMessage\)/);
 assert.match(app, /function allCustomerPortalMessages\(job = \{\}\)[\s\S]*?filter\(isCustomerPortalMessage\)/);
+assert.match(app, /function customerPortalPaymentTimelineLabel\(payment = \{\}\)/);
+assert.match(app, /deposit: "deposit received"/);
+assert.match(app, /refund: "refund issued"/);
+assert.match(app, /title: customerPortalPaymentTimelineLabel\(payment\)/);
+assert.match(app, /detail: customerPortalPaymentTimelineDetail\(payment, invoice\)/);
+assert.match(app, /createdAt: payment\.paidAt \|\| payment\.createdAt/);
 assert.match(app, /submit_customer_portal_reply/);
 assert.match(app, /input_reply: reply/);
 assert.match(app, /input_reply: message/);

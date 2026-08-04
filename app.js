@@ -11737,6 +11737,26 @@ function customerPortalTimelineTime(value) {
   });
 }
 
+function customerPortalPaymentTimelineLabel(payment = {}) {
+  const record = normalizePaymentRecord(payment);
+  const labels = {
+    deposit: "deposit received",
+    payment: "payment received",
+    refund: "refund issued",
+    credit: "credit applied"
+  };
+  return `${formatMoney(record.amount)} ${labels[record.kind] || "payment received"}`;
+}
+
+function customerPortalPaymentTimelineDetail(payment = {}, invoice = {}) {
+  const record = normalizePaymentRecord(payment);
+  const method = paymentMethodLabel(record.method || invoice.paymentMethod);
+  const note = record.note && !/^legacy payment recorded|legacy deposit collected$/i.test(record.note)
+    ? ` - ${record.note}`
+    : "";
+  return `${method}${note}`;
+}
+
 function customerPortalTimelineEvents(job = {}) {
   ensureJobDefaults(job);
   const events = [];
@@ -11815,9 +11835,9 @@ function customerPortalTimelineEvents(job = {}) {
     addEvent({
       type: "payment",
       tone: "paid",
-      title: `${paymentKindLabel(payment.kind)} received`,
-      detail: `${formatMoney(payment.amount)} by ${paymentMethodLabel(payment.method || invoice.paymentMethod)}`,
-      createdAt: payment.createdAt || payment.paidAt
+      title: customerPortalPaymentTimelineLabel(payment),
+      detail: customerPortalPaymentTimelineDetail(payment, invoice),
+      createdAt: payment.paidAt || payment.createdAt
     });
   });
 
