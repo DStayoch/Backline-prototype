@@ -17795,7 +17795,7 @@ function createJob(formData) {
   if (state.automations.missedCall) {
     job.messages.push({
       direction: "out",
-      body: "Sorry we missed you. Backline captured this request so the team can follow up.",
+      body: "Thanks for contacting us. Your request is in our system and the team will follow up shortly.",
       createdAt: now.toLocaleString()
     });
   }

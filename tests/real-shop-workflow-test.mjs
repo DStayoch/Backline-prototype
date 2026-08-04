@@ -204,7 +204,7 @@ const job = {
   status: "open",
   technician: "To Be Determined",
   messages: [
-    { direction: "out", body: "Sorry we missed you. Backline captured this request.", customerVisible: true },
+    { direction: "out", body: "Thanks for contacting us. Your request is in our system and the team will follow up shortly.", customerVisible: true },
     { direction: "note", body: "Internal margin note.", customerVisible: false }
   ],
   files: [],
@@ -292,7 +292,7 @@ job.files.push(
 );
 
 assert.deepEqual(customerPortalMessages(job).map((message) => message.body), [
-  "Sorry we missed you. Backline captured this request.",
+  "Thanks for contacting us. Your request is in our system and the team will follow up shortly.",
   "Your repair is complete and paid.",
   "Thank you!"
 ]);
