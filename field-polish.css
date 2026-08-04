@@ -16,6 +16,7 @@
   --section-title: #0f2b46;
 }
 
+html[data-theme="dark"],
 body.dark {
   --scan-card-bg: #111e2f;
   --scan-card-border: #48617c;

@@ -12,7 +12,9 @@ const [
   productionConfigExample,
   genericConfigExample,
   packageJson,
-  pagesArtifactTest
+  pagesArtifactTest,
+  css,
+  fieldPolish
 ] = await Promise.all([
   readFile(".gitignore", "utf8"),
   readFile(".github/workflows/pages.yml", "utf8"),
@@ -24,7 +26,9 @@ const [
   readFile("supabase-config.production.example.js", "utf8"),
   readFile("supabase-config.example.js", "utf8"),
   readFile("package.json", "utf8"),
-  readFile("tests/pages-artifact-test.mjs", "utf8")
+  readFile("tests/pages-artifact-test.mjs", "utf8"),
+  readFile("styles.css", "utf8"),
+  readFile("field-polish.css", "utf8")
 ]);
 
 assert.match(gitignore, /^supabase-config\.js$/m, "Local Supabase config must stay ignored.");
@@ -37,6 +41,11 @@ assert.match(pagesWorkflow, /path: _site/, "Pages deploy should upload only the 
 assert.match(pagesWorkflow, /cp index\.html styles\.css field-polish\.css app\.js _site\//, "Pages deploy should copy core app and polish files into _site.");
 assert.match(pagesWorkflow, /cp -R assets _site\/assets/, "Pages deploy should include visual assets.");
 assert.doesNotMatch(pagesWorkflow, /path: \./, "Pages deploy should not upload the whole repository.");
+assert.match(fieldPolish, /html\[data-theme="dark"\],\s*body\.dark\s*\{/, "Polish overrides must follow the app's html[data-theme=dark] selector.");
+assert.match(fieldPolish, /--scan-card-bg:\s*#111e2f/, "Dark polish cards should use a dark surface.");
+for (const alias of ["--text", "--text-muted", "--accent", "--primary", "--primary-soft", "--soft-blue", "--red", "--danger-soft", "--green-dark", "--amber-dark", "--radius-sm"]) {
+  assert.match(css, new RegExp(`${alias}:`), `Theme CSS should define ${alias} for older shared UI rules.`);
+}
 
 assert.match(localConfigExample, /environment:\s*"local"/, "Local config example must identify itself as local.");
 assert.match(localConfigExample, /YOUR-LOCAL-OR-DEV-PROJECT/, "Local config example should use placeholder project values.");
