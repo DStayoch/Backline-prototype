@@ -199,6 +199,36 @@ body.dark {
   text-transform: none;
 }
 
+.customer-card > span:first-child {
+  display: grid;
+  gap: 6px;
+  width: auto;
+  max-width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 0 !important;
+  background: transparent !important;
+  color: var(--ink) !important;
+  letter-spacing: 0;
+  line-height: 1.25;
+  text-transform: none;
+}
+
+.customer-card strong,
+.customer-card small,
+.customer-card em {
+  min-width: 0;
+}
+
+.customer-card strong {
+  line-height: 1.22;
+}
+
+.customer-card small {
+  margin-top: 0;
+  line-height: 1.3;
+}
+
 .job-summary-card strong,
 .invoice-summary-card strong,
 .dispatch-brief-card strong,
