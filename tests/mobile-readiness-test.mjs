@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 const app = readFileSync("app.js", "utf8");
 const html = readFileSync("index.html", "utf8");
 const css = readFileSync("styles.css", "utf8");
+const fieldPolishCss = readFileSync("field-polish.css", "utf8");
 
 function has(source, pattern, message) {
   assert.match(source, pattern, message);
@@ -46,6 +47,8 @@ assert.doesNotMatch(desktopTopbarActions, /display: grid|grid-template-columns:/
 has(desktopCollapsibleSummary, /display: flex;/, "desktop collapsible section headers should keep the browser layout");
 has(desktopCollapsibleSummary, /padding: 14px;/, "desktop collapsible section headers should keep their existing padding");
 assert.doesNotMatch(desktopCollapsibleSummary, /padding: 18px 22px|grid-template-columns:/, "mobile collapsible spacing must not leak into desktop");
+has(fieldPolishCss, /\.collapsible-field-summary \{[\s\S]*?padding: 14px 28px;/, "field polish should keep browser section header text away from card edges");
+has(fieldPolishCss, /@media \(max-width: 720px\) \{[\s\S]*?\.collapsible-field-summary,[\s\S]*?\.section-heading \{[\s\S]*?padding-right: 26px;[\s\S]*?padding-left: 26px;/, "field polish mobile override should preserve section header side padding");
 has(css, /\.customer-search \{[\s\S]*?z-index: 50;/, "customer search should remain layered above normal content");
 has(css, /\.settings-menu \{[\s\S]*?z-index: 40;/, "closed settings button should stay below customer search results");
 has(css, /\.settings-menu:has\(\.settings-popover:not\(\[hidden\]\)\) \{[\s\S]*?z-index: 120;/, "open settings menu should layer above customer search");
