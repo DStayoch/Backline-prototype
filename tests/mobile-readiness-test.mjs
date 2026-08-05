@@ -30,6 +30,7 @@ function ruleBlock(source, selector) {
 
 const desktopTopbar = ruleBlock(desktop, ".topbar");
 const desktopTopbarActions = ruleBlock(desktop, ".topbar-actions");
+const desktopCollapsibleSummary = ruleBlock(desktop, ".collapsible-field-summary");
 
 has(html, /<meta name="viewport" content="width=device-width, initial-scale=1">/, "mobile viewport meta is required");
 
@@ -42,6 +43,9 @@ assert.doesNotMatch(desktopTopbar, /justify-content: flex-start|align-items: str
 has(desktopTopbarActions, /display: flex;/, "desktop topbar actions should remain flex-based");
 has(desktopTopbarActions, /flex-wrap: wrap;/, "desktop topbar actions can wrap without using mobile grid");
 assert.doesNotMatch(desktopTopbarActions, /display: grid|grid-template-columns:/, "mobile topbar action grid must not leak into desktop");
+has(desktopCollapsibleSummary, /display: flex;/, "desktop collapsible section headers should keep the browser layout");
+has(desktopCollapsibleSummary, /padding: 14px;/, "desktop collapsible section headers should keep their existing padding");
+assert.doesNotMatch(desktopCollapsibleSummary, /padding: 18px 22px|grid-template-columns:/, "mobile collapsible spacing must not leak into desktop");
 has(css, /\.customer-search \{[\s\S]*?z-index: 50;/, "customer search should remain layered above normal content");
 has(css, /\.settings-menu \{[\s\S]*?z-index: 40;/, "closed settings button should stay below customer search results");
 has(css, /\.settings-menu:has\(\.settings-popover:not\(\[hidden\]\)\) \{[\s\S]*?z-index: 120;/, "open settings menu should layer above customer search");
@@ -96,6 +100,9 @@ has(phone, /\.job-row \{[\s\S]*?padding: 12px;/, "phone inbox rows should use co
 has(phone, /\.job-row-top,[\s\S]*?\.job-row-bottom \{[\s\S]*?align-items: flex-start;[\s\S]*?justify-content: flex-start;/, "phone inbox row metadata should not collide");
 has(phone, /\.detail-panel,[\s\S]*?\.detail-panel\.panel,[\s\S]*?#view-inbox\.active \.detail-panel \{[\s\S]*?overflow-x: clip;[\s\S]*?overflow-y: visible;/, "phone selected job detail should clip sideways overflow while allowing vertical page scrolling");
 has(phone, /\.job-sticky-header,[\s\S]*?\.detail-title,[\s\S]*?\.job-summary-bar \{[\s\S]*?width: 100%;[\s\S]*?max-width: 100%;[\s\S]*?overflow-x: clip;/, "phone job header and summary should stay inside the visible panel");
+has(phone, /\.collapsible-field-summary \{[\s\S]*?grid-template-columns: minmax\(0, 1fr\) auto;[\s\S]*?gap: 10px 16px;[\s\S]*?padding: 18px 22px;/, "phone collapsible section headers should keep text away from card edges");
+has(phone, /\.collapsible-field-summary strong,[\s\S]*?\.collapsible-field-summary small \{[\s\S]*?overflow-wrap: anywhere;/, "phone collapsible section text should wrap inside the panel");
+has(narrowPhone, /\.collapsible-field-summary \{[\s\S]*?grid-template-columns: 1fr;[\s\S]*?padding: 16px 18px;/, "narrow phone collapsible section headers should stack when status labels would crowd text");
 has(phone, /\.dispatch-brief-grid \{[\s\S]*?grid-template-columns: 1fr;/, "phone dispatch brief cards should stack in one readable column");
 has(phone, /\.dispatch-brief-card strong,[\s\S]*?\.dispatch-brief-card small \{[\s\S]*?overflow: visible;[\s\S]*?overflow-wrap: anywhere;/, "phone dispatch brief text should wrap instead of clipping");
 has(phone, /\.message-thread-panel \{[\s\S]*?height: auto;[\s\S]*?max-height: none;[\s\S]*?overflow: visible;/, "phone message panel should not trap page scrolling");

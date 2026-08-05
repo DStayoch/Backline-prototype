@@ -9206,6 +9206,34 @@ html[data-theme="dark"] .approval-logo-full {
     overflow-x: clip;
   }
 
+  .collapsible-field-summary {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px 16px;
+    padding: 18px 22px;
+  }
+
+  .collapsible-field-summary > span:first-child {
+    gap: 7px;
+  }
+
+  .collapsible-field-summary strong,
+  .collapsible-field-summary small {
+    min-width: 0;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+
+  .collapsible-summary-right {
+    justify-self: end;
+    min-width: 0;
+  }
+
+  .collapsible-field-body {
+    padding: 0 22px 18px;
+  }
+
   .dispatch-brief {
     padding: 12px;
   }
@@ -9838,6 +9866,20 @@ html[data-theme="dark"] .approval-logo-full {
 
   .detail-actions {
     display: block;
+  }
+
+  .collapsible-field-summary {
+    grid-template-columns: 1fr;
+    align-items: flex-start;
+    padding: 16px 18px;
+  }
+
+  .collapsible-summary-right {
+    justify-self: start;
+  }
+
+  .collapsible-field-body {
+    padding: 0 18px 16px;
   }
 
   .detail-actions .action-button,
