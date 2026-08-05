@@ -98,6 +98,9 @@ has(phone, /\.dispatch-brief-grid \{[\s\S]*?grid-template-columns: 1fr;/, "phone
 has(phone, /\.dispatch-brief-card strong,[\s\S]*?\.dispatch-brief-card small \{[\s\S]*?overflow: visible;[\s\S]*?overflow-wrap: anywhere;/, "phone dispatch brief text should wrap instead of clipping");
 has(phone, /\.message-thread-panel \{[\s\S]*?height: auto;[\s\S]*?max-height: none;[\s\S]*?overflow: visible;/, "phone message panel should not trap page scrolling");
 has(phone, /\.message-thread \{[\s\S]*?max-height: 360px;[\s\S]*?overflow-y: auto;/, "phone message history should scroll inside a bounded thread area");
+has(phone, /\.message-thread \{[\s\S]*?overflow-x: hidden;[\s\S]*?width: 100%;[\s\S]*?max-width: 100%;[\s\S]*?min-width: 0;/, "phone message history should wrap within the viewport instead of requiring sideways swipe");
+has(css, /\.message-bubble \{[\s\S]*?max-width: min\(100%, 680px\);[\s\S]*?overflow-wrap: anywhere;[\s\S]*?word-break: break-word;/, "message bubbles should wrap long customer text and links");
+has(css, /\.portal-message p \{[\s\S]*?overflow-wrap: anywhere;[\s\S]*?word-break: break-word;/, "customer portal messages should wrap long text and links");
 has(phone, /\.invoice-line-header \{[\s\S]*?display: none;/, "phone invoice rows should stop pretending to be a desktop table");
 has(phone, /\.invoice-line-row,[\s\S]*?\.pricebook-row,[\s\S]*?\.payment-ledger-list \.invoice-line-row \{[\s\S]*?grid-template-columns: 1fr;[\s\S]*?align-items: stretch;/, "phone billing rows should stack as cards");
 has(phone, /\.task-form,[\s\S]*?\.task-row,[\s\S]*?\.communication-row,[\s\S]*?\{[\s\S]*?grid-template-columns: 1fr;/, "phone task form and task rows should stack instead of using desktop columns");
