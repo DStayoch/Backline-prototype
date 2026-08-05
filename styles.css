@@ -9326,25 +9326,39 @@ html[data-theme="dark"] .approval-logo-full {
 
   .work-grid.inbox-collapsed .inbox-panel {
     width: 100%;
+    align-self: stretch;
   }
 
   .work-grid.inbox-collapsed .inbox-panel .panel-header > div,
   .work-grid.inbox-collapsed .inbox-panel .segmented,
   .work-grid.inbox-collapsed .job-list {
-    display: grid;
+    display: none;
   }
 
   .work-grid.inbox-collapsed .inbox-panel .panel-header {
     min-height: auto;
     height: auto;
-    padding: 16px;
+    display: grid;
+    grid-template-columns: 1fr;
+    padding: 10px;
     border-bottom: 1px solid var(--line);
   }
 
   .work-grid.inbox-collapsed .collapse-inbox-button {
+    display: block;
+    grid-column: 1;
+    grid-row: 1;
     width: 100%;
     height: auto;
-    min-height: 38px;
+    min-height: 44px;
+    justify-self: stretch;
+    align-self: stretch;
+    padding: 0 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--field);
+    color: var(--ink);
+    font-size: 0.9rem;
     writing-mode: horizontal-tb;
     transform: none;
   }

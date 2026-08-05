@@ -78,7 +78,9 @@ has(narrowPhone, /\.detail-actions \{[\s\S]*?display: block;/, "narrow phones mu
 has(phone, /#view-inbox\.active \.work-grid \{[\s\S]*?height: auto;[\s\S]*?min-height: 0;[\s\S]*?overflow-y: visible;/, "mobile inbox should stop using the desktop split-scroll shell");
 has(phone, /#view-inbox\.active \.inbox-panel \{[\s\S]*?position: static;/, "mobile inbox panel should scroll with the page");
 has(phone, /#view-inbox\.active \.job-list,[\s\S]*?#view-inbox\.active \.detail-panel \{[\s\S]*?overflow-y: visible;/, "mobile inbox and job detail should not trap scrolling");
-has(phone, /\.work-grid\.inbox-collapsed \.collapse-inbox-button \{[\s\S]*?writing-mode: horizontal-tb;[\s\S]*?transform: none;/, "collapsed inbox control should become a normal button on phones");
+has(phone, /\.work-grid\.inbox-collapsed \.inbox-panel \.panel-header > div,[\s\S]*?\.work-grid\.inbox-collapsed \.inbox-panel \.segmented,[\s\S]*?\.work-grid\.inbox-collapsed \.job-list \{[\s\S]*?display: none;/, "collapsed mobile inbox should hide filters and job rows");
+has(phone, /\.work-grid\.inbox-collapsed \.inbox-panel \.panel-header \{[\s\S]*?display: grid;[\s\S]*?grid-template-columns: 1fr;[\s\S]*?padding: 10px;/, "collapsed mobile inbox should reduce to a compact header row");
+has(phone, /\.work-grid\.inbox-collapsed \.collapse-inbox-button \{[\s\S]*?display: block;[\s\S]*?width: 100%;[\s\S]*?min-height: 44px;[\s\S]*?writing-mode: horizontal-tb;[\s\S]*?transform: none;/, "collapsed inbox control should become a normal full-width button on phones");
 
 has(phone, /\.modal-actions,[\s\S]*?\.inventory-detail-actions \{[\s\S]*?display: grid;[\s\S]*?grid-template-columns: repeat\(2, minmax\(0, 1fr\)\);/, "phone utility action rows should use balanced columns where appropriate");
 has(phone, /\.detail-actions \{[\s\S]*?display: block;[\s\S]*?max-width: 100%;[\s\S]*?overflow: hidden;/, "phone job detail actions should use a dedicated mobile surface instead of the desktop toolbar");
