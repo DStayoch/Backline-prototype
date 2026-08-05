@@ -12445,6 +12445,17 @@ async function routeFromHash() {
     return;
   }
 
+  const viewMatch = window.location.hash.match(/^#(dashboard|schedule|inbox|money|followups|communications|jobsdb|customers|team|activity|insights|creator)$/);
+  if (viewMatch) {
+    document.body.classList.remove("approval-mode");
+    state.portalJob = null;
+    elements.approvalPage.hidden = true;
+    elements.approvalPage.innerHTML = "";
+    render();
+    activateView(viewMatch[1]);
+    return;
+  }
+
   document.body.classList.remove("approval-mode");
   state.portalJob = null;
   elements.approvalPage.hidden = true;
@@ -22655,6 +22666,15 @@ setInterval(() => {
   }
 }, 15000);
 
+function registerBacklineServiceWorker() {
+  if (window.location.protocol === "file:" || !("serviceWorker" in navigator)) return;
+  window.addEventListener("load", () => {
+    navigator.serviceWorker
+      .register("./service-worker.js", { scope: "./" })
+      .catch((error) => console.warn("Backline service worker registration failed.", error));
+  });
+}
+
 async function initApp() {
   try {
     if (window.location.hash.startsWith("#approval-token=") || window.location.hash.startsWith("#portal=")) {
@@ -22714,4 +22734,5 @@ async function initApp() {
   }
 }
 
+registerBacklineServiceWorker();
 initApp();

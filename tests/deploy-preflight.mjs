@@ -38,7 +38,7 @@ assert.match(pagesWorkflow, /BACKLINE_SUPABASE_URL/, "Pages deploy must read the
 assert.match(pagesWorkflow, /BACKLINE_SUPABASE_ANON_KEY/, "Pages deploy must read the production Supabase anon key from GitHub settings.");
 assert.match(pagesWorkflow, /cat > _site\/supabase-config\.js/, "Pages deploy must generate production supabase-config.js.");
 assert.match(pagesWorkflow, /path: _site/, "Pages deploy should upload only the prepared static site.");
-assert.match(pagesWorkflow, /cp index\.html styles\.css field-polish\.css app\.js _site\//, "Pages deploy should copy core app and polish files into _site.");
+assert.match(pagesWorkflow, /cp index\.html styles\.css field-polish\.css app\.js manifest\.webmanifest service-worker\.js _site\//, "Pages deploy should copy core app, polish, and PWA files into _site.");
 assert.match(pagesWorkflow, /cp -R assets _site\/assets/, "Pages deploy should include visual assets.");
 assert.doesNotMatch(pagesWorkflow, /path: \./, "Pages deploy should not upload the whole repository.");
 assert.match(fieldPolish, /html\[data-theme="dark"\],\s*body\.dark\s*\{/, "Polish overrides must follow the app's html[data-theme=dark] selector.");

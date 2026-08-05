@@ -122,7 +122,7 @@ assert.match(html, /<link rel="stylesheet" href="styles\.css">/);
 assert.match(html, /@supabase\/supabase-js@2/);
 assert.match(html, /jspdf@2\.5\.1/);
 assert.match(html, /<script src="supabase-config\.js"><\/script>/);
-assert.match(html, /<script src="app\.js\?v=20260617-creator-access"><\/script>/);
+assert.match(html, /<script src="app\.js\?v=20260805-pwa"><\/script>/);
 assert.match(html, /id="topbarGreeting"/);
 assert.match(html, /id="topbarInsight"/);
 assert.match(html, /Welcome back\./);

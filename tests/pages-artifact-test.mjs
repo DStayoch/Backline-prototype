@@ -4,7 +4,7 @@ import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 
-const rootFiles = ["index.html", "styles.css", "field-polish.css", "app.js"];
+const rootFiles = ["index.html", "styles.css", "field-polish.css", "app.js", "manifest.webmanifest", "service-worker.js"];
 const fakeProductionUrl = "https://production-example.supabase.co";
 const fakeProductionAnonKey = "production-anon-key-placeholder";
 
@@ -35,6 +35,8 @@ try {
 
   for (const asset of [
     "assets/backline-icon-transparent.png",
+    "assets/backline-pwa-192.png",
+    "assets/backline-pwa-512.png",
     "assets/backline-wordmark.png",
     "assets/backline-wordmark-dark.png",
     "assets/backline-full-logo-transparent.png"
@@ -57,10 +59,19 @@ try {
   const index = await readFile(join(siteDir, "index.html"), "utf8");
   const config = await readFile(join(siteDir, "supabase-config.js"), "utf8");
   const app = await readFile(join(siteDir, "app.js"), "utf8");
+  const manifest = await readFile(join(siteDir, "manifest.webmanifest"), "utf8");
+  const serviceWorker = await readFile(join(siteDir, "service-worker.js"), "utf8");
 
   assert.match(index, /<script src="supabase-config\.js"><\/script>/, "Artifact index should load generated Supabase config.");
   assert.match(index, /<script src="app\.js\?v=/, "Artifact index should load the cache-tagged app bundle.");
+  assert.match(index, /<link rel="manifest" href="manifest\.webmanifest">/, "Artifact index should expose the PWA manifest.");
+  assert.match(index, /<meta name="theme-color" content="#162234">/, "Artifact index should set the install theme color.");
   assert.match(index, /assets\/backline-icon-transparent\.png/, "Artifact index should reference included favicon asset.");
+  assert.match(manifest, /"display":\s*"standalone"/, "PWA manifest should open Backline as a standalone app.");
+  assert.match(manifest, /assets\/backline-pwa-192\.png/, "PWA manifest should include the 192px icon.");
+  assert.match(manifest, /assets\/backline-pwa-512\.png/, "PWA manifest should include the 512px icon.");
+  assert.match(serviceWorker, /const BACKLINE_CACHE = "backline-pwa-/, "Service worker should version its cache.");
+  assert.match(serviceWorker, /self\.addEventListener\("fetch"/, "Service worker should handle offline fetch fallback.");
   assert.match(config, /environment:\s*"production"/, "Generated config should identify production.");
   assert.match(config, /field-polish\.css\?v=20260624-flat-meta-labels/, "Generated config should load the field polish stylesheet.");
   assert.match(config, new RegExp(fakeProductionUrl.replace(/\./g, "\\.")), "Generated config should include production Supabase URL.");
