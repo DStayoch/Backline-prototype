@@ -17,6 +17,10 @@ assert.match(app, /renderApprovalPage\(row\.job, \{ token, publicMode: true, lin
 assert.match(app, /const decisionSent =[\s\S]*?options\.linkStatus === "used"/);
 assert.match(app, /function approvalPdfLines\(job, company = companySettings\(\)\)/);
 assert.match(app, /function approvalPdfSections\(job, company = companySettings\(\)\)/);
+assert.match(app, /function customerFacingTechnicianName\(value\)/);
+assert.match(app, /return first === "there" \? "Technician" : `Technician \$\{first\}`/);
+assert.match(app, /\["Technician", customerFacingTechnicianName\(job\.technician\)\]/);
+assert.match(app, /customerFacingTechnicianName\(job\.technician\)\s+\]\);/);
 assert.match(app, /title: "Service provider"/);
 assert.match(app, /title: "Customer and job"/);
 assert.match(app, /title: "Estimate approval"/);
@@ -45,6 +49,10 @@ assert.match(app, /renderApprovalPage\(submittedJob, \{ token, publicMode: true,
 
 assert.match(app, /function customerPortalMessages\(job = \{\}\)[\s\S]*?filter\(isCustomerPortalMessage\)/);
 assert.match(app, /function allCustomerPortalMessages\(job = \{\}\)[\s\S]*?filter\(isCustomerPortalMessage\)/);
+assert.match(app, /function customerFacingMessageAuthor\(message = \{\}, company = companySettings\(\)\)/);
+assert.match(app, /customerFacingTechnicianName\(normalized\.createdBy\)/);
+assert.match(app, /escapeHtml\(customerFacingMessageAuthor\(message, company\)\)/);
+assert.match(app, /escapeHtml\(customerFacingTechnicianName\(job\.technician\)\)/);
 assert.match(app, /function customerPortalPaymentTimelineLabel\(payment = \{\}\)/);
 assert.match(app, /deposit: "deposit received"/);
 assert.match(app, /refund: "refund issued"/);

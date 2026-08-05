@@ -1796,7 +1796,7 @@ function approvalPdfLines(job, company = companySettings()) {
     ["Service address", job.address],
     ["Service type", `${job.trade} / ${jobTypeLabel(job)}`],
     ["Scheduled service", scheduleText(job)],
-    ["Technician", normalizeTechnician(job.technician)],
+    ["Technician", customerFacingTechnicianName(job.technician)],
     ["Requested work", job.issue],
     ["Estimate package", estimate.packageName],
     ["Estimate expires", estimate.expiresAt ? new Date(`${estimate.expiresAt}T12:00:00`).toLocaleDateString() : "Not set"],
@@ -1853,7 +1853,7 @@ function invoicePdfLines(job) {
     ["Service address", job.address],
     ["Trade", `${job.trade} / ${jobTypeLabel(job)}`],
     ["Scheduled", scheduleText(job)],
-    ["Technician", normalizeTechnician(job.technician)],
+    ["Technician", customerFacingTechnicianName(job.technician)],
     ["Invoice number", invoice.number],
     ["Invoice status", invoiceStatusLabel(invoice.status)],
     ["Service description", job.issue],
@@ -2051,7 +2051,7 @@ function createInvoicePdfFile(job) {
     `${job.trade} / ${jobTypeLabel(job)}`,
     job.issue,
     `Scheduled ${scheduleText(job, { includeYear: true })}`,
-    `Technician ${normalizeTechnician(job.technician)}`
+    customerFacingTechnicianName(job.technician)
   ]);
   y += 124;
 
@@ -2326,6 +2326,35 @@ function displayPersonName(value) {
     .filter(Boolean)
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
     .join(" ");
+}
+
+function isBacklineIdentity(value) {
+  const normalized = String(value || "").trim().toLowerCase();
+  return !normalized || ["backline", "backline user", "local user"].includes(normalized);
+}
+
+function technicianDisplayName(value) {
+  const technician = normalizeTechnician(value);
+  return technician === "To Be Determined" ? technician : displayPersonName(technician);
+}
+
+function customerFacingTechnicianName(value) {
+  const technician = normalizeTechnician(value);
+  if (technician === "To Be Determined") return technician;
+  const first = displayFirstName(technician);
+  return first === "there" ? "Technician" : `Technician ${first}`;
+}
+
+function internalActorDisplayName(value) {
+  return isBacklineIdentity(value) ? "Backline" : displayPersonName(value);
+}
+
+function customerFacingMessageAuthor(message = {}, company = companySettings()) {
+  const normalized = normalizeJobMessage(message);
+  if (normalized.direction === "in") return normalized.createdBy || "Customer";
+  return isBacklineIdentity(normalized.createdBy)
+    ? company.companyName || "Backline"
+    : customerFacingTechnicianName(normalized.createdBy);
 }
 
 function normalizeTechnician(value) {
@@ -2796,7 +2825,10 @@ function technicianOptionNames(selectedTechnician = "To Be Determined") {
 }
 
 function technicianOptionItems(selectedTechnician = "To Be Determined") {
-  return technicianOptionNames(selectedTechnician).map((name) => ({ value: name, label: name }));
+  return technicianOptionNames(selectedTechnician).map((name) => ({
+    value: name,
+    label: technicianDisplayName(name)
+  }));
 }
 
 function resetAuthCreateAccountState() {
@@ -7514,7 +7546,7 @@ function renderInventoryUsageModal(key = "") {
               <small>${escapeHtml(scheduleText(row.job, { includeYear: true }))}</small>
             </span>
             <span>
-              <strong>${escapeHtml(normalizeTechnician(row.job.technician))}</strong>
+              <strong>${escapeHtml(technicianDisplayName(row.job.technician))}</strong>
               <small>${escapeHtml(`${row.part.qty || "1"} from ${row.part.source === "truck stock" ? "on hand" : row.part.source || "on hand"}`)}</small>
             </span>
             <span>
@@ -11178,7 +11210,7 @@ function notificationActionConfig(type, job, overrides = {}) {
       channel: "App",
       audience: "team",
       recipient: tech,
-      body: `${job.name} is assigned to ${tech} for ${scheduleText(job)}. Job type: ${jobTypeLabel(job)}.`
+      body: `${job.name} is assigned to ${technicianDisplayName(tech)} for ${scheduleText(job)}. Job type: ${jobTypeLabel(job)}.`
     },
     approval_link: {
       title: "Approval link",
@@ -11996,7 +12028,7 @@ function renderCustomerPortalPage(jobOrId, options = {}) {
       <section class="approval-card portal-card">
         <h2>Visit details</h2>
         <div class="approval-meta-grid">
-          <div><span>Technician</span><strong>${escapeHtml(normalizeTechnician(job.technician))}</strong></div>
+          <div><span>Technician</span><strong>${escapeHtml(customerFacingTechnicianName(job.technician))}</strong></div>
           <div><span>Site contact</span><strong>${escapeHtml(job.siteContact || job.name)}</strong></div>
           <div><span>Office</span><strong>${escapeHtml(company.companyName)}</strong><small>${escapeHtml(officeContact)}</small></div>
           <div><span>Job type</span><strong>${escapeHtml(jobTypeLabel(job))}</strong></div>
@@ -12035,7 +12067,7 @@ function renderCustomerPortalPage(jobOrId, options = {}) {
         <div class="portal-message-list">
           ${recentMessages.length ? recentMessages.map((message) => `
             <article class="portal-message ${escapeHtml(message.direction)}">
-              <strong>${escapeHtml(message.direction === "in" ? (message.createdBy || job.name) : (message.createdBy && message.createdBy !== "Backline" ? message.createdBy : company.companyName))}</strong>
+              <strong>${escapeHtml(customerFacingMessageAuthor(message, company))}</strong>
               <p>${escapeHtml(message.body)}</p>
               <small>${escapeHtml(customerPortalTimelineTime(message.createdAt))}</small>
             </article>
@@ -12169,7 +12201,7 @@ function renderApprovalPage(jobOrId, options = {}) {
         <h2>Visit Details</h2>
         <div class="approval-meta-grid">
           <div><span>Scheduled</span><strong>${escapeHtml(scheduleText(job))}</strong></div>
-          <div><span>Technician</span><strong>${escapeHtml(normalizeTechnician(job.technician))}</strong></div>
+          <div><span>Technician</span><strong>${escapeHtml(customerFacingTechnicianName(job.technician))}</strong></div>
           <div><span>Site contact</span><strong class="truncate-value" title="${escapeHtml(job.siteContact || job.name)}">${escapeHtml(job.siteContact || job.name)}</strong></div>
           <div><span>Job type</span><strong>${escapeHtml(jobTypeLabel(job))}</strong></div>
         </div>
@@ -12565,7 +12597,7 @@ function renderJobSummaryBar(job) {
   const balance = invoiceBalance(job);
   const nextAction = nextBestAction(job);
   const scheduleValue = scheduleText(job, { includeYear: true });
-  const technician = isFieldScopedRole() ? "Assigned to you" : normalizeTechnician(job.technician);
+  const technician = isFieldScopedRole() ? "Assigned to you" : technicianDisplayName(job.technician);
   return `
     <section class="job-summary-bar" aria-label="Job summary">
       <div class="job-summary-card">
@@ -12617,7 +12649,7 @@ function dispatchBriefRows(job = {}) {
     },
     {
       label: "Technician",
-      value: isFieldScopedRole() ? "Assigned to you" : normalizeTechnician(job.technician),
+      value: isFieldScopedRole() ? "Assigned to you" : technicianDisplayName(job.technician),
       detail: normalizeTechnician(job.technician) === "To Be Determined" ? "Needs assignment" : "Confirmed assignment",
       tone: normalizeTechnician(job.technician) === "To Be Determined" ? "needs-schedule" : "ready"
     },
@@ -12945,7 +12977,7 @@ function renderDetail() {
             <span>Technician</span>
             ${can("book")
               ? technicianPicker(job)
-              : `<strong>${escapeHtml(normalizeTechnician(job.technician))}</strong>`}
+              : `<strong>${escapeHtml(technicianDisplayName(job.technician))}</strong>`}
           </div>
         `}
         <div class="meta">
@@ -13101,7 +13133,7 @@ function renderMessage(job, message) {
   const isOutbound = normalized.direction === "out";
   const isNote = normalized.direction === "note";
   const className = isNote ? "message-line note" : isOutbound ? "message-line outbound" : "message-line";
-  const actor = normalized.createdBy || "Backline";
+  const actor = internalActorDisplayName(normalized.createdBy || "Backline");
   const label = isNote ? actor.slice(0, 1).toUpperCase() : isOutbound ? "SMS" : job.name.slice(0, 1).toUpperCase();
   return `
     <div class="${className}">
@@ -13155,7 +13187,7 @@ function renderScheduleCard(job, options = {}) {
         </button>
         <div class="appointment-meta-strip">
           <span>${escapeHtml(job.trade)} / ${escapeHtml(jobTypeLabel(job))}</span>
-          <span>${escapeHtml(normalizeTechnician(job.technician))}</span>
+          <span>${escapeHtml(technicianDisplayName(job.technician))}</span>
           <span>${escapeHtml(balance ? `${formatMoney(balance)} due` : formatMoney(jobReportingValue(job)))}</span>
         </div>
         <small class="schedule-card-note ${escapeHtml(readinessMeta.className)}">${escapeHtml(readinessMeta.detail)}</small>
@@ -13497,7 +13529,7 @@ function renderPrintSchedule(range = "today") {
           <span>${escapeHtml(job.issue)}</span>
         </td>
         <td>
-          <strong>${escapeHtml(normalizeTechnician(job.technician))}</strong>
+          <strong>${escapeHtml(technicianDisplayName(job.technician))}</strong>
           <span>${escapeHtml(job.trade)} / ${escapeHtml(jobTypeLabel(job))}</span>
         </td>
         <td>
@@ -14526,7 +14558,7 @@ function renderJobsDatabase() {
         <span class="pill ${escapeHtml(job.status)}">${escapeHtml(statusLabel(job.status))}</span>
         <span>${escapeHtml(jobDatabaseGroupLabel(jobDatabaseGroup(job)))}</span>
         <span>${escapeHtml(scheduleText(job))}</span>
-        <em>${escapeHtml(normalizeTechnician(job.technician))}</em>
+        <em>${escapeHtml(technicianDisplayName(job.technician))}</em>
       </button>
     `).join("")
     : showingDeleted
