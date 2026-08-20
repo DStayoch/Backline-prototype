@@ -5,6 +5,7 @@ const index = readFileSync("index.html", "utf8");
 const app = readFileSync("app.js", "utf8");
 const manifest = JSON.parse(readFileSync("manifest.webmanifest", "utf8"));
 const serviceWorker = readFileSync("service-worker.js", "utf8");
+const server = readFileSync("server.js", "utf8");
 
 function pngSize(path) {
   const bytes = readFileSync(path);
@@ -46,5 +47,7 @@ assert.match(serviceWorker, /self\.addEventListener\("install"/);
 assert.match(serviceWorker, /self\.addEventListener\("activate"/);
 assert.match(serviceWorker, /self\.addEventListener\("fetch"/);
 assert.match(serviceWorker, /request\.mode === "navigate"/);
+
+assert.match(server, /"\.webmanifest": "application\/manifest\+json; charset=utf-8"/);
 
 console.log("PWA readiness contracts passed.");
