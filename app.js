@@ -1608,7 +1608,8 @@ function supabaseConfig() {
   return {
     url: String(config.url || "").trim(),
     anonKey: String(config.anonKey || "").trim(),
-    environment: String(config.environment || "").trim()
+    environment: String(config.environment || "").trim(),
+    publicAppUrl: String(config.publicAppUrl || "").trim()
   };
 }
 
@@ -5073,7 +5074,22 @@ async function revokeTeamInvite(inviteId) {
 }
 
 function appEntryUrl() {
+  const configured = supabaseConfig().publicAppUrl;
+  if (configured) {
+    try {
+      const url = new URL(configured, window.location.href);
+      url.hash = "";
+      url.search = "";
+      return url.toString();
+    } catch {
+      return configured;
+    }
+  }
   return `${window.location.origin}${window.location.pathname}`;
+}
+
+function authRedirectTo() {
+  return appEntryUrl();
 }
 
 function warnIfUnsafeProductionCustomerLink(label = "customer-facing link") {
@@ -20194,6 +20210,30 @@ document.addEventListener("click", async (event) => {
     }
   }
 
+  const oauthButton = event.target.closest("[data-oauth-provider]");
+  if (oauthButton) {
+    const provider = oauthButton.dataset.oauthProvider;
+    if (!["google", "apple"].includes(provider)) return;
+    const client = getSupabaseClient();
+    if (!client) {
+      elements.authGateStatus.textContent = "Supabase is not configured yet.";
+      return;
+    }
+    oauthButton.disabled = true;
+    elements.authGateStatus.textContent = `Opening ${provider === "google" ? "Google" : "Apple"} sign in...`;
+    const { error } = await client.auth.signInWithOAuth({
+      provider,
+      options: {
+        redirectTo: authRedirectTo()
+      }
+    });
+    if (error) {
+      oauthButton.disabled = false;
+      elements.authGateStatus.textContent = friendlyAuthError(error);
+    }
+    return;
+  }
+
   const technicianToggle = event.target.closest("[data-toggle-technician-picker]");
   if (technicianToggle) {
     state.openTechnicianPicker = state.openTechnicianPicker === technicianToggle.dataset.toggleTechnicianPicker
@@ -21917,7 +21957,7 @@ document.addEventListener("submit", async (event) => {
           email,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}${window.location.pathname}`,
+            emailRedirectTo: authRedirectTo(),
             data: {
               display_name: displayName,
               full_name: displayName

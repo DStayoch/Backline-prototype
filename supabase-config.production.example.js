@@ -4,5 +4,6 @@
 window.BACKLINE_SUPABASE_CONFIG = {
   environment: "production",
   url: "https://YOUR-PRODUCTION-PROJECT.supabase.co",
-  anonKey: "YOUR-PRODUCTION-SUPABASE-ANON-KEY"
+  anonKey: "YOUR-PRODUCTION-SUPABASE-ANON-KEY",
+  publicAppUrl: "https://YOUR-GITHUB-PAGES-URL/"
 };

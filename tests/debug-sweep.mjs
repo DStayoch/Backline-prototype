@@ -47,6 +47,8 @@ assert.match(html, /data-auth-signin-button/, "Sign in action should be addressa
 assert.match(html, /data-auth-back-login hidden/, "Create-account mode should offer a Back to login control");
 assert.match(html, /Back to login/, "Back to login copy should be visible in create-account mode");
 assert.match(html, /data-auth-signup-button/, "Create account action should be addressable during auth mode changes");
+assert.match(html, /data-oauth-provider="google"/, "Google OAuth should be available from the auth gate");
+assert.match(html, /data-oauth-provider="apple"/, "Apple OAuth should be available from the auth gate");
 assert.match(html, /jspdf@2\.5\.1/, "Approval PDFs need the PDF generator loaded");
 assert.match(html, /id="teamHeaderSubtitle"/, "Team view should have role-aware subtitle copy");
 assert.match(html, /id="teamAccessSummary"/, "Team view should show the signed-in user's access summary");
@@ -532,6 +534,9 @@ assert.match(js, /if \(state\.jobs\.length\) \{\s+writes\.push\(client\.from\("j
 assert.match(js, /data-auth-back-login/);
 assert.match(js, /data-auth-signin-button/);
 assert.match(js, /data-auth-signup-button/);
+assert.match(js, /client\.auth\.signInWithOAuth\(/);
+assert.match(js, /redirectTo: authRedirectTo\(\)/);
+assert.match(js, /emailRedirectTo: authRedirectTo\(\)/);
 assert.match(js, /elements\.authForm\?\.classList\.remove\("signup-mode"\)/);
 assert.match(js, /elements\.authForm\.classList\.add\("signup-mode"\)/);
 assert.match(js, /Sign in to load your secure Backline workspace\./);

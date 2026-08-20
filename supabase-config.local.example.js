@@ -4,5 +4,6 @@
 window.BACKLINE_SUPABASE_CONFIG = {
   environment: "local",
   url: "https://YOUR-LOCAL-OR-DEV-PROJECT.supabase.co",
-  anonKey: "YOUR-LOCAL-OR-DEV-SUPABASE-ANON-KEY"
+  anonKey: "YOUR-LOCAL-OR-DEV-SUPABASE-ANON-KEY",
+  publicAppUrl: ""
 };

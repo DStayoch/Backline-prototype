@@ -166,6 +166,20 @@ Job photos and attachments use the `job-files` Supabase Storage bucket in secure
 
 Before using a production URL, add that URL to the Supabase Auth URL configuration so account confirmation and future auth emails return users to the right Backline workspace URL.
 
+For this deployment, use:
+
+```text
+https://dstayoch.github.io/Backline-prototype/
+```
+
+In Supabase, open **Authentication** -> **URL Configuration**:
+
+- Set **Site URL** to the hosted Backline URL above.
+- Add the hosted Backline URL above to **Redirect URLs**.
+- Keep local URLs only in a local/dev Supabase project, not production.
+
+Backline also supports Google and Apple sign-in through Supabase OAuth. Enable each provider in **Authentication** -> **Providers**, add the provider credentials from Google/Apple, and use the Supabase callback URL shown in that provider panel when configuring Google/Apple.
+
 ## GitHub Pages
 
 This repo includes a GitHub Pages workflow. After pushing to GitHub:

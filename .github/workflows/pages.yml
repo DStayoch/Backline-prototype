@@ -43,7 +43,8 @@ jobs:
           window.BACKLINE_SUPABASE_CONFIG = {
             environment: "production",
             url: "$BACKLINE_SUPABASE_URL",
-            anonKey: "$BACKLINE_SUPABASE_ANON_KEY"
+            anonKey: "$BACKLINE_SUPABASE_ANON_KEY",
+            publicAppUrl: "https://dstayoch.github.io/Backline-prototype/"
           };
           (function () {
             if (document.querySelector('link[href^="field-polish.css"]')) return;

@@ -7,6 +7,7 @@ import { tmpdir } from "node:os";
 const rootFiles = ["index.html", "styles.css", "field-polish.css", "app.js", "manifest.webmanifest", "service-worker.js"];
 const fakeProductionUrl = "https://production-example.supabase.co";
 const fakeProductionAnonKey = "production-anon-key-placeholder";
+const fakePublicAppUrl = "https://dstayoch.github.io/Backline-prototype/";
 
 const siteDir = await mkdtemp(join(tmpdir(), "backline-pages-artifact-"));
 
@@ -18,7 +19,8 @@ try {
   await writeFile(join(siteDir, "supabase-config.js"), `window.BACKLINE_SUPABASE_CONFIG = {
   environment: "production",
   url: "${fakeProductionUrl}",
-  anonKey: "${fakeProductionAnonKey}"
+  anonKey: "${fakeProductionAnonKey}",
+  publicAppUrl: "${fakePublicAppUrl}"
 };
 (function () {
   if (document.querySelector('link[href^="field-polish.css"]')) return;
@@ -76,6 +78,7 @@ try {
   assert.match(config, /field-polish\.css\?v=20260624-flat-meta-labels/, "Generated config should load the field polish stylesheet.");
   assert.match(config, new RegExp(fakeProductionUrl.replace(/\./g, "\\.")), "Generated config should include production Supabase URL.");
   assert.match(config, new RegExp(fakeProductionAnonKey), "Generated config should include production Supabase anon key.");
+  assert.match(config, new RegExp(fakePublicAppUrl.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")), "Generated config should include hosted Backline app URL.");
   assert.doesNotMatch(config, /YOUR-PRODUCTION-PROJECT|YOUR-PROJECT|uwgklcnwjsmmwndoqdam|sb_publishable_/i, "Generated config should not contain placeholders or development values.");
   assert.match(app, /warnIfUnsafeProductionCustomerLink/, "Artifact app should include production customer-link safety warning.");
 } finally {

@@ -67,11 +67,26 @@ Foundry access is separate from shop owner/admin roles. Shop owners cannot grant
 
 In Supabase Auth URL settings:
 
-- Set Site URL to the hosted Backline HTTPS URL.
-- Add the hosted Backline HTTPS URL to allowed redirect URLs.
+- Set Site URL to the hosted Backline HTTPS URL:
+  `https://dstayoch.github.io/Backline-prototype/`
+- Add the hosted Backline HTTPS URL to allowed redirect URLs:
+  `https://dstayoch.github.io/Backline-prototype/`
 - Do not use `localhost`, `127.0.0.1`, or `file://` for production auth URLs.
+- Confirm account email links return to the hosted Backline URL, not a local machine URL.
 
-## 5. Confirm Storage
+## 5. Enable Google And Apple OAuth
+
+In Supabase Auth provider settings:
+
+- Enable Google.
+- Enable Apple.
+- Copy the Supabase callback URL from each provider panel into the matching Google/Apple developer console.
+- Add the Google Client ID/secret and Apple Services ID/team/key details back into Supabase.
+- Keep the hosted Backline URL above as the return URL for the app.
+
+OAuth sign-in is started by Backline, but Google, Apple, and Supabase own the credential handling.
+
+## 6. Confirm Storage
 
 The schema creates and scopes the `job-files` storage bucket.
 
@@ -82,7 +97,7 @@ After the hosted app is connected:
 - Open a customer-visible file from the customer portal.
 - Confirm files are stored under the correct organization folder.
 
-## 6. Deploy Team Invite Email Function
+## 7. Deploy Team Invite Email Function
 
 Deploy `supabase/functions/send-team-invite` to the production Supabase project.
 
@@ -101,7 +116,7 @@ INVITE_REPLY_TO_EMAIL=office@yourshop.com
 
 For production invites, verify a real domain in Resend and use that domain in `INVITE_FROM_EMAIL`. Resend test mode only sends to the verified account email.
 
-## 7. Connect Hosted Backline
+## 8. Connect Hosted Backline
 
 In GitHub:
 
@@ -111,7 +126,7 @@ In GitHub:
 
 Backline generates `supabase-config.js` during the Pages workflow. Do not commit production `supabase-config.js`.
 
-## 8. Post-Setup Checks
+## 9. Post-Setup Checks
 
 In hosted Backline:
 
