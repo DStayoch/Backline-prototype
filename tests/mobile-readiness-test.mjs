@@ -44,6 +44,8 @@ assert.doesNotMatch(desktopTopbar, /justify-content: flex-start|align-items: str
 has(desktopTopbarActions, /display: flex;/, "desktop topbar actions should remain flex-based");
 has(desktopTopbarActions, /flex-wrap: wrap;/, "desktop topbar actions can wrap without using mobile grid");
 assert.doesNotMatch(desktopTopbarActions, /display: grid|grid-template-columns:/, "mobile topbar action grid must not leak into desktop");
+has(desktop, /\.onboarding-panel-header > div \{[\s\S]*?flex: 1 1 auto;[\s\S]*?min-width: 0;/, "desktop onboarding copy should take the remaining header space instead of collapsing beside the action");
+has(desktop, /\.onboarding-tour-button \{[\s\S]*?width: auto;[\s\S]*?white-space: nowrap;/, "desktop onboarding tour button should stay compact instead of consuming the header width");
 has(desktopCollapsibleSummary, /display: flex;/, "desktop collapsible section headers should keep the browser layout");
 has(desktopCollapsibleSummary, /padding: 14px;/, "desktop collapsible section headers should keep their existing padding");
 assert.doesNotMatch(desktopCollapsibleSummary, /padding: 18px 22px|grid-template-columns:/, "mobile collapsible spacing must not leak into desktop");
