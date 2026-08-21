@@ -35,11 +35,11 @@ assert.deepEqual(pngSize("assets/backline-pwa-192.png"), { width: 192, height: 1
 assert.deepEqual(pngSize("assets/backline-pwa-512.png"), { width: 512, height: 512 });
 
 assert.match(app, /function registerBacklineServiceWorker\(\)/);
-assert.match(app, /navigator\.serviceWorker\s+\.register\("\.\/service-worker\.js", \{ scope: "\.\/" \}\)/);
+assert.match(app, /navigator\.serviceWorker\s+\.register\("\.\/service-worker\.js\?v=20260821-name-format", \{ scope: "\.\/" \}\)/);
 assert.match(app, /#\(dashboard\|schedule\|inbox\|money\|followups\|communications\|jobsdb\|customers\|team\|activity\|insights\|creator\)/);
 assert.match(app, /activateView\(viewMatch\[1\]\)/);
 
-assert.match(serviceWorker, /const BACKLINE_CACHE = "backline-pwa-20260805-1"/);
+assert.match(serviceWorker, /const BACKLINE_CACHE = "backline-pwa-20260821-1"/);
 assert.match(serviceWorker, /"\.\/manifest\.webmanifest"/);
 assert.match(serviceWorker, /"\.\/assets\/backline-pwa-192\.png"/);
 assert.match(serviceWorker, /"\.\/assets\/backline-pwa-512\.png"/);

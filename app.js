@@ -23093,7 +23093,7 @@ function registerBacklineServiceWorker() {
   if (window.location.protocol === "file:" || !("serviceWorker" in navigator)) return;
   window.addEventListener("load", () => {
     navigator.serviceWorker
-      .register("./service-worker.js", { scope: "./" })
+      .register("./service-worker.js?v=20260821-name-format", { scope: "./" })
       .catch((error) => console.warn("Backline service worker registration failed.", error));
   });
 }
