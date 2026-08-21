@@ -747,11 +747,12 @@
 
     <dialog class="modal" id="jobModal">
       <form class="modal-card" method="dialog" id="jobForm">
-        <div class="modal-header">
+        <div class="modal-header modal-header-with-close">
           <div>
             <p class="eyebrow">New request</p>
             <h2>Add recovered job</h2>
           </div>
+          <button class="modal-close-button" type="button" data-cancel-modal="job" aria-label="Close new job form">&times;</button>
         </div>
 
         <div class="form-grid">
@@ -826,12 +827,13 @@
 
     <dialog class="modal" id="actionModal">
       <form class="modal-card action-modal-card" id="actionForm">
-        <div class="modal-header">
+        <div class="modal-header modal-header-with-close">
           <div>
             <p class="eyebrow" id="actionModalEyebrow">Job action</p>
             <h2 id="actionModalTitle">Update job</h2>
             <p id="actionModalSubtitle"></p>
           </div>
+          <button class="modal-close-button" type="button" data-cancel-modal="action" aria-label="Close job action">&times;</button>
         </div>
         <div class="form-grid" id="actionModalFields"></div>
         <div class="modal-actions">
@@ -843,12 +845,13 @@
 
     <dialog class="modal" id="pricebookEditModal">
       <form class="modal-card pricebook-edit-card" id="pricebookEditForm">
-        <div class="modal-header">
+        <div class="modal-header modal-header-with-close">
           <div>
             <p class="eyebrow">Inventory</p>
             <h2>Edit pricebook item</h2>
             <p>Update future pricing, supplier, and on-hand defaults. Existing invoices stay unchanged.</p>
           </div>
+          <button class="modal-close-button" type="button" data-cancel-modal="pricebook-edit" aria-label="Close pricebook item editor">&times;</button>
         </div>
         <input type="hidden" name="id">
         <div class="form-grid">
@@ -924,12 +927,13 @@
 
     <dialog class="modal" id="inventoryOrderModal">
       <form class="modal-card inventory-order-card" id="inventoryOrderForm">
-        <div class="modal-header">
+        <div class="modal-header modal-header-with-close">
           <div>
             <p class="eyebrow">Inventory</p>
             <h2 id="inventoryOrderTitle">Mark material ordered</h2>
             <p id="inventoryOrderSubtitle"></p>
           </div>
+          <button class="modal-close-button" type="button" data-cancel-modal="inventory-order" aria-label="Close inventory order form">&times;</button>
         </div>
         <input type="hidden" name="mode">
         <input type="hidden" name="itemId">
@@ -967,12 +971,13 @@
 
     <dialog class="modal" id="supplierModal">
       <form class="modal-card supplier-card" id="supplierForm" method="dialog" novalidate>
-        <div class="modal-header">
+        <div class="modal-header modal-header-with-close">
           <div>
             <p class="eyebrow">Supplier</p>
             <h2 id="supplierModalTitle">Edit supplier</h2>
             <p>Save contact details, account notes, and ordering preferences for this supplier.</p>
           </div>
+          <button class="modal-close-button" type="button" data-cancel-modal="supplier" aria-label="Close supplier editor">&times;</button>
         </div>
         <input type="hidden" name="id">
         <div class="form-grid">
@@ -1015,12 +1020,13 @@
 
     <dialog class="modal" id="reorderCopyModal">
       <section class="modal-card reorder-copy-card">
-        <div class="modal-header">
+        <div class="modal-header modal-header-with-close">
           <div>
             <p class="eyebrow">Inventory</p>
             <h2>Copy reorder list</h2>
             <p>Your browser blocked automatic copying. Select this list and copy it manually.</p>
           </div>
+          <button class="modal-close-button" type="button" data-cancel-modal="reorder-copy" aria-label="Close reorder list">&times;</button>
         </div>
         <textarea id="reorderCopyText" readonly rows="9"></textarea>
         <div class="modal-actions">
@@ -1031,12 +1037,13 @@
 
     <dialog class="modal" id="deleteModal">
       <form class="modal-card delete-modal-card" method="dialog" id="deleteForm">
-        <div class="modal-header">
+        <div class="modal-header modal-header-with-close">
           <div>
             <p class="eyebrow">Delete job</p>
             <h2>Move this job to deleted archive?</h2>
             <p id="deleteModalSummary">This job will leave active work but stay recoverable in the Jobs database.</p>
           </div>
+          <button class="modal-close-button" type="button" data-cancel-modal="delete" aria-label="Close delete job confirmation">&times;</button>
         </div>
         <div class="delete-warning">
           <strong>Deleted jobs are archived.</strong>
@@ -1051,12 +1058,13 @@
 
     <dialog class="modal" id="teamRemoveModal">
       <form class="modal-card delete-modal-card" method="dialog" id="teamRemoveForm">
-        <div class="modal-header">
+        <div class="modal-header modal-header-with-close">
           <div>
             <p class="eyebrow">Team access</p>
             <h2>Remove this team member?</h2>
             <p id="teamRemoveModalSummary">This person will lose access to this Backline workspace.</p>
           </div>
+          <button class="modal-close-button" type="button" data-cancel-modal="team-remove" aria-label="Close remove team member confirmation">&times;</button>
         </div>
         <div class="delete-warning">
           <strong>Workspace access will be removed.</strong>
@@ -1071,12 +1079,13 @@
 
     <dialog class="modal" id="importConfirmModal">
       <form class="modal-card delete-modal-card" method="dialog" id="importConfirmForm">
-        <div class="modal-header">
+        <div class="modal-header modal-header-with-close">
           <div>
             <p class="eyebrow">Restore backup</p>
             <h2>Restore this workspace from backup?</h2>
             <p id="importConfirmSummary">This export does not identify a secure workspace.</p>
           </div>
+          <button class="modal-close-button" type="button" data-cancel-modal="import-confirm" aria-label="Close restore backup confirmation">&times;</button>
         </div>
         <div class="delete-warning">
           <strong>Review before restoring.</strong>

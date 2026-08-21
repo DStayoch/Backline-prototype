@@ -1843,6 +1843,13 @@ textarea {
   gap: 12px;
 }
 
+.activity-detail-header-actions {
+  display: grid;
+  justify-items: end;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
 .activity-detail-header h2 {
   margin: 2px 0 4px;
   font-size: 1.25rem;
@@ -8646,6 +8653,31 @@ html[data-theme="dark"] .approval-logo-full {
 }
 
 .modal-close-button:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+.modal-inline-close {
+  width: 36px;
+  height: 36px;
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-muted);
+  color: var(--text);
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.modal-inline-close:hover {
+  background: var(--blue-soft);
+  border-color: var(--blue);
+  color: var(--blue-dark);
+}
+
+.modal-inline-close:focus-visible {
   outline: 2px solid var(--blue);
   outline-offset: 2px;
 }

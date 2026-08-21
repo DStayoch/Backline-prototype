@@ -7560,7 +7560,10 @@ function renderInventoryUsageModal(key = "") {
         <h2>${escapeHtml(target.label || "Part usage")}</h2>
         <p>${escapeHtml(rows.length ? `${rows.length} logged use${rows.length === 1 ? "" : "s"} across jobs.` : "No jobs have logged this part yet.")}</p>
       </div>
-      <span class="pill ${escapeHtml(totals.unbilled ? "estimated" : "paid")}">${escapeHtml(totals.unbilled ? `${totals.unbilled} unbilled` : "All billed")}</span>
+      <div class="activity-detail-header-actions">
+        <button class="modal-inline-close" type="button" data-cancel-modal="inventory-usage" aria-label="Close inventory usage">&times;</button>
+        <span class="pill ${escapeHtml(totals.unbilled ? "estimated" : "paid")}">${escapeHtml(totals.unbilled ? `${totals.unbilled} unbilled` : "All billed")}</span>
+      </div>
     </div>
     <div class="activity-detail-grid">
       ${activityDetailStat("Logged uses", rows.length)}
@@ -14369,7 +14372,10 @@ function renderInventoryOrderDetail(purchaseOrderId = "") {
         <h2>${escapeHtml(order.number)}</h2>
         <p>${escapeHtml(`${order.supplier || "Supplier not set"} - ${inventoryOrderFilterLabel(order.status)}`)}</p>
       </div>
-      <span class="pill ${escapeHtml(order.status === "received" ? "paid" : order.status === "late" ? "urgent" : "booked")}">${escapeHtml(inventoryOrderFilterLabel(order.status))}</span>
+      <div class="activity-detail-header-actions">
+        <button class="modal-inline-close" type="button" data-cancel-modal="inventory-order-detail" aria-label="Close inventory order details">&times;</button>
+        <span class="pill ${escapeHtml(order.status === "received" ? "paid" : order.status === "late" ? "urgent" : "booked")}">${escapeHtml(inventoryOrderFilterLabel(order.status))}</span>
+      </div>
     </div>
     <div class="activity-detail-grid">
       ${activityDetailStat("Ordered", order.orderedQty)}
@@ -14936,7 +14942,10 @@ function renderActivityDetail(eventId) {
         <h2>${escapeHtml(event.label)}</h2>
         <p>${escapeHtml(event.detail || event.job?.issue || "No extra detail recorded")}</p>
       </div>
-      <span class="pill ${escapeHtml(event.type)}">${escapeHtml(activityTypeLabel(event.type))}</span>
+      <div class="activity-detail-header-actions">
+        <button class="modal-inline-close" type="button" data-cancel-modal="activity-detail" aria-label="Close activity detail">&times;</button>
+        <span class="pill ${escapeHtml(event.type)}">${escapeHtml(activityTypeLabel(event.type))}</span>
+      </div>
     </div>
 
     <div class="activity-detail-grid">

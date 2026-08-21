@@ -100,6 +100,51 @@ const publicTokenHardeningSql = await readFile("supabase-schema-17-public-token-
 const activityAppendOnlySql = await readFile("supabase-schema-18-activity-append-only.sql", "utf8");
 const platformAdminsSql = await readFile("supabase-schema-19-platform-admins.sql", "utf8");
 
+const modalContracts = [
+  ["companySettingsModal", "company-settings"],
+  ["onboardingGuideModal", "onboarding-guide"],
+  ["jobModal", "job"],
+  ["actionModal", "action"],
+  ["pricebookEditModal", "pricebook-edit"],
+  ["inventoryUsageModal", "inventory-usage", true],
+  ["inventoryOrderDetailModal", "inventory-order-detail", true],
+  ["inventoryOrderModal", "inventory-order"],
+  ["supplierModal", "supplier"],
+  ["reorderCopyModal", "reorder-copy"],
+  ["deleteModal", "delete"],
+  ["teamRemoveModal", "team-remove"],
+  ["importConfirmModal", "import-confirm"],
+  ["customRoleModal", "custom-role"],
+  ["activityDetailModal", "activity-detail", true]
+];
+
+for (const [id, cancelKey, dynamicHeader] of modalContracts) {
+  const match = html.match(new RegExp(`<dialog[^>]*id="${id}"[^>]*>[\\s\\S]*?<\\/dialog>`));
+  assert.ok(match, `${id} should be a complete dialog`);
+  const modal = match[0];
+  assert.match(modal, /<div class="modal-actions(?: [^"]*)?">[\s\S]*?<button/, `${id} should keep a footer action`);
+  assert.match(
+    modal,
+    cancelKey === "custom-role"
+      ? /id="cancelCustomRoleEdit"/
+      : new RegExp(`data-cancel-modal="${cancelKey}"`),
+    `${id} should keep a footer close or cancel action`
+  );
+  if (dynamicHeader) {
+    assert.match(
+      js,
+      new RegExp(`class="modal-inline-close"[^>]*data-cancel-modal="${cancelKey}"`),
+      `${id} should render a top-right close button with its detail header`
+    );
+  } else {
+    assert.match(
+      modal,
+      new RegExp(`class="modal-close-button"[^>]*data-cancel-modal="${cancelKey}"`),
+      `${id} should have a top-right close button`
+    );
+  }
+}
+
 assert.match(html, /<title>Backline<\/title>/);
 assert.match(html, /rel="icon" type="image\/png" href="assets\/backline-icon-transparent\.png"/);
 assert.match(html, /class="auth-logo" src="assets\/backline-banner-clean-outline\.png"/);
