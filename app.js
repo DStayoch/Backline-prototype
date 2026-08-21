@@ -1647,7 +1647,8 @@ function deploymentEnvironmentTone(environment = deploymentEnvironment()) {
 
 function isSupabaseConfigured() {
   const config = supabaseConfig();
-  return Boolean(config.url && config.anonKey && window.supabase?.createClient);
+  const hasPlaceholder = /YOUR-|YOUR_|example|placeholder/i.test(`${config.url} ${config.anonKey}`);
+  return Boolean(config.url && config.anonKey && !hasPlaceholder && window.supabase?.createClient);
 }
 
 function updateAuthStatus() {
@@ -1865,6 +1866,7 @@ function invoicePdfLines(job) {
     ["Paid amount", formatMoney(invoice.paidAmount)],
     ["Balance due", formatMoney(invoiceBalance(job))],
     ["Payment method", paymentMethodLabel(invoice.paymentMethod)],
+    ["Payment link", invoice.paymentLink || "Not provided"],
     ["Payment terms", company.invoiceTerms],
     ["Deposit policy", company.defaultDepositWording],
     ["Customer support", company.receiptSupportLine || customerFacingSupportLine(company)],
@@ -6444,6 +6446,22 @@ function normalizePaymentRequest(record = {}, job = {}) {
   };
 }
 
+function normalizePaymentLink(value = "") {
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+  const candidate = /^[a-z][a-z0-9+.-]*:\/\//i.test(raw) ? raw : `https://${raw}`;
+  try {
+    const url = new URL(candidate);
+    return ["http:", "https:"].includes(url.protocol) ? url.toString() : "";
+  } catch {
+    return "";
+  }
+}
+
+function invoicePaymentLink(job = {}) {
+  return normalizePaymentLink(invoiceRecord(job).paymentLink);
+}
+
 function paymentRequests(job = {}) {
   return Array.isArray(job.paymentRequests)
     ? job.paymentRequests.map((request) => normalizePaymentRequest(request, job)).filter((request) => request.amount > 0)
@@ -6457,7 +6475,11 @@ function activePaymentRequest(job = {}) {
 }
 
 function paymentRequestUrl(job = {}) {
-  return customerPortalUrl(job);
+  return invoicePaymentLink(job) || customerPortalUrl(job);
+}
+
+function paymentRequestMessagePrefix(job = {}) {
+  return invoicePaymentLink(job) ? "Please use the secure payment link" : "Please review the customer portal";
 }
 
 function legacyPaymentRecords(record = {}) {
@@ -6552,6 +6574,7 @@ function normalizeInvoiceRecord(record = {}, job = {}) {
     depositCollected,
     paidAmount,
     paymentMethod: String(record.paymentMethod || "").trim(),
+    paymentLink: normalizePaymentLink(record.paymentLink || record.paymentUrl || record.payment_link || ""),
     status,
     note: String(record.note || "").trim(),
     paidAt: record.paidAt || "",
@@ -8439,7 +8462,7 @@ function sendReceivableReminder(jobId) {
     const url = paymentRequestUrl(job);
     addJobMessage(job, {
       direction: "out",
-      body: `Payment reminder: ${formatMoney(balance)} remains open on invoice ${invoice.number}. Please review the customer portal by ${formatDateLabel(request.dueDate, { includeYear: true })}: ${url}`,
+      body: `Payment reminder: ${formatMoney(balance)} remains open on invoice ${invoice.number}. ${paymentRequestMessagePrefix(job)} by ${formatDateLabel(request.dueDate, { includeYear: true })}: ${url}`,
       createdBy: accountDisplayName(),
       customerVisible: true
     });
@@ -10503,6 +10526,7 @@ function renderInvoicePanel(job) {
   ensureJobDefaults(job);
   const invoice = invoiceRecord(job);
   const balance = invoiceBalance(job);
+  const paymentLink = invoicePaymentLink(job);
   return `
     <section class="field-panel invoice-panel">
       <div class="section-heading">
@@ -10532,6 +10556,11 @@ function renderInvoicePanel(job) {
           <span>Balance due</span>
           <strong>${escapeHtml(formatMoney(balance))}</strong>
           <small>${balance ? "Still owed" : "Paid in full"}</small>
+        </div>
+        <div class="invoice-summary-card ${paymentLink ? "ready" : ""}">
+          <span>Payment link</span>
+          <strong>${paymentLink ? "Ready" : "Not set"}</strong>
+          <small>${escapeHtml(paymentLink || "Paste Stripe, Square, PayPal, Venmo Business, or another hosted payment URL")}</small>
         </div>
       </div>
       ${renderBillingReview(job)}
@@ -11726,6 +11755,7 @@ function renderCustomerPortalPaymentRequest(job = {}) {
   const invoice = invoiceRecord(job);
   const request = activePaymentRequest(job);
   const balance = invoiceBalance(job);
+  const paymentLink = invoicePaymentLink(job);
   if (!request && (!invoice.amount || balance <= 0)) return "";
   const requestedAmount = request?.amount || balance;
   const dueDate = request?.dueDate || addDaysISO(7);
@@ -11744,6 +11774,16 @@ function renderCustomerPortalPaymentRequest(job = {}) {
         <div><span>Balance</span><strong>${escapeHtml(formatMoney(balance))}</strong></div>
         <div><span>Requested</span><strong>${escapeHtml(formatMoney(requestedAmount))}</strong><small>${escapeHtml(`Due ${formatDateLabel(dueDate, { includeYear: true })}`)}</small></div>
       </div>
+      ${paymentLink ? `
+        <div class="portal-payment-link">
+          <div class="portal-payment-link-main">
+            <span>Secure checkout</span>
+            <strong>${escapeHtml(formatMoney(requestedAmount))} requested</strong>
+            <small>Pay through the shop's hosted payment page. Backline does not store card or bank details.</small>
+          </div>
+          <a class="primary-button portal-payment-link-button" href="${escapeHtml(paymentLink)}" target="_blank" rel="noopener noreferrer">Pay invoice</a>
+        </div>
+      ` : ""}
       <form class="portal-payment-form" id="customerPortalPaymentForm" data-portal-job-id="${escapeHtml(job.id)}" data-portal-token="${escapeHtml(ensureJobPortalToken(job))}">
         <label>
           Amount paid or planned
@@ -11767,7 +11807,7 @@ function renderCustomerPortalPaymentRequest(job = {}) {
           Message for the office
           <textarea name="note" rows="3" placeholder="Tell the office anything they should know before recording this payment."></textarea>
         </label>
-        <button class="primary-button" type="submit">Send payment details</button>
+        <button class="${paymentLink ? "secondary-button" : "primary-button"}" type="submit">${paymentLink ? "Send payment note" : "Send payment details"}</button>
       </form>
     </section>
   `;
@@ -19264,6 +19304,7 @@ function actionModalConfig(action, job) {
           { value: "financing", label: "Financing" },
           { value: "other", label: "Other" }
         ] }),
+        inputField({ label: "Payment link", name: "paymentLink", type: "url", value: actionDraft.paymentLink ?? (invoice.paymentLink || ""), placeholder: "Stripe, Square, PayPal, Venmo Business, or other hosted payment URL", wide: true }),
         inputField({ label: "Invoice note", name: "note", value: actionDraft.note ?? (invoice.note || ""), placeholder: "Payment terms, deposit notes, or billing context", wide: true })
       ]
     },
@@ -19577,6 +19618,7 @@ function applyActionForm(action, data) {
         payments,
         depositRequested: Math.min(depositRequested, amount),
         paymentMethod: String(data.get("paymentMethod") || "").trim(),
+        paymentLink: normalizePaymentLink(data.get("paymentLink")),
         status: nextStatus,
         note: String(data.get("note") || "").trim(),
         updatedAt: new Date().toISOString(),
@@ -19666,7 +19708,7 @@ function applyActionForm(action, data) {
       const url = paymentRequestUrl(job);
       addJobMessage(job, {
         direction: "out",
-        body: `${note || "Payment request ready."} Requested amount: ${formatMoney(request.amount)} due ${formatDateLabel(request.dueDate, { includeYear: true })}. ${url}`,
+        body: `${note || "Payment request ready."} Requested amount: ${formatMoney(request.amount)} due ${formatDateLabel(request.dueDate, { includeYear: true })}. ${paymentRequestMessagePrefix(job)}: ${url}`,
         createdBy: accountDisplayName(),
         customerVisible: true
       });

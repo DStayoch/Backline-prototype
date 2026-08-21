@@ -119,7 +119,9 @@ has(phone, /\.task-form,[\s\S]*?\.task-row,[\s\S]*?\.communication-row,[\s\S]*?\
 has(phone, /\.job-summary-card,[\s\S]*?\.summary-value-button,[\s\S]*?\.task-row > span,[\s\S]*?\.task-row strong,[\s\S]*?\.task-row small \{[\s\S]*?overflow-wrap: anywhere;/, "phone task text should wrap inside the card");
 has(phone, /\.task-form input,[\s\S]*?\.task-form select,[\s\S]*?\.task-form button,[\s\S]*?\.task-check \{[\s\S]*?width: 100%;[\s\S]*?min-width: 0;/, "phone task controls should fit inside the task card");
 
-has(phone, /\.portal-payment-form,[\s\S]*?\.portal-section-header,[\s\S]*?\.portal-file-row,[\s\S]*?\.customer-timeline-event \{[\s\S]*?grid-template-columns: 1fr;/, "portal panels should collapse to one column");
+has(phone, /\.portal-payment-link,[\s\S]*?\.portal-payment-form,[\s\S]*?\.portal-section-header,[\s\S]*?\.portal-file-row,[\s\S]*?\.customer-timeline-event \{[\s\S]*?grid-template-columns: 1fr;/, "portal panels should collapse to one column");
+has(phone, /\.portal-payment-link-button \{[\s\S]*?width: 100%;[\s\S]*?min-width: 0;/, "portal payment link button should fit the phone width");
+has(phone, /\.portal-section-header > \.pill \{[\s\S]*?justify-self: start;/, "portal section badges should stay compact on phones");
 has(phone, /\.portal-file-actions \{[\s\S]*?justify-content: stretch;[\s\S]*?width: 100%;/, "portal file actions should be reachable on phones");
 has(phone, /\.portal-file-actions \.utility-button \{[\s\S]*?flex: 1 1 128px;/, "portal file buttons should share available phone width");
 has(phone, /\.approval-actions,[\s\S]*?\.inventory-detail-actions \{[\s\S]*?display: grid;[\s\S]*?grid-template-columns: repeat\(2, minmax\(0, 1fr\)\);/, "approval decision actions should use balanced phone columns");

@@ -49,6 +49,11 @@ assert.match(app, /renderApprovalPage\(submittedJob, \{ token, publicMode: true,
 
 assert.match(app, /function customerPortalMessages\(job = \{\}\)[\s\S]*?filter\(isCustomerPortalMessage\)/);
 assert.match(app, /function allCustomerPortalMessages\(job = \{\}\)[\s\S]*?filter\(isCustomerPortalMessage\)/);
+assert.match(app, /function invoicePaymentLink\(job = \{\}\)/);
+assert.match(app, /const paymentLink = invoicePaymentLink\(job\)/);
+assert.match(app, /href="\$\{escapeHtml\(paymentLink\)\}" target="_blank" rel="noopener noreferrer"/);
+assert.match(app, /Pay invoice/);
+assert.match(app, /Backline does not store card or bank details/);
 assert.match(app, /function customerFacingMessageAuthor\(message = \{\}, company = companySettings\(\)\)/);
 assert.match(app, /customerFacingTechnicianName\(normalized\.createdBy\)/);
 assert.match(app, /escapeHtml\(customerFacingMessageAuthor\(message, company\)\)/);
