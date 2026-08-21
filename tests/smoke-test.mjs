@@ -410,6 +410,7 @@ assert.match(js, /renderTopbar\(\);/);
 assert.match(js, /function displayPersonName\(/);
 assert.match(js, /function teamMemberDisplayLabel\(member\)/);
 assert.match(js, /displayPersonName\(teamMemberDisplayName\(member\)\)/);
+assert.match(js, /elements\.authStatus\.textContent = `\$\{roleLabel\(\)\}: \$\{displayPersonName\(accountDisplayName\(\)\)\}`;/);
 assert.match(js, /function technicianDisplayName\(value\)/);
 assert.match(js, /return technician === "To Be Determined" \? technician : displayPersonName\(technician\)/);
 assert.match(js, /function internalActorDisplayName\(value\)/);

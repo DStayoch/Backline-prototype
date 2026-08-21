@@ -1717,7 +1717,7 @@ function updateAuthStatus() {
   }
 
   if (state.currentUser) {
-    elements.authStatus.textContent = `${roleLabel()}: ${accountDisplayName()}`;
+    elements.authStatus.textContent = `${roleLabel()}: ${displayPersonName(accountDisplayName())}`;
     elements.signOutButton.hidden = false;
     return;
   }
