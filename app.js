@@ -9,6 +9,7 @@ const SECURE_COMPANY_SETTINGS_KEY_PREFIX = "backline.secureCompanySettings";
 const SELECTED_WORKSPACE_KEY_PREFIX = "backline.selectedWorkspace";
 const FOUNDRY_PILOT_CRM_KEY = "backline.foundryPilotCrm.v1";
 const THEME_KEY = "backline.theme.v1";
+const TUTORIAL_GUIDE_KEY = "backline.tutorialGuideDismissals.v1";
 const OWNER_ONBOARDING_KEY = "backline.ownerOnboardingEmail.v1";
 const DATABASE_NAME = "backline.field-service";
 const DATABASE_VERSION = 5;
@@ -518,6 +519,8 @@ let state = {
   rolePreviewSlug: "",
   inboxCollapsed: false,
   onboardingChecklistExpanded: false,
+  tutorialGuideDismissals: loadTutorialGuideDismissals(),
+  contextualGuideOpen: false,
   expandedPanels: {},
   jobActionMenuOpen: false,
   messageThreadHeight: MESSAGE_THREAD_DEFAULT_HEIGHT,
@@ -549,6 +552,8 @@ const elements = {
   statsStrip: document.querySelector("#statsStrip"),
   onboardingPanel: document.querySelector("#onboardingPanel"),
   onboardingGuideModal: document.querySelector("#onboardingGuideModal"),
+  contextualGuide: document.querySelector("#contextualGuide"),
+  jobFormGuide: document.querySelector("#jobFormGuide"),
   approvalPage: document.querySelector("#approvalPage"),
   attentionSummary: document.querySelector("#attentionSummary"),
   attentionList: document.querySelector("#attentionList"),
@@ -897,6 +902,23 @@ function loadThemePreference() {
     return ["light", "dark"].includes(preference) ? preference : "light";
   } catch {
     return "light";
+  }
+}
+
+function loadTutorialGuideDismissals() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(TUTORIAL_GUIDE_KEY) || "{}");
+    return saved && typeof saved === "object" && !Array.isArray(saved) ? saved : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveTutorialGuideDismissals() {
+  try {
+    localStorage.setItem(TUTORIAL_GUIDE_KEY, JSON.stringify(state.tutorialGuideDismissals));
+  } catch {
+    // Help preferences are optional and should never interrupt shop work.
   }
 }
 
@@ -2460,6 +2482,8 @@ function activateView(view) {
   document.querySelectorAll(".view").forEach((section) => section.classList.remove("active"));
   document.querySelector(`[data-view="${view}"]`)?.classList.add("active");
   document.querySelector(`#view-${view}`)?.classList.add("active");
+  state.contextualGuideOpen = false;
+  renderContextualGuide();
   return true;
 }
 
@@ -11908,9 +11932,110 @@ function renderOnboardingPanel() {
   `;
 }
 
+const contextualGuides = {
+  dashboard: {
+    label: "Home help",
+    title: "Start with the work that needs attention",
+    detail: "Home is your daily command center. Review what needs attention, then create or open a job to keep the work moving.",
+    destination: "new-job",
+    action: "Create a job"
+  },
+  inbox: {
+    label: "Jobs help",
+    title: "Each job keeps the whole customer story together",
+    detail: "Open a job, then follow its Suggested next step to book it, do the work, send an estimate, invoice, or record payment. Customer messages and portal updates stay on that same job.",
+    destination: "first-job",
+    action: "Open a job"
+  },
+  schedule: {
+    label: "Schedule help",
+    title: "Turn requests into a clear workday",
+    detail: "Book a date and time, assign the technician, and use the schedule to spot open capacity before you promise an appointment.",
+    destination: "first-job",
+    action: "Open a job"
+  },
+  money: {
+    label: "Money help",
+    title: "Follow the money from estimate to payment",
+    detail: "Start from a job to send an estimate or invoice. When money comes in, record the amount so the balance and customer timeline stay accurate.",
+    destination: "first-job",
+    action: "Open a job"
+  },
+  customers: {
+    label: "Customers help",
+    title: "Keep a customer's service history in one place",
+    detail: "Search a customer to review prior jobs, notes, equipment, files, and payments before you book the next visit.",
+    destination: "customer-search",
+    action: "Find a customer"
+  },
+  team: {
+    label: "Team help",
+    title: "Give each person only the access they need",
+    detail: "Invite office staff and technicians with the closest role. Technicians see assigned work, while office roles can schedule, communicate, and bill.",
+    destination: "team-invite",
+    action: "Invite a teammate"
+  },
+  communications: {
+    label: "Comms help",
+    title: "Customer conversations stay tied to the job",
+    detail: "Open the related job to reply, add an internal note, or send a customer portal update. This keeps the office and field team on the same page.",
+    destination: "first-job",
+    action: "Open a job"
+  },
+  followups: {
+    label: "Follow-ups help",
+    title: "Use follow-ups to keep promises from slipping",
+    detail: "Review the next customer touchpoint, then open the job to call, message, schedule, or complete the work with the right context.",
+    destination: "first-job",
+    action: "Open a job"
+  }
+};
+
+function activeViewName() {
+  return document.querySelector(".view.active")?.id.replace(/^view-/, "") || "dashboard";
+}
+
+function renderContextualGuide() {
+  if (!elements.contextualGuide) return;
+  const view = activeViewName();
+  const guide = contextualGuides[view];
+  const hidden = !guide || (state.tutorialGuideDismissals[view] && !state.contextualGuideOpen);
+  elements.contextualGuide.hidden = hidden;
+  if (hidden) {
+    elements.contextualGuide.innerHTML = "";
+    return;
+  }
+  elements.contextualGuide.innerHTML = `
+    <div class="contextual-guide-copy">
+      <span>${escapeHtml(guide.label)}</span>
+      <strong>${escapeHtml(guide.title)}</strong>
+      <p>${escapeHtml(guide.detail)}</p>
+    </div>
+    <div class="contextual-guide-actions">
+      <button class="text-button" type="button" data-contextual-guide-destination="${escapeHtml(guide.destination)}">${escapeHtml(guide.action)}</button>
+      <button class="contextual-guide-dismiss" type="button" data-dismiss-contextual-guide aria-label="Dismiss ${escapeHtml(guide.label)}" title="Dismiss help">&times;</button>
+    </div>
+  `;
+}
+
+function openContextualGuideDestination(destination = "") {
+  if (destination === "customer-search") {
+    elements.searchInput?.focus();
+    return;
+  }
+  if (destination === "team-invite") {
+    document.querySelector('#teamInviteForm input[name="email"]')?.focus();
+    return;
+  }
+  openOnboardingDestination(destination);
+}
+
 function openNewJobModal() {
   if (!canOrRecord("createJob", "open new job form")) return;
   elements.jobForm.reset();
+  if (elements.jobFormGuide) {
+    elements.jobFormGuide.hidden = Boolean(state.tutorialGuideDismissals["new-job"]);
+  }
   renderNewJobPickers({
     trade: "HVAC",
     jobType: "tbd",
@@ -18118,6 +18243,7 @@ function render() {
   renderAutomations();
   renderAttention();
   renderOnboardingPanel();
+  renderContextualGuide();
   renderBetaReadiness();
   renderDashboardPanels();
   renderStats();
@@ -21199,6 +21325,34 @@ document.addEventListener("click", async (event) => {
 
   if (event.target.closest("[data-open-onboarding-guide]")) {
     elements.onboardingGuideModal?.showModal();
+    return;
+  }
+
+  if (event.target.closest("[data-open-contextual-guide]")) {
+    state.contextualGuideOpen = true;
+    renderContextualGuide();
+    return;
+  }
+
+  if (event.target.closest("[data-dismiss-contextual-guide]")) {
+    const view = activeViewName();
+    state.tutorialGuideDismissals[view] = true;
+    state.contextualGuideOpen = false;
+    saveTutorialGuideDismissals();
+    renderContextualGuide();
+    return;
+  }
+
+  if (event.target.closest("[data-dismiss-new-job-guide]")) {
+    state.tutorialGuideDismissals["new-job"] = true;
+    saveTutorialGuideDismissals();
+    if (elements.jobFormGuide) elements.jobFormGuide.hidden = true;
+    return;
+  }
+
+  const contextualGuideDestination = event.target.closest("[data-contextual-guide-destination]")?.dataset.contextualGuideDestination;
+  if (contextualGuideDestination) {
+    openContextualGuideDestination(contextualGuideDestination);
     return;
   }
 

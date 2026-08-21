@@ -154,7 +154,10 @@
         <header class="topbar">
           <div class="topbar-title">
             <p class="eyebrow" id="todayLabel"></p>
-            <h1 id="topbarGreeting">Welcome back.</h1>
+            <div class="topbar-heading-row">
+              <h1 id="topbarGreeting">Welcome back.</h1>
+              <button class="topbar-help-button" type="button" data-open-contextual-guide aria-label="Open help for this page" title="Help for this page">?</button>
+            </div>
             <p id="topbarInsight">Loading the latest across your shop.</p>
           </div>
           <div class="topbar-actions">
@@ -194,6 +197,8 @@
             <button class="primary-button" type="button" id="newJobButton">New job</button>
           </div>
         </header>
+
+        <aside class="contextual-guide" id="contextualGuide" aria-live="polite" hidden></aside>
 
         <section class="view active" id="view-dashboard" aria-label="Home">
           <div class="attention-layout">
@@ -754,6 +759,14 @@
           </div>
           <button class="modal-close-button" type="button" data-cancel-modal="job" aria-label="Close new job form">&times;</button>
         </div>
+
+        <aside class="form-guide" id="jobFormGuide" aria-label="New job help">
+          <div class="form-guide-header">
+            <span>Quick guide</span>
+            <button class="contextual-guide-dismiss" type="button" data-dismiss-new-job-guide aria-label="Dismiss new job help" title="Dismiss help">&times;</button>
+          </div>
+          <p>Start with the customer's name, phone, and issue. You can schedule and assign a technician now or come back to it later.</p>
+        </aside>
 
         <div class="form-grid">
           <label>

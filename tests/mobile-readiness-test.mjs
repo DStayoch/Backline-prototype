@@ -108,8 +108,11 @@ has(phone, /\.modal-card \{[\s\S]*?width: calc\(100vw - 20px\);[\s\S]*?max-heigh
 has(css, /\.modal-card \{[\s\S]*?max-height: calc\(100svh - 28px\);[\s\S]*?overflow-y: auto;/, "desktop and tablet modals should keep long forms inside the viewport with internal scrolling");
 has(phone, /\.onboarding-step \{[\s\S]*?grid-template-columns: 1fr;[\s\S]*?align-items: stretch;/, "phone onboarding steps should stack cleanly instead of squeezing instructions and actions");
 has(phone, /\.onboarding-step \.primary-button \{[\s\S]*?width: 100%;/, "phone onboarding actions should fill the available width");
+has(phone, /\.contextual-guide \{[\s\S]*?grid-template-columns: 1fr;[\s\S]*?align-items: start;/, "phone contextual help should stack its copy instead of squeezing it beside controls");
+has(phone, /\.contextual-guide-actions \{[\s\S]*?width: 100%;[\s\S]*?justify-content: space-between;/, "phone contextual help controls should stay compact and reachable");
 has(css, /\.onboarding-current \{[\s\S]*?padding: 16px;/, "onboarding copy should not sit against the panel edge");
 has(css, /\.onboarding-tour-list li \{[\s\S]*?padding: 16px;/, "quick tour rows should have consistent breathing room");
+has(css, /\.contextual-guide \{[\s\S]*?grid-template-columns: minmax\(0, 1fr\) auto;[\s\S]*?border-left: 4px solid var\(--blue\);/, "contextual help should use a compact two-column desktop layout with a clear visual anchor");
 has(phone, /\.job-row \{[\s\S]*?padding: 12px;/, "phone inbox rows should use compact card padding");
 has(phone, /\.job-row-top,[\s\S]*?\.job-row-bottom \{[\s\S]*?align-items: flex-start;[\s\S]*?justify-content: flex-start;/, "phone inbox row metadata should not collide");
 has(phone, /\.detail-panel,[\s\S]*?\.detail-panel\.panel,[\s\S]*?#view-inbox\.active \.detail-panel \{[\s\S]*?overflow-x: clip;[\s\S]*?overflow-y: visible;/, "phone selected job detail should clip sideways overflow while allowing vertical page scrolling");
