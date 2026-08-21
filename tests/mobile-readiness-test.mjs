@@ -69,6 +69,8 @@ has(tablet, /#view-inbox\.active \.job-summary-bar \{[\s\S]*?grid-template-colum
 has(phone, /html,[\s\S]*?body \{[\s\S]*?overflow-x: hidden;[\s\S]*?overflow-y: auto;/, "phone layout should prevent sideways drift while keeping vertical page scroll");
 has(phone, /\.workspace \{[\s\S]*?padding: 10px;[\s\S]*?height: auto;[\s\S]*?min-width: 0;[\s\S]*?overflow-x: hidden;[\s\S]*?overflow-y: visible;/, "phone workspace needs compact padding and must not trap vertical scroll");
 has(phone, /\.topbar,[\s\S]*?\.modal-header \{[\s\S]*?flex-direction: column;/, "phone headers should stack instead of squeezing");
+has(phone, /\.onboarding-panel-header \{[\s\S]*?display: grid;[\s\S]*?grid-template-columns: minmax\(0, 1fr\) auto;[\s\S]*?align-items: center;/, "onboarding header should keep its help action compact beside the copy on phones");
+has(phone, /\.onboarding-tour-button \{[\s\S]*?width: auto;[\s\S]*?white-space: nowrap;/, "onboarding tour button should not stretch across a separate full-width row on phones");
 has(phone, /\.topbar \{[\s\S]*?align-items: stretch;[\s\S]*?justify-content: flex-start;[\s\S]*?gap: 10px;[\s\S]*?background: var\(--bg\);[\s\S]*?border-bottom: 1px solid/, "phone topbar should be compact and opaque instead of using desktop spacing");
 has(phone, /\.topbar-title \{[\s\S]*?flex: 0 0 auto;[\s\S]*?gap: 5px;/, "phone topbar title must not inherit the desktop 280px flex basis");
 has(phone, /\.topbar-actions \{[\s\S]*?flex: 0 0 auto;[\s\S]*?display: grid;[\s\S]*?width: 100%;/, "phone topbar actions must not inherit desktop flex sizing");

@@ -9213,11 +9213,26 @@ html[data-theme="dark"] .approval-logo-full {
   }
 
   .onboarding-panel-header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
     gap: 12px;
   }
 
+  .onboarding-panel-header > div {
+    min-width: 0;
+  }
+
+  .onboarding-panel-header h2,
+  .onboarding-panel-header p {
+    overflow-wrap: anywhere;
+  }
+
   .onboarding-tour-button {
-    width: 100%;
+    width: auto;
+    min-width: 0;
+    padding-inline: 12px;
+    white-space: nowrap;
   }
 
   .onboarding-step {
