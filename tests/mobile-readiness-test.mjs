@@ -99,6 +99,10 @@ has(phone, /\.job-action-menu-trigger \{[\s\S]*?width: 100%;[\s\S]*?max-width: 1
 has(phone, /\.job-action-menu-panel \{[\s\S]*?grid-column: 1 \/ -1;[\s\S]*?width: 100%;[\s\S]*?grid-template-columns: 1fr;/, "phone more-actions panel should open full-width inside the action grid");
 has(phone, /\.job-summary-bar \{[\s\S]*?width: 100%;[\s\S]*?max-width: 100%;[\s\S]*?grid-template-columns: 1fr;[\s\S]*?overflow: hidden;/, "phone job summary cards should stack inside the panel");
 has(phone, /\.modal-card \{[\s\S]*?width: calc\(100vw - 20px\);[\s\S]*?max-height: calc\(100svh - 20px\);[\s\S]*?overflow-y: auto;/, "phone modals should stay scrollable inside the viewport");
+has(phone, /\.onboarding-step \{[\s\S]*?grid-template-columns: 1fr;[\s\S]*?align-items: stretch;/, "phone onboarding steps should stack cleanly instead of squeezing instructions and actions");
+has(phone, /\.onboarding-step \.primary-button \{[\s\S]*?width: 100%;/, "phone onboarding actions should fill the available width");
+has(css, /\.onboarding-current \{[\s\S]*?padding: 16px;/, "onboarding copy should not sit against the panel edge");
+has(css, /\.onboarding-tour-list li \{[\s\S]*?padding: 16px;/, "quick tour rows should have consistent breathing room");
 has(phone, /\.job-row \{[\s\S]*?padding: 12px;/, "phone inbox rows should use compact card padding");
 has(phone, /\.job-row-top,[\s\S]*?\.job-row-bottom \{[\s\S]*?align-items: flex-start;[\s\S]*?justify-content: flex-start;/, "phone inbox row metadata should not collide");
 has(phone, /\.detail-panel,[\s\S]*?\.detail-panel\.panel,[\s\S]*?#view-inbox\.active \.detail-panel \{[\s\S]*?overflow-x: clip;[\s\S]*?overflow-y: visible;/, "phone selected job detail should clip sideways overflow while allowing vertical page scrolling");

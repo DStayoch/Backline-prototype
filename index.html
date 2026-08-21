@@ -220,6 +220,8 @@
 
           <div class="stats-strip" id="statsStrip"></div>
 
+          <section class="panel onboarding-panel" id="onboardingPanel" aria-label="Getting started"></section>
+
           <section class="panel beta-readiness-panel">
             <div class="panel-header">
               <div>
@@ -691,6 +693,56 @@
           <button class="primary-button" type="submit">Save settings</button>
         </div>
       </form>
+    </dialog>
+
+    <dialog class="modal onboarding-guide-modal" id="onboardingGuideModal">
+      <section class="modal-card onboarding-guide-card" aria-labelledby="onboardingGuideTitle">
+        <div class="modal-header modal-header-with-close">
+          <div>
+            <p class="eyebrow">Quick tour</p>
+            <h2 id="onboardingGuideTitle">Run your shop in Backline</h2>
+            <p>Use these four steps whenever you need a simple refresher. Nothing here changes your data.</p>
+          </div>
+          <button class="modal-close-button" type="button" data-cancel-modal="onboarding-guide" aria-label="Close quick tour">&times;</button>
+        </div>
+        <ol class="onboarding-tour-list">
+          <li>
+            <span>1</span>
+            <div>
+              <strong>Start with Home</strong>
+              <p>See what needs attention, today's work, money waiting, and the next setup task.</p>
+              <button class="utility-button" type="button" data-onboarding-destination="dashboard">Open Home</button>
+            </div>
+          </li>
+          <li>
+            <span>2</span>
+            <div>
+              <strong>Add the customer and job</strong>
+              <p>Enter the caller's details once. Backline keeps the customer, job, messages, and history connected.</p>
+              <button class="utility-button" type="button" data-onboarding-destination="new-job">Create a job</button>
+            </div>
+          </li>
+          <li>
+            <span>3</span>
+            <div>
+              <strong>Follow the next step</strong>
+              <p>Open a job and use its suggested next step to book it, start field work, send an estimate, or record payment.</p>
+              <button class="utility-button" type="button" data-onboarding-destination="inbox">Open jobs</button>
+            </div>
+          </li>
+          <li>
+            <span>4</span>
+            <div>
+              <strong>Close the loop with the customer</strong>
+              <p>Send estimates, share the customer portal, invoice the work, and record the payment in one place.</p>
+              <button class="utility-button" type="button" data-onboarding-destination="money">Open money</button>
+            </div>
+          </li>
+        </ol>
+        <div class="modal-actions">
+          <button class="secondary-button" type="button" data-cancel-modal="onboarding-guide">Close tour</button>
+        </div>
+      </section>
     </dialog>
 
     <dialog class="modal" id="jobModal">

@@ -517,6 +517,7 @@ let state = {
   editingCustomRoleSlug: null,
   rolePreviewSlug: "",
   inboxCollapsed: false,
+  onboardingChecklistExpanded: false,
   expandedPanels: {},
   jobActionMenuOpen: false,
   messageThreadHeight: MESSAGE_THREAD_DEFAULT_HEIGHT,
@@ -546,6 +547,8 @@ const elements = {
   signOutButton: document.querySelector("#signOutButton"),
   newJobButton: document.querySelector("#newJobButton"),
   statsStrip: document.querySelector("#statsStrip"),
+  onboardingPanel: document.querySelector("#onboardingPanel"),
+  onboardingGuideModal: document.querySelector("#onboardingGuideModal"),
   approvalPage: document.querySelector("#approvalPage"),
   attentionSummary: document.querySelector("#attentionSummary"),
   attentionList: document.querySelector("#attentionList"),
@@ -11813,6 +11816,129 @@ function renderCustomerPortalPaymentRequest(job = {}) {
   `;
 }
 
+function onboardingChecklistItems(settings = companySettings()) {
+  const normalized = normalizeCompanySettings(settings);
+  const jobs = roleScopedJobs();
+  const firstJob = jobs[0] || null;
+  const hasBilling = jobs.some((job) => estimateAmount(job) > 0 || invoiceRecord(job).amount > 0 || invoiceCollectedAmount(invoiceRecord(job)) > 0);
+  const hasCustomerLink = jobs.some((job) => job.portalToken || customerPortalMessages(job).length || ["sent", "approved", "declined"].includes(job.approvalStatus));
+
+  return [
+    {
+      key: "shop-profile",
+      label: "Add your shop details",
+      detail: "Set the name, phone, and service area customers will see.",
+      complete: Boolean(normalized.companyName && normalized.companyName !== defaultCompanySettings.companyName && phoneDigits(normalized.phone).length === 10 && normalized.serviceArea),
+      destination: "settings",
+      action: "Open settings"
+    },
+    {
+      key: "first-job",
+      label: "Create your first customer and job",
+      detail: "Add the caller once and keep the work, messages, and history together.",
+      complete: jobs.length > 0,
+      destination: "new-job",
+      action: "Create a job"
+    },
+    {
+      key: "first-booking",
+      label: "Book the appointment",
+      detail: "Choose a date, time, and technician so the job is ready for the day.",
+      complete: jobs.some((job) => isScheduled(job)),
+      destination: firstJob ? "first-job" : "new-job",
+      action: firstJob ? "Open job" : "Create a job"
+    },
+    {
+      key: "first-billing",
+      label: "Send your first estimate or invoice",
+      detail: "Use the job's suggested next step to move work into billing.",
+      complete: hasBilling,
+      destination: firstJob ? "first-job" : "new-job",
+      action: firstJob ? "Open job" : "Create a job"
+    },
+    {
+      key: "customer-link",
+      label: "Share a customer link",
+      detail: "Use a job to send an approval link or customer portal update.",
+      complete: hasCustomerLink,
+      destination: firstJob ? "first-job" : "new-job",
+      action: firstJob ? "Open job" : "Create a job"
+    }
+  ];
+}
+
+function renderOnboardingPanel() {
+  if (!elements.onboardingPanel || !can("exportData")) return;
+  const items = onboardingChecklistItems();
+  const completeCount = items.filter((item) => item.complete).length;
+  const nextItem = items.find((item) => !item.complete);
+  const allComplete = !nextItem;
+  const visibleItems = state.onboardingChecklistExpanded ? items : (nextItem ? [nextItem] : []);
+  const progress = Math.round((completeCount / items.length) * 100);
+
+  elements.onboardingPanel.innerHTML = `
+    <div class="panel-header onboarding-panel-header">
+      <div>
+        <h2>${allComplete ? "Your shop is ready" : "Getting started"}</h2>
+        <p>${allComplete ? "You have completed the Backline basics. The quick tour is always here when you need it." : `${completeCount} of ${items.length} basics complete`}</p>
+      </div>
+      <button class="utility-button onboarding-tour-button" type="button" data-open-onboarding-guide>Quick tour</button>
+    </div>
+    ${allComplete ? "" : `
+      <div class="onboarding-progress" aria-hidden="true"><span style="width: ${progress}%"></span></div>
+      <div class="onboarding-current">
+        ${visibleItems.map((item) => `
+          <article class="onboarding-step ${item.complete ? "complete" : ""}">
+            <div class="onboarding-step-copy">
+              <span>${item.complete ? "Complete" : item.key === nextItem?.key ? "Up next" : "Later"}</span>
+              <strong>${escapeHtml(item.label)}</strong>
+              <p>${escapeHtml(item.detail)}</p>
+            </div>
+            <button class="primary-button" type="button" data-onboarding-destination="${escapeHtml(item.destination)}">${escapeHtml(item.action)}</button>
+          </article>
+        `).join("")}
+      </div>
+      <div class="onboarding-panel-footer">
+        <button class="text-button" type="button" data-toggle-onboarding-checklist>${state.onboardingChecklistExpanded ? "Show less" : "View all setup steps"}</button>
+      </div>
+    `}
+  `;
+}
+
+function openNewJobModal() {
+  if (!canOrRecord("createJob", "open new job form")) return;
+  elements.jobForm.reset();
+  renderNewJobPickers({
+    trade: "HVAC",
+    jobType: "tbd",
+    urgency: "normal",
+    durationMinutes: String(DEFAULT_JOB_DURATION_MINUTES),
+    technician: "To Be Determined"
+  });
+  renderJobTemplatePicker(suggestedJobTemplateKeyFromForm(elements.jobForm));
+  elements.jobModal.showModal();
+}
+
+function openOnboardingDestination(destination = "") {
+  if (elements.onboardingGuideModal?.open) elements.onboardingGuideModal.close("navigate");
+  if (destination === "settings") {
+    openCompanySettingsModal();
+    return;
+  }
+  if (destination === "new-job") {
+    openNewJobModal();
+    return;
+  }
+  if (destination === "first-job") {
+    const job = roleScopedJobs()[0];
+    if (job) state.selectedJobId = job.id;
+    activateView("inbox");
+    render();
+    return;
+  }
+  activateView(destination);
+}
+
 function customerPortalTimelineTime(value) {
   const date = customerTimelineDate(value);
   if (!date.getTime()) return "Recently";
@@ -12687,7 +12813,7 @@ function renderJobSummaryBar(job) {
         <small>${escapeHtml(balance ? `${formatMoney(invoice.amount)} total` : "Paid in full")}</small>
       </div>
       <div class="job-summary-card job-summary-action">
-        <span>Next action</span>
+        <span>Suggested next step</span>
         ${renderNextBestActionButton(nextAction)}
         ${nextAction?.detail ? `<small>${escapeHtml(nextAction.detail)}</small>` : ""}
       </div>
@@ -17982,6 +18108,7 @@ function render() {
   renderNewJobPickers();
   renderAutomations();
   renderAttention();
+  renderOnboardingPanel();
   renderBetaReadiness();
   renderDashboardPanels();
   renderStats();
@@ -21057,17 +21184,24 @@ document.addEventListener("click", async (event) => {
 
   const openModal = event.target.closest("[data-open-job-modal], #newJobButton");
   if (openModal) {
-    if (!canOrRecord("createJob", "open new job form")) return;
-    elements.jobForm.reset();
-    renderNewJobPickers({
-      trade: "HVAC",
-      jobType: "tbd",
-      urgency: "normal",
-      durationMinutes: String(DEFAULT_JOB_DURATION_MINUTES),
-      technician: "To Be Determined"
-    });
-    renderJobTemplatePicker(suggestedJobTemplateKeyFromForm(elements.jobForm));
-    elements.jobModal.showModal();
+    openNewJobModal();
+    return;
+  }
+
+  if (event.target.closest("[data-open-onboarding-guide]")) {
+    elements.onboardingGuideModal?.showModal();
+    return;
+  }
+
+  if (event.target.closest("[data-toggle-onboarding-checklist]")) {
+    state.onboardingChecklistExpanded = !state.onboardingChecklistExpanded;
+    renderOnboardingPanel();
+    return;
+  }
+
+  const onboardingDestination = event.target.closest("[data-onboarding-destination]")?.dataset.onboardingDestination;
+  if (onboardingDestination) {
+    openOnboardingDestination(onboardingDestination);
     return;
   }
 
@@ -21097,6 +21231,10 @@ document.addEventListener("click", async (event) => {
   }
   if (cancelModal === "company-settings") {
     elements.companySettingsModal.close("cancel");
+    return;
+  }
+  if (cancelModal === "onboarding-guide") {
+    elements.onboardingGuideModal.close("cancel");
     return;
   }
   if (cancelModal === "activity-detail") {
