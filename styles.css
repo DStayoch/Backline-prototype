@@ -6476,6 +6476,47 @@ html[data-theme="dark"] .auth-logo {
   padding: 0 12px;
 }
 
+.offline-unlock-panel {
+  display: grid;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--blue-soft) 34%, var(--surface));
+  padding: 16px;
+}
+
+.offline-unlock-panel[hidden] {
+  display: none;
+}
+
+.offline-unlock-panel h2,
+.offline-unlock-panel p {
+  margin: 0;
+}
+
+.offline-unlock-panel form,
+.offline-unlock-panel label {
+  display: grid;
+  gap: 7px;
+}
+
+.offline-unlock-panel label {
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
+.offline-unlock-panel input {
+  min-height: 42px;
+  padding: 0 12px;
+}
+
+.auth-gate.offline-unlock-mode .auth-form,
+.auth-gate.offline-unlock-mode .auth-divider,
+.auth-gate.offline-unlock-mode .oauth-actions {
+  display: none;
+}
+
 .auth-actions {
   display: flex;
   gap: 10px;

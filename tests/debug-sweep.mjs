@@ -534,6 +534,10 @@ assert.match(js, /if \(state\.secureMode\) \{\s+saveSecureCompanySettingsBackup\
 assert.match(js, /async function saveSecureOfflineSnapshot/);
 assert.match(js, /async function restoreSecureOfflineSnapshot/);
 assert.match(js, /async function syncPendingOfflineChanges/);
+assert.match(js, /async function enableOfflineAccess/);
+assert.match(js, /async function unlockOfflineWorkspace/);
+assert.match(html, /id="offlineAccessButton"/);
+assert.match(html, /id="offlineAccessModal"/);
 assert.match(js, /if \(state\.customers\.length\) \{\s+writes\.push\(client\.from\("customers"\)\.upsert/s);
 assert.match(js, /if \(state\.jobs\.length\) \{\s+writes\.push\(client\.from\("jobs"\)\.upsert/s);
 assert.match(js, /data-auth-back-login/);

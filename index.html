@@ -12,7 +12,7 @@
     <link rel="icon" type="image/png" href="assets/backline-icon-transparent.png">
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="apple-touch-icon" href="assets/backline-icon-transparent.png">
-    <link rel="stylesheet" href="styles.css?v=20260821-offline-sync">
+    <link rel="stylesheet" href="styles.css?v=20260821-offline-unlock">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
     <script src="supabase-config.js"></script>
@@ -54,6 +54,21 @@
           <button class="oauth-button" type="button" data-oauth-provider="google">Continue with Google</button>
           <button class="oauth-button" type="button" data-oauth-provider="apple">Continue with Apple</button>
         </div>
+        <section class="offline-unlock-panel" id="offlineUnlockPanel" hidden aria-labelledby="offlineUnlockHeading">
+          <p class="eyebrow">Offline access</p>
+          <h2 id="offlineUnlockHeading">Unlock saved workspace</h2>
+          <p id="offlineUnlockProfile"></p>
+          <form id="offlineUnlockForm">
+            <label>
+              Offline PIN
+              <input name="pin" type="password" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" minlength="6" maxlength="6" required>
+            </label>
+            <div class="auth-actions">
+              <button class="primary-button" type="submit">Unlock workspace</button>
+              <button class="secondary-button" type="button" data-offline-unlock-online>Use online sign in</button>
+            </div>
+          </form>
+        </section>
         <p class="settings-note" id="authGateStatus">Secure database mode is ready when Supabase is configured.</p>
       </section>
     </main>
@@ -192,6 +207,7 @@
                 <div class="settings-section utility-section">
                   <span class="settings-label">Utilities</span>
                   <button class="utility-button" type="button" id="workspaceSettingsButton">Workspace settings</button>
+                  <button class="utility-button" type="button" id="offlineAccessButton">Offline access</button>
                   <button class="utility-button" type="button" id="settingsConnectionButton">Test secure connection</button>
                   <button class="utility-button" type="button" id="settingsExportButton">Download backup</button>
                   <label class="utility-button file-button" for="importInput">Restore from backup</label>
@@ -559,6 +575,34 @@
     </div>
 
     <section class="print-schedule" id="printSchedule" aria-hidden="true"></section>
+
+    <dialog class="modal" id="offlineAccessModal">
+      <form class="modal-card offline-access-card" id="offlineAccessForm">
+        <div class="modal-header modal-header-with-close">
+          <div>
+            <p class="eyebrow">Device security</p>
+            <h2 id="offlineAccessTitle">Enable offline access</h2>
+            <p id="offlineAccessDetail">Set a six-digit PIN to protect the workspace saved on this device.</p>
+          </div>
+          <button class="modal-close-button" type="button" data-cancel-modal="offline-access" aria-label="Close offline access">&times;</button>
+        </div>
+        <div class="form-grid">
+          <label>
+            Offline PIN
+            <input name="pin" type="password" inputmode="numeric" autocomplete="new-password" pattern="[0-9]{6}" minlength="6" maxlength="6" required>
+          </label>
+          <label data-offline-pin-confirm>
+            Confirm PIN
+            <input name="confirmPin" type="password" inputmode="numeric" autocomplete="new-password" pattern="[0-9]{6}" minlength="6" maxlength="6" required>
+          </label>
+        </div>
+        <p class="form-status" id="offlineAccessStatus"></p>
+        <div class="modal-actions">
+          <button class="secondary-button" type="button" data-cancel-modal="offline-access">Cancel</button>
+          <button class="primary-button" type="submit" id="offlineAccessSubmit">Enable offline access</button>
+        </div>
+      </form>
+    </dialog>
 
     <dialog class="modal" id="companySettingsModal">
       <form class="modal-card company-settings-card" method="dialog" id="companySettingsForm">
@@ -1169,6 +1213,6 @@
       </section>
     </dialog>
 
-    <script src="app.js?v=20260821-offline-sync"></script>
+    <script src="app.js?v=20260821-offline-unlock"></script>
   </body>
 </html>

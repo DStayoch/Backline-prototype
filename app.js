@@ -13,7 +13,7 @@ const TUTORIAL_GUIDE_KEY = "backline.tutorialGuideDismissals.v1";
 const CONTEXTUAL_HELP_ENABLED_KEY = "backline.contextualHelpEnabled.v1";
 const OWNER_ONBOARDING_KEY = "backline.ownerOnboardingEmail.v1";
 const DATABASE_NAME = "backline.field-service";
-const DATABASE_VERSION = 6;
+const DATABASE_VERSION = 7;
 const JOB_STORE = "jobs";
 const CUSTOMER_STORE = "customers";
 const DELETED_JOB_STORE = "deletedJobs";
@@ -21,6 +21,7 @@ const ACTIVITY_STORE = "activityEvents";
 const PRICEBOOK_STORE = "pricebookItems";
 const SUPPLIER_STORE = "suppliers";
 const SECURE_OFFLINE_SNAPSHOT_STORE = "secureOfflineSnapshots";
+const OFFLINE_UNLOCK_PROFILE_STORE = "offlineUnlockProfiles";
 const SCHEDULE_LATER_WINDOW_DAYS = 42;
 const DEFAULT_JOB_DURATION_MINUTES = 90;
 const DAILY_TECH_CAPACITY_MINUTES = 8 * 60;
@@ -497,6 +498,9 @@ let state = {
   offlineMode: false,
   offlineSyncPending: false,
   offlineSyncNoticeShown: false,
+  offlineUnlockKey: null,
+  offlineUnlockProfileId: "",
+  offlineAccessMode: "enable",
   lastSupabaseNetworkToastAt: 0,
   lastProductionLinkWarningAt: 0,
   selectedJobId: null,
@@ -553,6 +557,9 @@ const elements = {
   toastRegion: document.querySelector("#toastRegion"),
   authForm: document.querySelector("#authForm"),
   authGateStatus: document.querySelector("#authGateStatus"),
+  offlineUnlockPanel: document.querySelector("#offlineUnlockPanel"),
+  offlineUnlockProfile: document.querySelector("#offlineUnlockProfile"),
+  offlineUnlockForm: document.querySelector("#offlineUnlockForm"),
   authStatus: document.querySelector("#authStatus"),
   signOutButton: document.querySelector("#signOutButton"),
   newJobButton: document.querySelector("#newJobButton"),
@@ -662,6 +669,11 @@ const elements = {
   printScheduleRange: document.querySelector("#printScheduleRange"),
   printSchedule: document.querySelector("#printSchedule"),
   companySettingsModal: document.querySelector("#companySettingsModal"),
+  offlineAccessButton: document.querySelector("#offlineAccessButton"),
+  offlineAccessModal: document.querySelector("#offlineAccessModal"),
+  offlineAccessForm: document.querySelector("#offlineAccessForm"),
+  offlineAccessTitle: document.querySelector("#offlineAccessTitle"),
+  offlineAccessDetail: document.querySelector("#offlineAccessDetail"),
   companySettingsForm: document.querySelector("#companySettingsForm"),
   workspaceSetupProgress: document.querySelector("#workspaceSetupProgress"),
   templateSettingsList: document.querySelector("#templateSettingsList"),
@@ -942,11 +954,116 @@ function secureOfflineSnapshotPayload(options = {}) {
   };
 }
 
+function offlineUnlockProfileId(orgId = state.organizationId, userId = state.currentUser?.id) {
+  return orgId && userId ? `offline-unlock:${userId}:${orgId}` : "";
+}
+
+function bytesToBase64(bytes) {
+  let binary = "";
+  const chunkSize = 0x8000;
+  for (let index = 0; index < bytes.length; index += chunkSize) {
+    binary += String.fromCharCode(...bytes.subarray(index, index + chunkSize));
+  }
+  return btoa(binary);
+}
+
+function base64ToBytes(value) {
+  return Uint8Array.from(atob(String(value || "")), (character) => character.charCodeAt(0));
+}
+
+async function offlineUnlockKeyFromPin(pin, salt) {
+  if (!window.crypto?.subtle) throw new Error("This browser cannot protect offline access. Update the browser, then try again.");
+  const material = await window.crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(pin),
+    "PBKDF2",
+    false,
+    ["deriveKey"]
+  );
+  return window.crypto.subtle.deriveKey(
+    { name: "PBKDF2", salt, iterations: 210000, hash: "SHA-256" },
+    material,
+    { name: "AES-GCM", length: 256 },
+    false,
+    ["encrypt", "decrypt"]
+  );
+}
+
+async function encryptOfflineSnapshot(snapshot, key) {
+  const iv = window.crypto.getRandomValues(new Uint8Array(12));
+  const plaintext = new TextEncoder().encode(JSON.stringify(snapshot));
+  const ciphertext = await window.crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, plaintext);
+  return { iv: bytesToBase64(iv), ciphertext: bytesToBase64(new Uint8Array(ciphertext)) };
+}
+
+async function decryptOfflineSnapshot(profile, key) {
+  const iv = base64ToBytes(profile.iv);
+  const ciphertext = base64ToBytes(profile.ciphertext);
+  const plaintext = await window.crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, ciphertext);
+  return JSON.parse(new TextDecoder().decode(plaintext));
+}
+
+async function offlineUnlockProfileForWorkspace(orgId = state.organizationId, userId = state.currentUser?.id) {
+  const id = offlineUnlockProfileId(orgId, userId);
+  if (!id) return null;
+  const db = await openDatabase();
+  return readStoreRecord(db, OFFLINE_UNLOCK_PROFILE_STORE, id);
+}
+
+async function offlineUnlockProfiles() {
+  try {
+    const db = await openDatabase();
+    return (await readStore(db, OFFLINE_UNLOCK_PROFILE_STORE))
+      .filter((profile) => profile?.id && profile?.userId && profile?.organizationId && profile?.ciphertext && profile?.salt)
+      .sort((a, b) => new Date(b.updatedAt || b.createdAt || 0) - new Date(a.updatedAt || a.createdAt || 0));
+  } catch {
+    return [];
+  }
+}
+
+function applySecureOfflineSnapshot(snapshot) {
+  if (!snapshot?.organizationId || !snapshot?.userId) return false;
+  state.secureMode = true;
+  state.databaseReady = true;
+  state.organizationId = snapshot.organizationId;
+  state.userRole = snapshot.userRole || "owner";
+  state.isCreator = snapshot.isCreator === true;
+  state.jobs = Array.isArray(snapshot.jobs) ? snapshot.jobs.map(ensureJobDefaults) : [];
+  state.customers = Array.isArray(snapshot.customers) ? snapshot.customers.map(normalizeCustomerRecord) : buildCustomersFromJobs(state.jobs);
+  state.deletedJobs = Array.isArray(snapshot.deletedJobs) ? snapshot.deletedJobs.map(ensureDeletedJobDefaults) : [];
+  state.activityEvents = Array.isArray(snapshot.activityEvents) ? snapshot.activityEvents : [];
+  state.pricebookItems = Array.isArray(snapshot.pricebookItems) ? snapshot.pricebookItems.map(normalizePricebookItem) : [];
+  state.suppliers = Array.isArray(snapshot.suppliers) ? snapshot.suppliers.map(normalizeSupplierRecord) : [];
+  state.companySettings = normalizeCompanySettings(snapshot.companySettings || {});
+  state.automations = { ...defaultAutomations, ...(snapshot.automations || {}) };
+  state.teamMembers = Array.isArray(snapshot.teamMembers) ? snapshot.teamMembers : [];
+  state.teamInvites = Array.isArray(snapshot.teamInvites) ? snapshot.teamInvites : [];
+  state.offlineSyncPending = snapshot.pending === true;
+  state.offlineMode = navigator.onLine === false;
+  saveSelectedWorkspaceId(state.organizationId);
+  saveSecureCompanySettingsBackup(state.companySettings, state.suppliers);
+  return true;
+}
+
 async function saveSecureOfflineSnapshot(options = {}) {
   const snapshot = secureOfflineSnapshotPayload(options);
   if (!snapshot) return false;
   try {
     const db = await openDatabase();
+    const profile = await readStoreRecord(db, OFFLINE_UNLOCK_PROFILE_STORE, offlineUnlockProfileId());
+    if (profile) {
+      if (!state.offlineUnlockKey || state.offlineUnlockProfileId !== profile.id) return false;
+      const encrypted = await encryptOfflineSnapshot(snapshot, state.offlineUnlockKey);
+      await writeStoreRecord(db, OFFLINE_UNLOCK_PROFILE_STORE, {
+        ...profile,
+        ...encrypted,
+        pending: snapshot.pending,
+        updatedAt: snapshot.savedAt
+      });
+      await deleteStoreRecord(db, SECURE_OFFLINE_SNAPSHOT_STORE, snapshot.key);
+      state.offlineSyncPending = snapshot.pending;
+      return true;
+    }
     await writeStoreRecord(db, SECURE_OFFLINE_SNAPSHOT_STORE, snapshot);
     state.offlineSyncPending = snapshot.pending;
     return true;
@@ -966,27 +1083,7 @@ async function restoreSecureOfflineSnapshot(options = {}) {
     const snapshot = await readStoreRecord(db, SECURE_OFFLINE_SNAPSHOT_STORE, key);
     if (!snapshot || snapshot.organizationId !== orgId || snapshot.userId !== userId) return false;
     if (options.pendingOnly && !snapshot.pending) return false;
-
-    state.secureMode = true;
-    state.databaseReady = true;
-    state.organizationId = snapshot.organizationId;
-    state.userRole = snapshot.userRole || "owner";
-    state.isCreator = snapshot.isCreator === true;
-    state.jobs = Array.isArray(snapshot.jobs) ? snapshot.jobs.map(ensureJobDefaults) : [];
-    state.customers = Array.isArray(snapshot.customers) ? snapshot.customers.map(normalizeCustomerRecord) : buildCustomersFromJobs(state.jobs);
-    state.deletedJobs = Array.isArray(snapshot.deletedJobs) ? snapshot.deletedJobs.map(ensureDeletedJobDefaults) : [];
-    state.activityEvents = Array.isArray(snapshot.activityEvents) ? snapshot.activityEvents : [];
-    state.pricebookItems = Array.isArray(snapshot.pricebookItems) ? snapshot.pricebookItems.map(normalizePricebookItem) : [];
-    state.suppliers = Array.isArray(snapshot.suppliers) ? snapshot.suppliers.map(normalizeSupplierRecord) : [];
-    state.companySettings = normalizeCompanySettings(snapshot.companySettings || {});
-    state.automations = { ...defaultAutomations, ...(snapshot.automations || {}) };
-    state.teamMembers = Array.isArray(snapshot.teamMembers) ? snapshot.teamMembers : [];
-    state.teamInvites = Array.isArray(snapshot.teamInvites) ? snapshot.teamInvites : [];
-    state.offlineSyncPending = snapshot.pending === true;
-    state.offlineMode = navigator.onLine === false;
-    saveSelectedWorkspaceId(state.organizationId);
-    saveSecureCompanySettingsBackup(state.companySettings, state.suppliers);
-    return true;
+    return applySecureOfflineSnapshot(snapshot);
   } catch {
     return false;
   }
@@ -1005,6 +1102,143 @@ function showOfflineSaveNotice() {
     "warning",
     { id: "offline-save", timeout: 6000 }
   );
+}
+
+function validOfflinePin(pin) {
+  return /^\d{6}$/.test(String(pin || ""));
+}
+
+async function enableOfflineAccess(pin) {
+  if (!validOfflinePin(pin)) throw new Error("Use a six-digit PIN for offline access.");
+  const snapshot = secureOfflineSnapshotPayload({ pending: state.offlineSyncPending });
+  if (!snapshot) throw new Error("Open a secure workspace before enabling offline access.");
+  if (!window.crypto?.subtle) throw new Error("This browser cannot protect offline access. Update the browser, then try again.");
+
+  const salt = window.crypto.getRandomValues(new Uint8Array(16));
+  const key = await offlineUnlockKeyFromPin(pin, salt);
+  const encrypted = await encryptOfflineSnapshot(snapshot, key);
+  const profile = {
+    id: offlineUnlockProfileId(),
+    userId: state.currentUser.id,
+    organizationId: state.organizationId,
+    email: state.currentUser.email || "",
+    displayName: displayPersonName(accountDisplayName()) || state.currentUser.email || "Backline user",
+    salt: bytesToBase64(salt),
+    ...encrypted,
+    pending: snapshot.pending,
+    createdAt: new Date().toISOString(),
+    updatedAt: snapshot.savedAt
+  };
+  const db = await openDatabase();
+  await writeStoreRecord(db, OFFLINE_UNLOCK_PROFILE_STORE, profile);
+  await deleteStoreRecord(db, SECURE_OFFLINE_SNAPSHOT_STORE, snapshot.key);
+  state.offlineUnlockKey = key;
+  state.offlineUnlockProfileId = profile.id;
+  state.offlineSyncPending = snapshot.pending;
+  return profile;
+}
+
+async function unlockCurrentOfflineAccess(pin) {
+  if (!validOfflinePin(pin)) throw new Error("Enter your six-digit offline PIN.");
+  const profile = await offlineUnlockProfileForWorkspace();
+  if (!profile) throw new Error("Offline access has not been enabled for this workspace on this device.");
+  try {
+    const key = await offlineUnlockKeyFromPin(pin, base64ToBytes(profile.salt));
+    const snapshot = await decryptOfflineSnapshot(profile, key);
+    state.offlineUnlockKey = key;
+    state.offlineUnlockProfileId = profile.id;
+    return { profile, snapshot };
+  } catch {
+    throw new Error("That offline PIN is not correct.");
+  }
+}
+
+async function unlockOfflineWorkspace(profileId, pin) {
+  if (!validOfflinePin(pin)) throw new Error("Enter your six-digit offline PIN.");
+  const profiles = await offlineUnlockProfiles();
+  const profile = profiles.find((item) => item.id === profileId) || profiles[0];
+  if (!profile) throw new Error("No protected offline workspace is saved on this device.");
+  try {
+    const key = await offlineUnlockKeyFromPin(pin, base64ToBytes(profile.salt));
+    const snapshot = await decryptOfflineSnapshot(profile, key);
+    if (snapshot.userId !== profile.userId || snapshot.organizationId !== profile.organizationId) {
+      throw new Error("Saved workspace could not be verified.");
+    }
+    state.currentUser = {
+      id: profile.userId,
+      email: profile.email,
+      user_metadata: { display_name: profile.displayName, full_name: profile.displayName }
+    };
+    if (!applySecureOfflineSnapshot(snapshot)) throw new Error("Saved workspace could not be verified.");
+    state.offlineUnlockKey = key;
+    state.offlineUnlockProfileId = profile.id;
+    state.offlineMode = true;
+    updateAuthStatus();
+    return profile;
+  } catch (error) {
+    if (error?.message === "Saved workspace could not be verified.") throw error;
+    throw new Error("That offline PIN is not correct.");
+  }
+}
+
+async function showOfflineUnlockGate() {
+  if (navigator.onLine !== false) return false;
+  const profiles = await offlineUnlockProfiles();
+  if (!profiles.length) return false;
+  const profile = profiles[0];
+  setAuthGate(true);
+  elements.authGate.classList.add("offline-unlock-mode");
+  elements.offlineUnlockPanel.hidden = false;
+  elements.offlineUnlockPanel.dataset.profileId = profile.id;
+  elements.offlineUnlockProfile.textContent = `${profile.displayName || profile.email || "Saved workspace"} is available on this device.`;
+  elements.authGateStatus.textContent = "You are offline. Enter the device PIN to open the saved workspace.";
+  elements.offlineUnlockForm?.reset();
+  elements.offlineUnlockForm?.elements.pin?.focus();
+  return true;
+}
+
+function hideOfflineUnlockGate() {
+  elements.authGate.classList.remove("offline-unlock-mode");
+  elements.offlineUnlockPanel.hidden = true;
+  elements.offlineUnlockPanel.dataset.profileId = "";
+  elements.offlineUnlockForm?.reset();
+}
+
+async function openOfflineAccessModal() {
+  if (!state.secureMode || !state.currentUser || !state.organizationId) return;
+  closeSettingsMenu();
+  const profile = await offlineUnlockProfileForWorkspace();
+  state.offlineAccessMode = profile ? "unlock" : "enable";
+  const confirmField = elements.offlineAccessForm?.querySelector("[data-offline-pin-confirm]");
+  const confirmInput = elements.offlineAccessForm?.elements.confirmPin;
+  const submit = elements.offlineAccessForm?.querySelector("#offlineAccessSubmit");
+  elements.offlineAccessForm?.reset();
+  document.querySelector("#offlineAccessStatus").textContent = "";
+  if (profile) {
+    elements.offlineAccessTitle.textContent = "Refresh protected offline access";
+    elements.offlineAccessDetail.textContent = "Enter the six-digit PIN to refresh this device's encrypted workspace copy.";
+    if (confirmField) confirmField.hidden = true;
+    if (confirmInput) confirmInput.required = false;
+    if (submit) submit.textContent = "Unlock and refresh";
+  } else {
+    elements.offlineAccessTitle.textContent = "Enable offline access";
+    elements.offlineAccessDetail.textContent = "Set a six-digit PIN to protect the workspace saved on this device for jobsite use.";
+    if (confirmField) confirmField.hidden = false;
+    if (confirmInput) confirmInput.required = true;
+    if (submit) submit.textContent = "Enable offline access";
+  }
+  elements.offlineAccessModal.showModal();
+  elements.offlineAccessForm?.elements.pin?.focus();
+}
+
+async function promptForProtectedOfflineSync() {
+  const profile = await offlineUnlockProfileForWorkspace();
+  if (!profile?.pending || state.offlineUnlockProfileId === profile.id) return false;
+  elements.storageStatus.textContent = "Offline work is protected - enter PIN to upload it";
+  requestAnimationFrame(() => {
+    void openOfflineAccessModal();
+  });
+  return true;
 }
 
 function loadTutorialGuideDismissals() {
@@ -3028,6 +3262,8 @@ function setAuthGate(visible, message = "") {
   document.body.classList.toggle("auth-mode", visible);
   if (visible) {
     resetAuthCreateAccountState();
+  } else {
+    hideOfflineUnlockGate();
   }
   if (message) {
     elements.authGateStatus.textContent = message;
@@ -3047,6 +3283,8 @@ function resetSecureWorkspaceState() {
   state.offlineMode = false;
   state.offlineSyncPending = false;
   state.offlineSyncNoticeShown = false;
+  state.offlineUnlockKey = null;
+  state.offlineUnlockProfileId = "";
   state.organizationId = null;
   state.jobs = [];
   state.deletedJobs = [];
@@ -3197,6 +3435,7 @@ async function setupSecureBackend() {
   try {
     sessionResult = await client.auth.getSession();
   } catch (caughtError) {
+    if (await showOfflineUnlockGate()) return true;
     elements.storageStatus.textContent = "Secure database connection failed";
     notifySupabaseIssue(caughtError, {
       fallback: "Backline could not check your secure session."
@@ -3221,6 +3460,7 @@ async function setupSecureBackend() {
   updateAuthStatus();
 
   if (!state.currentUser) {
+    if (await showOfflineUnlockGate()) return true;
     setAuthGate(true, "Sign in to load the secure Backline database.");
     return true;
   }
@@ -3239,6 +3479,7 @@ async function setupSecureBackend() {
       return true;
     }
     if (offline) {
+      if (await showOfflineUnlockGate()) return true;
       setAuthGate(true, "You are offline. Sign in once while connected to make this workspace available on this device.");
       elements.storageStatus.textContent = "Offline workspace unavailable";
       return true;
@@ -3250,7 +3491,9 @@ async function setupSecureBackend() {
     const createdOwnerWorkspace = await ensureRemoteOrganization();
     queueOwnerWorkspaceSettingsOnboarding(createdOwnerWorkspace);
     await loadRemoteData();
-    await saveSecureOfflineSnapshot({ pending: false });
+    if (!await promptForProtectedOfflineSync()) {
+      await saveSecureOfflineSnapshot({ pending: false });
+    }
     setAuthGate(false);
     return true;
   } catch (caughtError) {
@@ -3978,6 +4221,11 @@ function openDatabase() {
         snapshots.createIndex("organizationId", "organizationId", { unique: false });
         snapshots.createIndex("userId", "userId", { unique: false });
       }
+      if (!db.objectStoreNames.contains(OFFLINE_UNLOCK_PROFILE_STORE)) {
+        const profiles = db.createObjectStore(OFFLINE_UNLOCK_PROFILE_STORE, { keyPath: "id" });
+        profiles.createIndex("userId", "userId", { unique: false });
+        profiles.createIndex("organizationId", "organizationId", { unique: false });
+      }
     };
 
     request.onsuccess = () => resolve(request.result);
@@ -4192,11 +4440,9 @@ function save() {
         try {
           await persistRemoteData();
           await syncArchivedActiveJobRemovals();
-          if (!await saveSecureOfflineSnapshot({ pending: false })) {
-            throw new Error("Backline saved securely, but could not update this device's offline copy.");
-          }
+          const deviceCopySaved = await saveSecureOfflineSnapshot({ pending: false });
           state.offlineMode = false;
-          return { offline: false };
+          return { offline: false, deviceCopySaved };
         } catch (caughtError) {
           if (!isSupabaseNetworkError(caughtError)) throw caughtError;
           state.offlineMode = true;
@@ -4213,7 +4459,9 @@ function save() {
           return;
         }
         lastRemoteRefreshAt = Date.now();
-        elements.storageStatus.textContent = `Secure database saved ${new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`;
+        elements.storageStatus.textContent = result?.deviceCopySaved === false
+          ? "Secure database saved - unlock offline access to refresh this device"
+          : `Secure database saved ${new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`;
       })
       .catch((caughtError) => {
         elements.storageStatus.textContent = "Secure database save failed";
@@ -5403,6 +5651,15 @@ function writeStoreRecord(db, storeName, record) {
   return new Promise((resolve, reject) => {
     const transaction = db.transaction(storeName, "readwrite");
     transaction.objectStore(storeName).put(record);
+    transaction.oncomplete = () => resolve();
+    transaction.onerror = () => reject(transaction.error);
+  });
+}
+
+function deleteStoreRecord(db, storeName, key) {
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(storeName, "readwrite");
+    transaction.objectStore(storeName).delete(key);
     transaction.oncomplete = () => resolve();
     transaction.onerror = () => reject(transaction.error);
   });
@@ -20693,6 +20950,11 @@ document.addEventListener("click", async (event) => {
     return;
   }
 
+  if (event.target.closest("#offlineAccessButton")) {
+    await openOfflineAccessModal();
+    return;
+  }
+
   if (event.target.closest("[data-add-template-card]")) {
     const template = newCustomTemplateDefinition();
     elements.templateSettingsList?.insertAdjacentHTML("beforeend", renderTemplateSettingsCard(template, templateSettings()));
@@ -20827,6 +21089,14 @@ document.addEventListener("click", async (event) => {
       oauthButton.disabled = false;
       elements.authGateStatus.textContent = friendlyAuthError(error);
     }
+    return;
+  }
+
+  if (event.target.closest("[data-offline-unlock-online]")) {
+    hideOfflineUnlockGate();
+    elements.authGateStatus.textContent = navigator.onLine === false
+      ? "Connect to the internet to sign in, or enter the offline PIN to open the saved workspace."
+      : "Sign in to load your secure Backline workspace.";
     return;
   }
 
@@ -21687,6 +21957,10 @@ document.addEventListener("click", async (event) => {
   }
   if (cancelModal === "company-settings") {
     elements.companySettingsModal.close("cancel");
+    return;
+  }
+  if (cancelModal === "offline-access") {
+    elements.offlineAccessModal.close("cancel");
     return;
   }
   if (cancelModal === "onboarding-guide") {
@@ -22561,6 +22835,68 @@ document.addEventListener("submit", async (event) => {
     return;
   }
 
+  const offlineUnlockForm = event.target.closest("#offlineUnlockForm");
+  if (offlineUnlockForm) {
+    event.preventDefault();
+    const submit = event.submitter || offlineUnlockForm.querySelector("button[type='submit']");
+    submit.disabled = true;
+    try {
+      await unlockOfflineWorkspace(
+        elements.offlineUnlockPanel.dataset.profileId,
+        String(new FormData(offlineUnlockForm).get("pin") || "")
+      );
+      setAuthGate(false);
+      elements.storageStatus.textContent = state.offlineSyncPending ? offlineSaveStatus() : "Offline - using data saved on this device";
+      routeFromHash();
+      showToast("Workspace unlocked", "You are using the protected copy saved on this device.", "success", {
+        id: "offline-unlock",
+        timeout: 4000
+      });
+    } catch (error) {
+      elements.authGateStatus.textContent = error?.message || "Backline could not unlock the saved workspace.";
+      offlineUnlockForm.elements.pin?.select();
+    } finally {
+      submit.disabled = false;
+    }
+    return;
+  }
+
+  const offlineAccessForm = event.target.closest("#offlineAccessForm");
+  if (offlineAccessForm) {
+    event.preventDefault();
+    const formData = new FormData(offlineAccessForm);
+    const pin = String(formData.get("pin") || "");
+    const confirmPin = String(formData.get("confirmPin") || "");
+    const status = document.querySelector("#offlineAccessStatus");
+    const submit = event.submitter || offlineAccessForm.querySelector("button[type='submit']");
+    status.textContent = "";
+    submit.disabled = true;
+    try {
+      if (state.offlineAccessMode === "enable") {
+        if (pin !== confirmPin) throw new Error("The PIN entries do not match.");
+        await enableOfflineAccess(pin);
+        elements.offlineAccessModal.close("enabled");
+        showToast("Offline access enabled", "This workspace is now protected by the PIN on this device.", "success");
+      } else {
+        const { profile, snapshot } = await unlockCurrentOfflineAccess(pin);
+        if (profile.pending) {
+          if (!applySecureOfflineSnapshot(snapshot)) throw new Error("The protected offline workspace could not be restored.");
+          await syncPendingOfflineChanges();
+        } else if (!await saveSecureOfflineSnapshot({ pending: false })) {
+          throw new Error("Backline could not refresh the protected offline workspace.");
+        }
+        elements.offlineAccessModal.close("refreshed");
+        render();
+        showToast("Offline access refreshed", "This device now has the latest protected workspace copy.", "success");
+      }
+    } catch (error) {
+      status.textContent = error?.message || "Backline could not update offline access.";
+    } finally {
+      submit.disabled = false;
+    }
+    return;
+  }
+
   const authForm = event.target.closest("#authForm");
   if (authForm) {
     event.preventDefault();
@@ -22646,7 +22982,10 @@ document.addEventListener("submit", async (event) => {
       queueOwnerWorkspaceSettingsOnboarding(mode === "signup" && createdOwnerWorkspace);
       await loadRemoteData();
       state.selectedJobId = state.jobs[0]?.id || null;
-      elements.storageStatus.textContent = "Secure database ready";
+      if (!await promptForProtectedOfflineSync()) {
+        await saveSecureOfflineSnapshot({ pending: false });
+        elements.storageStatus.textContent = "Secure database ready";
+      }
       setAuthGate(false);
       routeFromHash();
       openQueuedWorkspaceSettings();
@@ -23366,7 +23705,7 @@ function registerBacklineServiceWorker() {
   if (window.location.protocol === "file:" || !("serviceWorker" in navigator)) return;
   window.addEventListener("load", () => {
     navigator.serviceWorker
-      .register("./service-worker.js?v=20260821-offline-sync", { scope: "./" })
+      .register("./service-worker.js?v=20260821-offline-unlock", { scope: "./" })
       .catch((error) => console.warn("Backline service worker registration failed.", error));
   });
 }
