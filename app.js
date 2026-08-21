@@ -10,6 +10,7 @@ const SELECTED_WORKSPACE_KEY_PREFIX = "backline.selectedWorkspace";
 const FOUNDRY_PILOT_CRM_KEY = "backline.foundryPilotCrm.v1";
 const THEME_KEY = "backline.theme.v1";
 const TUTORIAL_GUIDE_KEY = "backline.tutorialGuideDismissals.v1";
+const CONTEXTUAL_HELP_ENABLED_KEY = "backline.contextualHelpEnabled.v1";
 const OWNER_ONBOARDING_KEY = "backline.ownerOnboardingEmail.v1";
 const DATABASE_NAME = "backline.field-service";
 const DATABASE_VERSION = 5;
@@ -521,6 +522,7 @@ let state = {
   onboardingChecklistExpanded: false,
   tutorialGuideDismissals: loadTutorialGuideDismissals(),
   contextualGuideOpen: false,
+  contextualHelpEnabled: loadContextualHelpEnabled(),
   expandedPanels: {},
   jobActionMenuOpen: false,
   messageThreadHeight: MESSAGE_THREAD_DEFAULT_HEIGHT,
@@ -553,6 +555,8 @@ const elements = {
   onboardingPanel: document.querySelector("#onboardingPanel"),
   onboardingGuideModal: document.querySelector("#onboardingGuideModal"),
   contextualGuide: document.querySelector("#contextualGuide"),
+  contextualHelpButton: document.querySelector("[data-open-contextual-guide]"),
+  contextualHelpToggle: document.querySelector("#contextualHelpToggle"),
   jobFormGuide: document.querySelector("#jobFormGuide"),
   approvalPage: document.querySelector("#approvalPage"),
   attentionSummary: document.querySelector("#attentionSummary"),
@@ -920,6 +924,35 @@ function saveTutorialGuideDismissals() {
   } catch {
     // Help preferences are optional and should never interrupt shop work.
   }
+}
+
+function loadContextualHelpEnabled() {
+  try {
+    return localStorage.getItem(CONTEXTUAL_HELP_ENABLED_KEY) !== "false";
+  } catch {
+    return true;
+  }
+}
+
+function renderContextualHelpControls() {
+  if (elements.contextualHelpButton) {
+    elements.contextualHelpButton.hidden = !state.contextualHelpEnabled;
+  }
+  if (elements.contextualHelpToggle) {
+    elements.contextualHelpToggle.checked = state.contextualHelpEnabled;
+  }
+}
+
+function setContextualHelpEnabled(enabled) {
+  state.contextualHelpEnabled = Boolean(enabled);
+  state.contextualGuideOpen = false;
+  try {
+    localStorage.setItem(CONTEXTUAL_HELP_ENABLED_KEY, String(state.contextualHelpEnabled));
+  } catch {
+    // This optional preference should not interrupt shop work.
+  }
+  renderContextualHelpControls();
+  renderContextualGuide();
 }
 
 function roleSlug(value) {
@@ -10020,6 +10053,7 @@ function renderPrintRangePicker(value = "today") {
 function renderSettingsPickers() {
   renderThemePicker();
   renderPrintRangePicker();
+  renderContextualHelpControls();
 }
 
 function renderSupplierPreferredContactPicker(value = "phone") {
@@ -11999,7 +12033,7 @@ function renderContextualGuide() {
   if (!elements.contextualGuide) return;
   const view = activeViewName();
   const guide = contextualGuides[view];
-  const hidden = !guide || (state.tutorialGuideDismissals[view] && !state.contextualGuideOpen);
+  const hidden = !state.contextualHelpEnabled || !guide || (state.tutorialGuideDismissals[view] && !state.contextualGuideOpen);
   elements.contextualGuide.hidden = hidden;
   if (hidden) {
     elements.contextualGuide.innerHTML = "";
@@ -21329,6 +21363,7 @@ document.addEventListener("click", async (event) => {
   }
 
   if (event.target.closest("[data-open-contextual-guide]")) {
+    if (!state.contextualHelpEnabled) return;
     state.contextualGuideOpen = true;
     renderContextualGuide();
     return;
@@ -22605,6 +22640,11 @@ document.addEventListener("submit", async (event) => {
 });
 
 document.addEventListener("change", (event) => {
+  if (event.target.matches("#contextualHelpToggle")) {
+    setContextualHelpEnabled(event.target.checked);
+    return;
+  }
+
   const pilotScore = event.target.closest("[data-foundry-pilot-score]");
   if (pilotScore) {
     updateFoundryPilotRecord(pilotScore.dataset.foundryPilotScore, {

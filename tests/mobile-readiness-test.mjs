@@ -113,6 +113,7 @@ has(phone, /\.contextual-guide-actions \{[\s\S]*?width: 100%;[\s\S]*?justify-con
 has(css, /\.onboarding-current \{[\s\S]*?padding: 16px;/, "onboarding copy should not sit against the panel edge");
 has(css, /\.onboarding-tour-list li \{[\s\S]*?padding: 16px;/, "quick tour rows should have consistent breathing room");
 has(css, /\.contextual-guide \{[\s\S]*?grid-template-columns: minmax\(0, 1fr\) auto;[\s\S]*?border-left: 4px solid var\(--blue\);/, "contextual help should use a compact two-column desktop layout with a clear visual anchor");
+has(css, /\.settings-section \.settings-toggle \{[\s\S]*?grid-template-columns: minmax\(0, 1fr\) auto;[\s\S]*?align-items: center;/, "help preference should use a compact settings toggle instead of a full-width action button");
 has(phone, /\.job-row \{[\s\S]*?padding: 12px;/, "phone inbox rows should use compact card padding");
 has(phone, /\.job-row-top,[\s\S]*?\.job-row-bottom \{[\s\S]*?align-items: flex-start;[\s\S]*?justify-content: flex-start;/, "phone inbox row metadata should not collide");
 has(phone, /\.detail-panel,[\s\S]*?\.detail-panel\.panel,[\s\S]*?#view-inbox\.active \.detail-panel \{[\s\S]*?overflow-x: clip;[\s\S]*?overflow-y: visible;/, "phone selected job detail should clip sideways overflow while allowing vertical page scrolling");
