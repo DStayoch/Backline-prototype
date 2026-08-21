@@ -530,7 +530,10 @@ assert.match(js, /const sessionUser = data\.session\?\.user \|\| null;\s+resetSe
 assert.match(js, /if \(!secureConfigured && !isSupabaseConfigured\(\)\) \{\s+await loadDatabaseData\(\);/s);
 assert.match(js, /const hasPlaceholder =/);
 assert.match(js, /config\.url && config\.anonKey && !hasPlaceholder && window\.supabase\?\.createClient/);
-assert.match(js, /if \(state\.secureMode\) \{\s+saveSecureCompanySettingsBackup\(state\.companySettings, state\.suppliers\);\s+elements\.storageStatus\.textContent = `Saving secure database/s);
+assert.match(js, /if \(state\.secureMode\) \{\s+saveSecureCompanySettingsBackup\(state\.companySettings, state\.suppliers\);\s+elements\.storageStatus\.textContent = navigator\.onLine === false/s);
+assert.match(js, /async function saveSecureOfflineSnapshot/);
+assert.match(js, /async function restoreSecureOfflineSnapshot/);
+assert.match(js, /async function syncPendingOfflineChanges/);
 assert.match(js, /if \(state\.customers\.length\) \{\s+writes\.push\(client\.from\("customers"\)\.upsert/s);
 assert.match(js, /if \(state\.jobs\.length\) \{\s+writes\.push\(client\.from\("jobs"\)\.upsert/s);
 assert.match(js, /data-auth-back-login/);

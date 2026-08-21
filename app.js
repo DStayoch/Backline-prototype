@@ -13,13 +13,14 @@ const TUTORIAL_GUIDE_KEY = "backline.tutorialGuideDismissals.v1";
 const CONTEXTUAL_HELP_ENABLED_KEY = "backline.contextualHelpEnabled.v1";
 const OWNER_ONBOARDING_KEY = "backline.ownerOnboardingEmail.v1";
 const DATABASE_NAME = "backline.field-service";
-const DATABASE_VERSION = 5;
+const DATABASE_VERSION = 6;
 const JOB_STORE = "jobs";
 const CUSTOMER_STORE = "customers";
 const DELETED_JOB_STORE = "deletedJobs";
 const ACTIVITY_STORE = "activityEvents";
 const PRICEBOOK_STORE = "pricebookItems";
 const SUPPLIER_STORE = "suppliers";
+const SECURE_OFFLINE_SNAPSHOT_STORE = "secureOfflineSnapshots";
 const SCHEDULE_LATER_WINDOW_DAYS = 42;
 const DEFAULT_JOB_DURATION_MINUTES = 90;
 const DAILY_TECH_CAPACITY_MINUTES = 8 * 60;
@@ -493,6 +494,9 @@ let state = {
   organizationId: null,
   userRole: "owner",
   supabaseClient: null,
+  offlineMode: false,
+  offlineSyncPending: false,
+  offlineSyncNoticeShown: false,
   lastSupabaseNetworkToastAt: 0,
   lastProductionLinkWarningAt: 0,
   selectedJobId: null,
@@ -542,6 +546,7 @@ let state = {
 let messageThreadResize = null;
 let lastRemoteRefreshAt = 0;
 let secureSavePromise = null;
+let offlineSyncPromise = null;
 
 const elements = {
   authGate: document.querySelector("#authGate"),
@@ -907,6 +912,99 @@ function loadThemePreference() {
   } catch {
     return "light";
   }
+}
+
+function secureOfflineSnapshotKey(orgId = state.organizationId, userId = state.currentUser?.id) {
+  return orgId && userId ? `${userId}:${orgId}` : "";
+}
+
+function secureOfflineSnapshotPayload(options = {}) {
+  const key = secureOfflineSnapshotKey();
+  if (!key) return null;
+  return {
+    key,
+    organizationId: state.organizationId,
+    userId: state.currentUser.id,
+    userRole: state.userRole,
+    isCreator: state.isCreator,
+    jobs: state.jobs.map(ensureJobDefaults),
+    customers: state.customers.map(normalizeCustomerRecord),
+    deletedJobs: state.deletedJobs.map(ensureDeletedJobDefaults),
+    activityEvents: state.activityEvents,
+    pricebookItems: state.pricebookItems.map(normalizePricebookItem),
+    suppliers: state.suppliers.map(normalizeSupplierRecord),
+    companySettings: normalizeCompanySettings(state.companySettings),
+    automations: { ...defaultAutomations, ...state.automations },
+    teamMembers: state.teamMembers,
+    teamInvites: state.teamInvites,
+    pending: Boolean(options.pending),
+    savedAt: new Date().toISOString()
+  };
+}
+
+async function saveSecureOfflineSnapshot(options = {}) {
+  const snapshot = secureOfflineSnapshotPayload(options);
+  if (!snapshot) return false;
+  try {
+    const db = await openDatabase();
+    await writeStoreRecord(db, SECURE_OFFLINE_SNAPSHOT_STORE, snapshot);
+    state.offlineSyncPending = snapshot.pending;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function restoreSecureOfflineSnapshot(options = {}) {
+  const orgId = options.organizationId || loadSelectedWorkspaceId();
+  const userId = state.currentUser?.id;
+  const key = secureOfflineSnapshotKey(orgId, userId);
+  if (!key) return false;
+
+  try {
+    const db = await openDatabase();
+    const snapshot = await readStoreRecord(db, SECURE_OFFLINE_SNAPSHOT_STORE, key);
+    if (!snapshot || snapshot.organizationId !== orgId || snapshot.userId !== userId) return false;
+    if (options.pendingOnly && !snapshot.pending) return false;
+
+    state.secureMode = true;
+    state.databaseReady = true;
+    state.organizationId = snapshot.organizationId;
+    state.userRole = snapshot.userRole || "owner";
+    state.isCreator = snapshot.isCreator === true;
+    state.jobs = Array.isArray(snapshot.jobs) ? snapshot.jobs.map(ensureJobDefaults) : [];
+    state.customers = Array.isArray(snapshot.customers) ? snapshot.customers.map(normalizeCustomerRecord) : buildCustomersFromJobs(state.jobs);
+    state.deletedJobs = Array.isArray(snapshot.deletedJobs) ? snapshot.deletedJobs.map(ensureDeletedJobDefaults) : [];
+    state.activityEvents = Array.isArray(snapshot.activityEvents) ? snapshot.activityEvents : [];
+    state.pricebookItems = Array.isArray(snapshot.pricebookItems) ? snapshot.pricebookItems.map(normalizePricebookItem) : [];
+    state.suppliers = Array.isArray(snapshot.suppliers) ? snapshot.suppliers.map(normalizeSupplierRecord) : [];
+    state.companySettings = normalizeCompanySettings(snapshot.companySettings || {});
+    state.automations = { ...defaultAutomations, ...(snapshot.automations || {}) };
+    state.teamMembers = Array.isArray(snapshot.teamMembers) ? snapshot.teamMembers : [];
+    state.teamInvites = Array.isArray(snapshot.teamInvites) ? snapshot.teamInvites : [];
+    state.offlineSyncPending = snapshot.pending === true;
+    state.offlineMode = navigator.onLine === false;
+    saveSelectedWorkspaceId(state.organizationId);
+    saveSecureCompanySettingsBackup(state.companySettings, state.suppliers);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function offlineSaveStatus() {
+  return "Offline - saved to this device; sync pending";
+}
+
+function showOfflineSaveNotice() {
+  if (state.offlineSyncNoticeShown) return;
+  state.offlineSyncNoticeShown = true;
+  showToast(
+    "Saved offline",
+    "This work is saved on this device and will upload automatically when Backline is back online.",
+    "warning",
+    { id: "offline-save", timeout: 6000 }
+  );
 }
 
 function loadTutorialGuideDismissals() {
@@ -2946,6 +3044,9 @@ function setAccountSwitching(active, message = "") {
 function resetSecureWorkspaceState() {
   state.secureMode = false;
   state.isCreator = false;
+  state.offlineMode = false;
+  state.offlineSyncPending = false;
+  state.offlineSyncNoticeShown = false;
   state.organizationId = null;
   state.jobs = [];
   state.deletedJobs = [];
@@ -3124,12 +3225,44 @@ async function setupSecureBackend() {
     return true;
   }
 
-  await loadCreatorAccess();
-  const createdOwnerWorkspace = await ensureRemoteOrganization();
-  queueOwnerWorkspaceSettingsOnboarding(createdOwnerWorkspace);
-  await loadRemoteData();
-  setAuthGate(false);
-  return true;
+  const offline = navigator.onLine === false;
+  const restoredPendingSnapshot = await restoreSecureOfflineSnapshot({ pendingOnly: true });
+  if (restoredPendingSnapshot || offline) {
+    const restoredSnapshot = restoredPendingSnapshot || await restoreSecureOfflineSnapshot();
+    if (restoredSnapshot) {
+      updateAuthStatus();
+      setAuthGate(false);
+      elements.storageStatus.textContent = state.offlineSyncPending ? offlineSaveStatus() : "Offline - using data saved on this device";
+      if (!offline && state.offlineSyncPending) {
+        void syncPendingOfflineChanges();
+      }
+      return true;
+    }
+    if (offline) {
+      setAuthGate(true, "You are offline. Sign in once while connected to make this workspace available on this device.");
+      elements.storageStatus.textContent = "Offline workspace unavailable";
+      return true;
+    }
+  }
+
+  try {
+    await loadCreatorAccess();
+    const createdOwnerWorkspace = await ensureRemoteOrganization();
+    queueOwnerWorkspaceSettingsOnboarding(createdOwnerWorkspace);
+    await loadRemoteData();
+    await saveSecureOfflineSnapshot({ pending: false });
+    setAuthGate(false);
+    return true;
+  } catch (caughtError) {
+    const restoredSnapshot = await restoreSecureOfflineSnapshot();
+    if (restoredSnapshot && isSupabaseNetworkError(caughtError)) {
+      updateAuthStatus();
+      setAuthGate(false);
+      elements.storageStatus.textContent = state.offlineSyncPending ? offlineSaveStatus() : "Offline - using data saved on this device";
+      return true;
+    }
+    throw caughtError;
+  }
 }
 
 async function ensureRemoteOrganization() {
@@ -3671,10 +3804,77 @@ async function persistRemoteData() {
   await persistRemotePricebookItems();
 }
 
+async function syncArchivedActiveJobRemovals() {
+  const client = getSupabaseClient();
+  if (!client || !state.organizationId || !state.currentUser) return;
+  const jobIds = [...new Set(state.deletedJobs.map((record) => record?.job?.id).filter(Boolean))];
+  if (!jobIds.length) return;
+
+  const results = await Promise.all(jobIds.map((jobId) => client
+    .from("jobs")
+    .delete()
+    .eq("organization_id", state.organizationId)
+    .eq("id", jobId)));
+  const error = results.find((result) => result.error)?.error;
+  if (error) throw error;
+}
+
+async function syncPendingOfflineChanges() {
+  if (!state.secureMode || !state.organizationId || !state.currentUser || navigator.onLine === false) return false;
+  if (!state.offlineSyncPending) return true;
+  if (offlineSyncPromise) return offlineSyncPromise;
+
+  const syncJob = (async () => {
+    elements.storageStatus.textContent = "Connection restored - uploading offline changes";
+    try {
+      await persistRemoteData();
+      await syncArchivedActiveJobRemovals();
+      const snapshotSaved = await saveSecureOfflineSnapshot({ pending: false });
+      if (!snapshotSaved) throw new Error("Backline could not confirm the synced device copy.");
+      state.offlineMode = false;
+      state.offlineSyncNoticeShown = false;
+      lastRemoteRefreshAt = Date.now();
+      elements.storageStatus.textContent = `Offline changes synced ${new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`;
+      showToast("Offline changes synced", "Work saved at the jobsite is now in the secure Backline database.", "success", {
+        id: "offline-sync",
+        timeout: 5000
+      });
+      return true;
+    } catch (caughtError) {
+      state.offlineMode = true;
+      await saveSecureOfflineSnapshot({ pending: true });
+      elements.storageStatus.textContent = offlineSaveStatus();
+      if (!isSupabaseNetworkError(caughtError)) {
+        notifySupabaseIssue(caughtError, {
+          fallback: "Backline could not upload the offline changes.",
+          always: true
+        });
+      }
+      return false;
+    }
+  })();
+
+  offlineSyncPromise = syncJob;
+  try {
+    return await syncJob;
+  } finally {
+    if (offlineSyncPromise === syncJob) offlineSyncPromise = null;
+  }
+}
+
 async function refreshRemoteDataIfNeeded(options = {}) {
   if (!state.secureMode || !state.organizationId || !state.currentUser) return;
   if (document.body.classList.contains("approval-mode") || document.body.classList.contains("auth-mode")) return;
   if (hasOpenModalForm()) return;
+  if (navigator.onLine === false) {
+    state.offlineMode = true;
+    elements.storageStatus.textContent = state.offlineSyncPending ? offlineSaveStatus() : "Offline - using data saved on this device";
+    return;
+  }
+  if (state.offlineSyncPending) {
+    await syncPendingOfflineChanges();
+    return;
+  }
   if (secureSavePromise) {
     try {
       await secureSavePromise;
@@ -3687,9 +3887,16 @@ async function refreshRemoteDataIfNeeded(options = {}) {
   lastRemoteRefreshAt = now;
   try {
     await loadRemoteData();
+    await saveSecureOfflineSnapshot({ pending: false });
+    state.offlineMode = false;
     render();
     elements.storageStatus.textContent = `Secure database synced ${new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`;
   } catch (caughtError) {
+    if (isSupabaseNetworkError(caughtError)) {
+      state.offlineMode = true;
+      elements.storageStatus.textContent = "Offline - using data saved on this device";
+      return;
+    }
     elements.storageStatus.textContent = "Secure database sync paused";
     notifySupabaseIssue(caughtError, {
       fallback: "Backline could not refresh the secure database."
@@ -3765,6 +3972,11 @@ function openDatabase() {
       if (!db.objectStoreNames.contains(SUPPLIER_STORE)) {
         const suppliers = db.createObjectStore(SUPPLIER_STORE, { keyPath: "id" });
         suppliers.createIndex("name", "name", { unique: false });
+      }
+      if (!db.objectStoreNames.contains(SECURE_OFFLINE_SNAPSHOT_STORE)) {
+        const snapshots = db.createObjectStore(SECURE_OFFLINE_SNAPSHOT_STORE, { keyPath: "key" });
+        snapshots.createIndex("organizationId", "organizationId", { unique: false });
+        snapshots.createIndex("userId", "userId", { unique: false });
       }
     };
 
@@ -3964,13 +4176,42 @@ function save() {
   syncCustomersFromJobs();
   if (state.secureMode) {
     saveSecureCompanySettingsBackup(state.companySettings, state.suppliers);
-    elements.storageStatus.textContent = `Saving secure database ${new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`;
+    elements.storageStatus.textContent = navigator.onLine === false
+      ? "Saving work to this device"
+      : `Saving secure database ${new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`;
     const saveJob = (secureSavePromise || Promise.resolve())
       .catch(() => {})
-      .then(() => persistRemoteData());
+      .then(async () => {
+        const snapshotSaved = await saveSecureOfflineSnapshot({ pending: true });
+        if (navigator.onLine === false) {
+          state.offlineMode = true;
+          if (!snapshotSaved) throw new Error("Backline could not save this work to the device while offline.");
+          return { offline: true };
+        }
+
+        try {
+          await persistRemoteData();
+          await syncArchivedActiveJobRemovals();
+          if (!await saveSecureOfflineSnapshot({ pending: false })) {
+            throw new Error("Backline saved securely, but could not update this device's offline copy.");
+          }
+          state.offlineMode = false;
+          return { offline: false };
+        } catch (caughtError) {
+          if (!isSupabaseNetworkError(caughtError)) throw caughtError;
+          state.offlineMode = true;
+          if (!snapshotSaved) throw new Error("Backline could not reach the secure database or save this work to the device.");
+          return { offline: true };
+        }
+      });
     secureSavePromise = saveJob;
     saveJob
-      .then(() => {
+      .then((result) => {
+        if (result?.offline) {
+          elements.storageStatus.textContent = offlineSaveStatus();
+          showOfflineSaveNotice();
+          return;
+        }
         lastRemoteRefreshAt = Date.now();
         elements.storageStatus.textContent = `Secure database saved ${new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`;
       })
@@ -5148,6 +5389,23 @@ function appEntryUrl() {
     }
   }
   return `${window.location.origin}${window.location.pathname}`;
+}
+
+function readStoreRecord(db, storeName, key) {
+  return new Promise((resolve, reject) => {
+    const request = db.transaction(storeName, "readonly").objectStore(storeName).get(key);
+    request.onsuccess = () => resolve(request.result || null);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+function writeStoreRecord(db, storeName, record) {
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(storeName, "readwrite");
+    transaction.objectStore(storeName).put(record);
+    transaction.oncomplete = () => resolve();
+    transaction.onerror = () => reject(transaction.error);
+  });
 }
 
 function authRedirectTo() {
@@ -23077,10 +23335,25 @@ document.addEventListener("keydown", (event) => {
 });
 
 window.addEventListener("hashchange", routeFromHash);
-window.addEventListener("focus", () => refreshRemoteDataIfNeeded({ force: true }));
+window.addEventListener("online", () => {
+  if (state.secureMode) {
+    void syncPendingOfflineChanges();
+    void refreshRemoteDataIfNeeded({ force: true });
+  }
+});
+window.addEventListener("offline", () => {
+  if (!state.secureMode) return;
+  state.offlineMode = true;
+  elements.storageStatus.textContent = state.offlineSyncPending ? offlineSaveStatus() : "Offline - using data saved on this device";
+});
+window.addEventListener("focus", () => {
+  if (state.offlineSyncPending) void syncPendingOfflineChanges();
+  void refreshRemoteDataIfNeeded({ force: true });
+});
 document.addEventListener("visibilitychange", () => {
   if (!document.hidden) {
-    refreshRemoteDataIfNeeded({ force: true });
+    if (state.offlineSyncPending) void syncPendingOfflineChanges();
+    void refreshRemoteDataIfNeeded({ force: true });
   }
 });
 setInterval(() => {
@@ -23093,7 +23366,7 @@ function registerBacklineServiceWorker() {
   if (window.location.protocol === "file:" || !("serviceWorker" in navigator)) return;
   window.addEventListener("load", () => {
     navigator.serviceWorker
-      .register("./service-worker.js?v=20260821-name-format", { scope: "./" })
+      .register("./service-worker.js?v=20260821-offline-sync", { scope: "./" })
       .catch((error) => console.warn("Backline service worker registration failed.", error));
   });
 }
@@ -23135,7 +23408,7 @@ async function initApp() {
       : state.jobs[0]?.id || null;
     if (!secureConfigured || state.currentUser) {
       elements.storageStatus.textContent = state.secureMode
-        ? "Secure database ready"
+        ? state.offlineSyncPending ? offlineSaveStatus() : state.offlineMode ? "Offline - using data saved on this device" : "Secure database ready"
         : state.databaseReady ? "Database ready" : "Fallback storage active";
     }
     try {
