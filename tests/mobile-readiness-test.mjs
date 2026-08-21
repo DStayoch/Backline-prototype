@@ -46,6 +46,8 @@ has(desktopTopbarActions, /flex-wrap: wrap;/, "desktop topbar actions can wrap w
 assert.doesNotMatch(desktopTopbarActions, /display: grid|grid-template-columns:/, "mobile topbar action grid must not leak into desktop");
 has(desktop, /\.onboarding-panel-header > div \{[\s\S]*?flex: 1 1 auto;[\s\S]*?min-width: 0;/, "desktop onboarding copy should take the remaining header space instead of collapsing beside the action");
 has(desktop, /\.onboarding-tour-button \{[\s\S]*?width: auto;[\s\S]*?white-space: nowrap;/, "desktop onboarding tour button should stay compact instead of consuming the header width");
+has(desktop, /\.panel-header > div:first-child,[\s\S]*?\.section-heading > div:first-child \{[\s\S]*?flex: 1 1 auto;[\s\S]*?min-width: 0;/, "shared panel and section copy should retain the remaining header space beside actions");
+has(desktop, /\.panel-header > \.utility-button,[\s\S]*?\.section-heading > \.utility-button \{[\s\S]*?width: auto;[\s\S]*?white-space: nowrap;/, "direct header utility actions should remain compact instead of consuming a full row");
 has(desktopCollapsibleSummary, /display: flex;/, "desktop collapsible section headers should keep the browser layout");
 has(desktopCollapsibleSummary, /padding: 14px;/, "desktop collapsible section headers should keep their existing padding");
 assert.doesNotMatch(desktopCollapsibleSummary, /padding: 18px 22px|grid-template-columns:/, "mobile collapsible spacing must not leak into desktop");
@@ -103,6 +105,7 @@ has(phone, /\.job-action-menu-trigger \{[\s\S]*?width: 100%;[\s\S]*?max-width: 1
 has(phone, /\.job-action-menu-panel \{[\s\S]*?grid-column: 1 \/ -1;[\s\S]*?width: 100%;[\s\S]*?grid-template-columns: 1fr;/, "phone more-actions panel should open full-width inside the action grid");
 has(phone, /\.job-summary-bar \{[\s\S]*?width: 100%;[\s\S]*?max-width: 100%;[\s\S]*?grid-template-columns: 1fr;[\s\S]*?overflow: hidden;/, "phone job summary cards should stack inside the panel");
 has(phone, /\.modal-card \{[\s\S]*?width: calc\(100vw - 20px\);[\s\S]*?max-height: calc\(100svh - 20px\);[\s\S]*?overflow-y: auto;/, "phone modals should stay scrollable inside the viewport");
+has(css, /\.modal-card \{[\s\S]*?max-height: calc\(100svh - 28px\);[\s\S]*?overflow-y: auto;/, "desktop and tablet modals should keep long forms inside the viewport with internal scrolling");
 has(phone, /\.onboarding-step \{[\s\S]*?grid-template-columns: 1fr;[\s\S]*?align-items: stretch;/, "phone onboarding steps should stack cleanly instead of squeezing instructions and actions");
 has(phone, /\.onboarding-step \.primary-button \{[\s\S]*?width: 100%;/, "phone onboarding actions should fill the available width");
 has(css, /\.onboarding-current \{[\s\S]*?padding: 16px;/, "onboarding copy should not sit against the panel edge");
