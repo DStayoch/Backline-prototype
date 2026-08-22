@@ -12,7 +12,7 @@
     <link rel="icon" type="image/png" href="assets/backline-icon-transparent.png">
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="apple-touch-icon" href="assets/backline-icon-transparent.png">
-    <link rel="stylesheet" href="styles.css?v=20260821-offline-unlock">
+    <link rel="stylesheet" href="styles.css?v=20260821-stripe-billing">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
     <script src="supabase-config.js"></script>
@@ -203,6 +203,17 @@
                   <span class="settings-label">Account</span>
                   <span id="authStatus">Local mode</span>
                   <button class="utility-button" type="button" id="signOutButton" hidden>Sign out</button>
+                </div>
+                <div class="settings-section billing-settings-section" id="billingSettingsSection" hidden>
+                  <span class="settings-label">Backline plan</span>
+                  <div class="billing-summary">
+                    <div>
+                      <strong id="billingPlanName">Backline plan</strong>
+                      <small id="billingPlanDetail">Subscription details load after you sign in.</small>
+                    </div>
+                    <span class="billing-status-badge" id="billingStatusBadge">Not set</span>
+                  </div>
+                  <button class="utility-button billing-action" type="button" id="billingActionButton">Choose plan</button>
                 </div>
                 <div class="settings-section utility-section">
                   <span class="settings-label">Utilities</span>
@@ -754,6 +765,50 @@
       </form>
     </dialog>
 
+    <dialog class="modal" id="billingPlanModal">
+      <form class="modal-card billing-plan-card" method="dialog" id="billingPlanForm">
+        <div class="modal-header modal-header-with-close">
+          <div>
+            <p class="eyebrow">Backline subscription</p>
+            <h2>Choose your shop plan</h2>
+            <p>Every plan includes the complete Backline workflow. Your price is based only on active Backline users.</p>
+          </div>
+          <button class="modal-close-button" type="button" data-cancel-modal="billing-plan" aria-label="Close plan selection">&times;</button>
+        </div>
+        <fieldset class="billing-plan-options" id="billingPlanOptions">
+          <label class="billing-plan-option">
+            <input type="radio" name="billingPlan" value="solo" required>
+            <span class="billing-plan-copy">
+              <strong>Solo</strong>
+              <small>1 active Backline user</small>
+            </span>
+            <strong class="billing-plan-price">$49<span>/mo</span></strong>
+          </label>
+          <label class="billing-plan-option">
+            <input type="radio" name="billingPlan" value="crew" required>
+            <span class="billing-plan-copy">
+              <strong>Crew</strong>
+              <small>Up to 5 active Backline users</small>
+            </span>
+            <strong class="billing-plan-price">$99<span>/mo</span></strong>
+          </label>
+          <label class="billing-plan-option">
+            <input type="radio" name="billingPlan" value="shop" required>
+            <span class="billing-plan-copy">
+              <strong>Shop</strong>
+              <small>Up to 10 active Backline users</small>
+            </span>
+            <strong class="billing-plan-price">$179<span>/mo</span></strong>
+          </label>
+        </fieldset>
+        <p class="billing-plan-note" id="billingPlanNote"></p>
+        <div class="modal-actions">
+          <button class="secondary-button" type="button" data-cancel-modal="billing-plan">Cancel</button>
+          <button class="primary-button" type="submit" id="billingCheckoutButton">Continue to secure checkout</button>
+        </div>
+      </form>
+    </dialog>
+
     <dialog class="modal onboarding-guide-modal" id="onboardingGuideModal">
       <section class="modal-card onboarding-guide-card" aria-labelledby="onboardingGuideTitle">
         <div class="modal-header modal-header-with-close">
@@ -1213,6 +1268,6 @@
       </section>
     </dialog>
 
-    <script src="app.js?v=20260821-offline-unlock"></script>
+    <script src="app.js?v=20260821-stripe-billing"></script>
   </body>
 </html>

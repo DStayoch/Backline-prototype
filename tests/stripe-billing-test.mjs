@@ -4,6 +4,8 @@ import { resolve } from "node:path";
 
 const root = resolve(import.meta.dirname, "..");
 const read = (path) => readFileSync(resolve(root, path), "utf8");
+const app = read("app.js");
+const page = read("index.html");
 const schema = read("supabase-schema-20-billing.sql");
 const checkout = read("supabase/functions/create-billing-checkout/index.ts");
 const portal = read("supabase/functions/create-billing-portal/index.ts");
@@ -17,6 +19,11 @@ assert.doesNotMatch(schema, /for (insert|update|delete)[\s\S]*to authenticated/i
 
 assert.match(checkout, /mode: "subscription"/, "Checkout must create subscriptions.");
 assert.match(checkout, /role=eq\.owner/, "Only a workspace owner may start billing checkout.");
+assert.match(checkout, /STRIPE_BACKLINE_SOLO_PRICE_ID/, "Checkout must support the Solo plan.");
+assert.match(checkout, /STRIPE_BACKLINE_CREW_PRICE_ID/, "Checkout must support the Crew plan.");
+assert.match(checkout, /STRIPE_BACKLINE_SHOP_PRICE_ID/, "Checkout must support the Shop plan.");
+assert.match(checkout, /memberCap: 10/, "Checkout must enforce the Shop capacity.");
+assert.match(checkout, /trial_period_days: 14/, "New subscriptions must receive the advertised trial.");
 assert.match(checkout, /STRIPE_SECRET_KEY/, "Stripe credentials must be server-side secrets.");
 assert.doesNotMatch(checkout, /payment_method_types/, "Checkout must use Stripe dynamic payment methods.");
 assert.match(checkout, /STRIPE_TAX_ENABLED/, "Tax must be a deliberate server-side setting.");
@@ -33,5 +40,12 @@ assert.match(webhook, /parent\?\.subscription_details/, "Webhook must support th
 
 assert.match(setup, /STRIPE_TAX_ENABLED=false/, "Tax must remain off until registrations are confirmed.");
 assert.match(setup, /stripe-webhook/i, "Setup must document webhook deployment.");
+assert.match(page, /id="billingPlanModal"/, "Owners need a dedicated billing plan dialog.");
+assert.match(page, /\$49<span>\/mo<\/span>/, "Solo pricing must be shown in the product.");
+assert.match(page, /\$99<span>\/mo<\/span>/, "Crew pricing must be shown in the product.");
+assert.match(page, /\$179<span>\/mo<\/span>/, "Shop pricing must be shown in the product.");
+assert.match(page, /data-cancel-modal="billing-plan"/, "Billing plan dialog needs a cancel action.");
+assert.match(app, /create-billing-checkout/, "The plan dialog must open secure Stripe Checkout.");
+assert.match(app, /create-billing-portal/, "Active subscribers must manage billing through the portal.");
 
 console.log("Stripe billing contracts passed.");

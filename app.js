@@ -6,6 +6,11 @@ const PRICEBOOK_KEY = "backline.pricebook.v1";
 const SUPPLIER_KEY = "backline.suppliers.v1";
 const COMPANY_SETTINGS_KEY = "backline.companySettings.v1";
 const SECURE_COMPANY_SETTINGS_KEY_PREFIX = "backline.secureCompanySettings";
+const BACKLINE_BILLING_PLANS = {
+  solo: { label: "Solo", price: 49, memberCap: 1 },
+  crew: { label: "Crew", price: 99, memberCap: 5 },
+  shop: { label: "Shop", price: 179, memberCap: 10 }
+};
 const SELECTED_WORKSPACE_KEY_PREFIX = "backline.selectedWorkspace";
 const FOUNDRY_PILOT_CRM_KEY = "backline.foundryPilotCrm.v1";
 const THEME_KEY = "backline.theme.v1";
@@ -494,6 +499,7 @@ let state = {
   isCreator: false,
   organizationId: null,
   userRole: "owner",
+  billing: null,
   supabaseClient: null,
   offlineMode: false,
   offlineSyncPending: false,
@@ -664,6 +670,15 @@ const elements = {
   searchInput: document.querySelector("#searchInput"),
   settingsButton: document.querySelector("#settingsButton"),
   settingsMenu: document.querySelector("#settingsMenu"),
+  billingSettingsSection: document.querySelector("#billingSettingsSection"),
+  billingPlanName: document.querySelector("#billingPlanName"),
+  billingPlanDetail: document.querySelector("#billingPlanDetail"),
+  billingStatusBadge: document.querySelector("#billingStatusBadge"),
+  billingActionButton: document.querySelector("#billingActionButton"),
+  billingPlanModal: document.querySelector("#billingPlanModal"),
+  billingPlanForm: document.querySelector("#billingPlanForm"),
+  billingPlanNote: document.querySelector("#billingPlanNote"),
+  billingCheckoutButton: document.querySelector("#billingCheckoutButton"),
   workspaceSettingsButton: document.querySelector("#workspaceSettingsButton"),
   themeSelect: document.querySelector("#themePicker"),
   printScheduleRange: document.querySelector("#printScheduleRange"),
@@ -3226,6 +3241,102 @@ function technicianOptionItems(selectedTechnician = "To Be Determined") {
   }));
 }
 
+function activeBacklineMemberCount() {
+  return Math.max(1, normalizedTeamMembers().length);
+}
+
+function billingPlanDetails(planKey = state.billing?.plan_key) {
+  return BACKLINE_BILLING_PLANS[String(planKey || "").toLowerCase()] || null;
+}
+
+function billingStatusLabel(status = state.billing?.status) {
+  const value = String(status || "inactive").replaceAll("_", " ");
+  return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
+function billingStatusDetail() {
+  const billing = state.billing;
+  const plan = billingPlanDetails();
+  const members = activeBacklineMemberCount();
+  if (!billing || !plan || ["inactive", "canceled", "incomplete_expired"].includes(billing.status)) {
+    return `${members} active Backline ${members === 1 ? "user" : "users"}. Start with a 14-day trial.`;
+  }
+  const ending = billing.cancel_at_period_end && billing.current_period_end
+    ? ` Ends ${formatDate(billing.current_period_end)}.`
+    : "";
+  return `${members} of ${plan.memberCap} active users on ${plan.label}.${ending}`;
+}
+
+function renderBillingSettings() {
+  if (!elements.billingSettingsSection) return;
+  const canManageBilling = state.secureMode && Boolean(state.currentUser) && currentRole() === "owner";
+  elements.billingSettingsSection.hidden = !canManageBilling;
+  if (!canManageBilling) return;
+
+  const billing = state.billing;
+  const plan = billingPlanDetails();
+  const activeSubscription = Boolean(plan && !["inactive", "canceled", "incomplete_expired"].includes(String(billing?.status || "inactive")));
+  elements.billingPlanName.textContent = activeSubscription ? `${plan.label} plan` : "Choose a Backline plan";
+  elements.billingPlanDetail.textContent = billingStatusDetail();
+  elements.billingStatusBadge.textContent = activeSubscription ? billingStatusLabel() : "Not set";
+  elements.billingStatusBadge.className = `billing-status-badge ${activeSubscription ? `is-${String(billing.status).replaceAll("_", "-")}` : ""}`;
+  elements.billingActionButton.textContent = activeSubscription ? "Manage plan" : "Choose plan";
+}
+
+function selectRecommendedBillingPlan() {
+  const members = activeBacklineMemberCount();
+  return Object.entries(BACKLINE_BILLING_PLANS).find(([, plan]) => members <= plan.memberCap)?.[0] || "shop";
+}
+
+function openBillingPlanModal() {
+  if (!state.secureMode || !state.organizationId || !state.currentUser || currentRole() !== "owner") {
+    showToast("Owner access needed", "Only the workspace owner can choose or manage a Backline subscription.", "warning");
+    return;
+  }
+  const members = activeBacklineMemberCount();
+  const recommended = selectRecommendedBillingPlan();
+  let hasAvailablePlan = false;
+  elements.billingPlanForm?.querySelectorAll('input[name="billingPlan"]').forEach((input) => {
+    const plan = billingPlanDetails(input.value);
+    input.disabled = Boolean(plan && members > plan.memberCap);
+    input.checked = input.value === recommended && !input.disabled;
+    hasAvailablePlan ||= !input.disabled;
+  });
+  elements.billingCheckoutButton.disabled = !hasAvailablePlan;
+  elements.billingPlanNote.textContent = hasAvailablePlan
+    ? `${members} active Backline ${members === 1 ? "user is" : "users are"} counted. Customer portal access never counts toward your plan.`
+    : `${members} active Backline users need an expanded plan. Contact Backline Support to set up a plan above 10 users.`;
+  elements.billingPlanModal?.showModal();
+}
+
+async function startBillingCheckout(planKey) {
+  const plan = billingPlanDetails(planKey);
+  if (!plan || activeBacklineMemberCount() > plan.memberCap) {
+    throw new Error("Choose a plan that fits the active Backline users in this shop.");
+  }
+  const client = getSupabaseClient();
+  if (!client || !state.organizationId) throw new Error("Sign in to a secure Backline workspace before starting checkout.");
+  const { data, error } = await client.functions.invoke("create-billing-checkout", {
+    body: { organizationId: state.organizationId, plan: planKey }
+  });
+  if (error || !data?.url) {
+    throw new Error(await edgeFunctionErrorMessage(error, data, "Backline could not open secure checkout."));
+  }
+  window.location.assign(data.url);
+}
+
+async function openBillingPortal() {
+  const client = getSupabaseClient();
+  if (!client || !state.organizationId) throw new Error("Sign in to a secure Backline workspace before managing billing.");
+  const { data, error } = await client.functions.invoke("create-billing-portal", {
+    body: { organizationId: state.organizationId }
+  });
+  if (error || !data?.url) {
+    throw new Error(await edgeFunctionErrorMessage(error, data, "Backline could not open billing management."));
+  }
+  window.location.assign(data.url);
+}
+
 function resetAuthCreateAccountState() {
   const usernameField = elements.authForm?.querySelector("[data-username-field]");
   const confirmPasswordField = elements.authForm?.querySelector("[data-confirm-password-field]");
@@ -3718,6 +3829,31 @@ async function loadRemoteData() {
   await loadRemotePricebookItems();
 
   await loadRemoteTeamData();
+  await loadRemoteBillingStatus();
+}
+
+async function loadRemoteBillingStatus() {
+  const client = getSupabaseClient();
+  if (!client || !state.organizationId) return;
+  try {
+    const { data, error } = await client
+      .from("organization_billing")
+      .select("plan_key,status,cancel_at_period_end,current_period_end,trial_end")
+      .eq("organization_id", state.organizationId)
+      .maybeSingle();
+    if (error) {
+      // A workspace can load normally before schema 20 has been applied.
+      if (/organization_billing|schema cache|does not exist/i.test(String(error.message || ""))) {
+        state.billing = null;
+        return;
+      }
+      throw error;
+    }
+    state.billing = data || null;
+  } catch (error) {
+    console.warn("Backline billing status could not load.", error);
+    state.billing = null;
+  }
 }
 
 async function loadRemoteJobFiles() {
@@ -9646,6 +9782,7 @@ function updateRoleUI() {
   document.querySelector("#settingsExportButton")?.toggleAttribute("hidden", !can("exportData"));
   document.querySelector("#settingsConnectionButton")?.toggleAttribute("hidden", !can("exportData"));
   document.querySelector("#workspaceSettingsButton")?.toggleAttribute("hidden", !can("exportData"));
+  elements.billingSettingsSection?.toggleAttribute("hidden", !(state.secureMode && Boolean(state.currentUser) && currentRole() === "owner"));
   document.querySelector("#confirmAllButton")?.toggleAttribute("hidden", !can("book"));
   document.querySelectorAll('label[for="importInput"]').forEach((label) => {
     label.hidden = !can("exportData");
@@ -18787,6 +18924,7 @@ function render() {
   if (document.body.classList.contains("approval-mode")) return;
   updateRoleUI();
   renderTopbar();
+  renderBillingSettings();
   renderNavBadges();
   renderNewJobPickers();
   renderAutomations();
@@ -20955,6 +21093,21 @@ document.addEventListener("click", async (event) => {
     return;
   }
 
+  if (event.target.closest("#billingActionButton")) {
+    try {
+      const plan = billingPlanDetails();
+      const activeSubscription = Boolean(plan && !["inactive", "canceled", "incomplete_expired"].includes(String(state.billing?.status || "inactive")));
+      if (activeSubscription) {
+        await openBillingPortal();
+      } else {
+        openBillingPlanModal();
+      }
+    } catch (error) {
+      showToast("Billing unavailable", error?.message || "Backline could not open billing right now.", "danger", { timeout: 6500 });
+    }
+    return;
+  }
+
   if (event.target.closest("[data-add-template-card]")) {
     const template = newCustomTemplateDefinition();
     elements.templateSettingsList?.insertAdjacentHTML("beforeend", renderTemplateSettingsCard(template, templateSettings()));
@@ -21961,6 +22114,10 @@ document.addEventListener("click", async (event) => {
   }
   if (cancelModal === "offline-access") {
     elements.offlineAccessModal.close("cancel");
+    return;
+  }
+  if (cancelModal === "billing-plan") {
+    elements.billingPlanModal.close("cancel");
     return;
   }
   if (cancelModal === "onboarding-guide") {
@@ -23602,6 +23759,21 @@ document.querySelector("#confirmAllButton").addEventListener("click", () => {
 document.querySelector("#settingsExportButton")?.addEventListener("click", exportData);
 document.querySelector("#settingsConnectionButton")?.addEventListener("click", testSecureConnection);
 
+elements.billingPlanForm?.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const planKey = new FormData(elements.billingPlanForm).get("billingPlan");
+  const previousText = elements.billingCheckoutButton.textContent;
+  try {
+    elements.billingCheckoutButton.disabled = true;
+    elements.billingCheckoutButton.textContent = "Opening secure checkout...";
+    await startBillingCheckout(String(planKey || ""));
+  } catch (error) {
+    elements.billingCheckoutButton.disabled = false;
+    elements.billingCheckoutButton.textContent = previousText;
+    showToast("Checkout unavailable", error?.message || "Backline could not open secure checkout.", "danger", { timeout: 7000 });
+  }
+});
+
 elements.signOutButton.addEventListener("click", async () => {
   setAccountSwitching(true, "Signing out...");
   const client = getSupabaseClient();
@@ -23705,7 +23877,7 @@ function registerBacklineServiceWorker() {
   if (window.location.protocol === "file:" || !("serviceWorker" in navigator)) return;
   window.addEventListener("load", () => {
     navigator.serviceWorker
-      .register("./service-worker.js?v=20260821-offline-unlock", { scope: "./" })
+      .register("./service-worker.js?v=20260821-stripe-billing", { scope: "./" })
       .catch((error) => console.warn("Backline service worker registration failed.", error));
   });
 }

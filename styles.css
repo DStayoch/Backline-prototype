@@ -839,6 +839,140 @@ textarea {
   font-size: 0.78rem;
 }
 
+.billing-settings-section {
+  gap: 10px;
+}
+
+.billing-summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.billing-summary > div {
+  min-width: 0;
+}
+
+.billing-summary strong,
+.billing-summary small {
+  display: block;
+}
+
+.billing-summary strong {
+  color: var(--ink);
+  font-size: 0.9rem;
+}
+
+.billing-summary small,
+.billing-plan-note {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 650;
+  line-height: 1.4;
+}
+
+.billing-status-badge {
+  border-radius: 999px;
+  background: var(--field);
+  color: var(--muted);
+  padding: 5px 8px;
+  font-size: 0.7rem;
+  font-weight: 850;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.billing-status-badge.is-active,
+.billing-status-badge.is-trialing {
+  background: color-mix(in srgb, var(--green) 16%, var(--surface));
+  color: var(--green);
+}
+
+.billing-status-badge.is-past-due,
+.billing-status-badge.is-unpaid,
+.billing-status-badge.is-incomplete {
+  background: color-mix(in srgb, var(--orange) 18%, var(--surface));
+  color: var(--orange);
+}
+
+.billing-plan-card {
+  width: min(560px, calc(100vw - 28px));
+}
+
+.billing-plan-options {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 16px;
+  border: 0;
+}
+
+.billing-plan-option {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  min-height: 74px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-muted);
+  cursor: pointer;
+}
+
+.billing-plan-option:has(input:checked) {
+  border-color: var(--blue);
+  background: color-mix(in srgb, var(--blue-soft) 55%, var(--surface));
+  box-shadow: inset 3px 0 0 var(--blue);
+}
+
+.billing-plan-option:has(input:disabled) {
+  cursor: not-allowed;
+  opacity: 0.56;
+}
+
+.billing-plan-option input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--blue);
+}
+
+.billing-plan-copy {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+}
+
+.billing-plan-copy strong {
+  color: var(--ink);
+  font-size: 0.95rem;
+}
+
+.billing-plan-copy small {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 650;
+  line-height: 1.3;
+}
+
+.billing-plan-price {
+  color: var(--ink);
+  font-size: 1.05rem;
+  white-space: nowrap;
+}
+
+.billing-plan-price span {
+  color: var(--muted);
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.billing-plan-note {
+  margin: 0;
+  padding: 0 16px 16px;
+}
+
 .team-layout {
   display: grid;
   grid-template-columns: minmax(0, 1.4fr) minmax(280px, 0.8fr);
@@ -10070,6 +10204,10 @@ html[data-theme="dark"] .approval-logo-full {
     overflow-y: auto;
   }
 
+  .billing-summary {
+    align-items: start;
+  }
+
   .schedule-filters {
     justify-content: flex-start;
   }
@@ -10414,6 +10552,22 @@ html[data-theme="dark"] .approval-logo-full {
   .modal-header,
   .modal-actions {
     padding: 14px;
+  }
+
+  .billing-plan-options {
+    padding: 14px;
+  }
+
+  .billing-plan-option {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .billing-plan-price {
+    grid-column: 2;
+  }
+
+  .billing-plan-note {
+    padding: 0 14px 14px;
   }
 
   .form-grid,

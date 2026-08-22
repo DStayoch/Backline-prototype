@@ -59,17 +59,25 @@ Deno.serve(async (request) => {
     const body = await request.json().catch(() => ({}));
     const organizationId = String(body.organizationId || "");
     const planKey = String(body.plan || "").toLowerCase();
-    const prices: Record<string, string | undefined> = {
-      starter: Deno.env.get("STRIPE_BACKLINE_STARTER_PRICE_ID"),
-      pro: Deno.env.get("STRIPE_BACKLINE_PRO_PRICE_ID")
+    const plans: Record<string, { priceId: string | undefined; memberCap: number }> = {
+      solo: { priceId: Deno.env.get("STRIPE_BACKLINE_SOLO_PRICE_ID"), memberCap: 1 },
+      crew: { priceId: Deno.env.get("STRIPE_BACKLINE_CREW_PRICE_ID"), memberCap: 5 },
+      shop: { priceId: Deno.env.get("STRIPE_BACKLINE_SHOP_PRICE_ID"), memberCap: 10 }
     };
-    const priceId = prices[planKey];
-    if (!organizationId || !priceId) return json({ error: "Choose an available Backline plan before checkout." }, 400);
+    const plan = plans[planKey];
+    if (!organizationId || !plan?.priceId) return json({ error: "Choose an available Backline plan before checkout." }, 400);
 
     const user = await verifiedUser(request);
     type Member = { organization_id: string };
     const member = await firstRow<Member>(`/rest/v1/organization_members?organization_id=eq.${encodeURIComponent(organizationId)}&user_id=eq.${encodeURIComponent(user.id)}&role=eq.owner&select=organization_id&limit=1`);
     if (!member) return json({ error: "Only the shop owner can manage Backline billing." }, 403);
+
+    const teamResponse = await supabaseRest(`/rest/v1/organization_members?organization_id=eq.${encodeURIComponent(organizationId)}&select=user_id`);
+    if (!teamResponse.ok) throw new Error(await teamResponse.text());
+    const teamMembers = await teamResponse.json();
+    if (!Array.isArray(teamMembers) || teamMembers.length > plan.memberCap) {
+      return json({ error: `This shop has more than ${plan.memberCap} active Backline users. Choose a larger plan before checkout.` }, 400);
+    }
 
     type Organization = { id: string; name: string };
     type Billing = { stripe_customer_id: string | null };
@@ -100,14 +108,17 @@ Deno.serve(async (request) => {
       integration_identifier: "backline_billing_checkout_xvupjldq",
       customer: customerId,
       client_reference_id: organizationId,
-      line_items: [{ price: priceId, quantity: 1 }],
+      line_items: [{ price: plan.priceId, quantity: 1 }],
       allow_promotion_codes: true,
       billing_address_collection: automaticTax ? "required" : "auto",
       ...(automaticTax ? { automatic_tax: { enabled: true } } : {}),
       success_url: `${appUrl}?billing=success&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${appUrl}?billing=canceled`,
-      metadata: { backline_organization_id: organizationId, backline_plan_key: planKey },
-      subscription_data: { metadata: { backline_organization_id: organizationId, backline_plan_key: planKey } }
+      metadata: { backline_organization_id: organizationId, backline_plan_key: planKey, backline_member_cap: String(plan.memberCap) },
+      subscription_data: {
+        trial_period_days: 14,
+        metadata: { backline_organization_id: organizationId, backline_plan_key: planKey, backline_member_cap: String(plan.memberCap) }
+      }
     });
     if (!session.url) throw new Error("Stripe did not return a checkout URL.");
     return json({ url: session.url });
