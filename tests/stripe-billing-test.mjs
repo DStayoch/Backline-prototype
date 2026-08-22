@@ -65,5 +65,7 @@ assert.match(app, /backline_workspace_access/, "Backline must load the server-en
 assert.match(page, /id="subscriptionGate"/, "Read-only workspaces need a dedicated subscription screen.");
 assert.match(page, /id="subscriptionGatePlanForm"/, "New workspaces need plan selection directly on the subscription screen.");
 assert.match(app, /Start \$\{plan\.label\} trial/, "The selected plan must drive the checkout action label.");
+assert.match(app, /function openQueuedWorkspaceSettings\(\) \{[\s\S]*?isSubscriptionReadOnly\(\)/, "New workspace setup must wait until billing grants full access.");
+assert.match(app, /renderSubscriptionGate\(\);[\s\S]*?if \(document\.body\.classList\.contains\("subscription-mode"\)\) return;[\s\S]*?openQueuedWorkspaceSettings\(\);/, "The initial workspace setup should open once subscription access is available.");
 
 console.log("Stripe billing contracts passed.");

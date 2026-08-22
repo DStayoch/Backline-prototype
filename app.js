@@ -3629,11 +3629,15 @@ function queueOwnerWorkspaceSettingsOnboarding(force = false) {
 }
 
 function openQueuedWorkspaceSettings() {
-  if (!state.openWorkspaceSettingsAfterLoad) return;
-  state.openWorkspaceSettingsAfterLoad = false;
+  if (!state.openWorkspaceSettingsAfterLoad || isSubscriptionReadOnly()) return;
   requestAnimationFrame(() => {
-    if (document.body.classList.contains("approval-mode") || document.body.classList.contains("auth-mode")) return;
+    if (
+      document.body.classList.contains("approval-mode") ||
+      document.body.classList.contains("auth-mode") ||
+      document.body.classList.contains("subscription-mode")
+    ) return;
     if (elements.companySettingsModal?.open) return;
+    state.openWorkspaceSettingsAfterLoad = false;
     openCompanySettingsModal();
   });
 }
@@ -19097,6 +19101,7 @@ function render() {
   applyBusinessTerminology();
   renderSubscriptionGate();
   if (document.body.classList.contains("subscription-mode")) return;
+  openQueuedWorkspaceSettings();
   updateRoleUI();
   renderTopbar();
   renderBillingSettings();
@@ -24194,7 +24199,7 @@ function registerBacklineServiceWorker() {
   if (window.location.protocol === "file:" || !("serviceWorker" in navigator)) return;
   window.addEventListener("load", () => {
     navigator.serviceWorker
-      .register("./service-worker.js?v=20260822-business-terms", { scope: "./" })
+      .register("./service-worker.js?v=20260822-post-subscription-setup", { scope: "./" })
       .catch((error) => console.warn("Backline service worker registration failed.", error));
   });
 }
