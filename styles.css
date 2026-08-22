@@ -3124,10 +3124,13 @@ button.metric-block {
 
 .job-summary-card strong,
 .summary-value-button {
+  min-width: 0;
+  max-width: 100%;
   color: var(--ink);
   font-size: 0.92rem;
   font-weight: 850;
   line-height: 1.25;
+  overflow-wrap: anywhere;
 }
 
 .summary-value-button {
@@ -11115,6 +11118,10 @@ html[data-theme="dark"] .approval-logo-full {
     max-width: 100%;
     grid-template-columns: 1fr;
     overflow: hidden;
+  }
+
+  #view-inbox.active .job-summary-bar {
+    grid-template-columns: 1fr;
   }
 
   .job-summary-card,

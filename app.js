@@ -24080,7 +24080,7 @@ function registerBacklineServiceWorker() {
   if (window.location.protocol === "file:" || !("serviceWorker" in navigator)) return;
   window.addEventListener("load", () => {
     navigator.serviceWorker
-      .register("./service-worker.js?v=20260822-switch-account", { scope: "./" })
+      .register("./service-worker.js?v=20260822-job-summary", { scope: "./" })
       .catch((error) => console.warn("Backline service worker registration failed.", error));
   });
 }
