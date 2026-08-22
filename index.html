@@ -12,7 +12,7 @@
     <link rel="icon" type="image/png" href="assets/backline-icon-transparent.png">
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="apple-touch-icon" href="assets/backline-icon-transparent.png">
-    <link rel="stylesheet" href="styles.css?v=20260822-billing-access">
+    <link rel="stylesheet" href="styles.css?v=20260822-subscription-gate">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
     <script src="supabase-config.js"></script>
@@ -74,20 +74,67 @@
     </main>
 
     <main class="subscription-gate" id="subscriptionGate" hidden>
-      <section class="subscription-gate-card">
-        <img class="auth-logo" src="assets/backline-banner-clean-outline.png" alt="Backline, Your office handled">
-        <div>
-          <p class="eyebrow" id="subscriptionGateEyebrow">Backline subscription</p>
-          <h1 id="subscriptionGateTitle">Choose a Backline plan</h1>
-          <p id="subscriptionGateDetail">Start the 14-day trial to open this workspace.</p>
+      <header class="subscription-gate-header">
+        <div class="subscription-gate-brand">
+          <span class="subscription-gate-brand-mark"><img src="assets/backline-icon.png" alt=""></span>
+          <span>BACKLINE</span>
         </div>
-        <p class="subscription-gate-status" id="subscriptionGateStatus"></p>
-        <div class="auth-actions">
-          <button class="primary-button" type="button" id="subscriptionGatePrimary">Choose plan</button>
-          <button class="secondary-button" type="button" id="subscriptionGateRefresh">Check subscription</button>
-          <button class="secondary-button" type="button" id="subscriptionGateExport" hidden>Download backup</button>
-        </div>
-      </section>
+        <span class="subscription-gate-tagline">Your office, handled</span>
+      </header>
+      <div class="subscription-gate-layout">
+        <section class="subscription-gate-welcome" aria-labelledby="subscriptionGateTitle">
+          <p class="eyebrow" id="subscriptionGateEyebrow">Backline for your shop</p>
+          <h1 id="subscriptionGateTitle">Start with the work that is already waiting.</h1>
+          <p id="subscriptionGateDetail">Choose the plan that fits your team. Your 14-day trial opens every core Backline workflow.</p>
+          <ul class="subscription-gate-outcomes">
+            <li><span aria-hidden="true">&#10003;</span><span>Keep jobs, customer records, and field updates in one place.</span></li>
+            <li><span aria-hidden="true">&#10003;</span><span>Give every technician a clear schedule and job history.</span></li>
+            <li><span aria-hidden="true">&#10003;</span><span>Send estimates, invoices, approvals, and customer updates without extra tools.</span></li>
+          </ul>
+          <p class="subscription-gate-trust">Your workspace stays available for viewing and backup even if you decide not to continue after the trial.</p>
+        </section>
+
+        <section class="subscription-gate-surface" aria-labelledby="subscriptionGatePanelTitle">
+          <div class="subscription-gate-surface-top">
+            <div>
+              <h2 id="subscriptionGatePanelTitle">Pick a plan for your team</h2>
+              <p id="subscriptionGatePanelDetail">You can change plans from Backline Settings anytime.</p>
+            </div>
+            <span class="subscription-gate-trial-badge" id="subscriptionGateTrialBadge">14 DAYS FREE</span>
+          </div>
+          <form class="subscription-gate-plans" id="subscriptionGatePlanForm">
+            <label class="subscription-gate-plan-option">
+              <input type="radio" name="subscriptionGatePlan" value="solo">
+              <span class="subscription-gate-radio" aria-hidden="true"></span>
+              <span><strong>Solo</strong><small>One active Backline user</small></span>
+              <b>$49 <small>/ month</small></b>
+            </label>
+            <label class="subscription-gate-plan-option">
+              <input type="radio" name="subscriptionGatePlan" value="crew">
+              <span class="subscription-gate-radio" aria-hidden="true"></span>
+              <span><strong>Crew</strong><small>Up to five active users</small></span>
+              <b>$99 <small>/ month</small></b>
+            </label>
+            <label class="subscription-gate-plan-option">
+              <input type="radio" name="subscriptionGatePlan" value="shop">
+              <span class="subscription-gate-radio" aria-hidden="true"></span>
+              <span><strong>Shop</strong><small>Ten users included, then $15 per user</small></span>
+              <b>$179 <small>/ month</small></b>
+            </label>
+          </form>
+          <p class="subscription-gate-recommendation" id="subscriptionGateRecommendation"><strong>Recommended:</strong> Start with the smallest plan that covers your active Backline users.</p>
+          <p class="subscription-gate-status" id="subscriptionGateStatus"></p>
+          <div class="subscription-gate-checkout">
+            <div class="subscription-gate-summary"><span id="subscriptionGatePlanSummary">For one owner-operator.</span><strong id="subscriptionGatePlanPrice">$49/month</strong></div>
+            <button class="primary-button subscription-gate-primary" type="button" id="subscriptionGatePrimary">Start Solo trial</button>
+            <div class="subscription-gate-secondary-actions">
+              <button class="text-button" type="button" id="subscriptionGateRefresh">Check subscription</button>
+              <button class="text-button" type="button" id="subscriptionGateExport" hidden>Download backup</button>
+            </div>
+            <p id="subscriptionGateCheckoutNote">Secure checkout is handled by Stripe. You can manage or cancel your subscription from Backline Settings.</p>
+          </div>
+        </section>
+      </div>
     </main>
 
     <main class="approval-page" id="approvalPage" hidden></main>
@@ -1285,6 +1332,6 @@
       </section>
     </dialog>
 
-    <script src="app.js?v=20260822-billing-access"></script>
+    <script src="app.js?v=20260822-subscription-gate"></script>
   </body>
 </html>

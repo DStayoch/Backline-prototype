@@ -63,5 +63,7 @@ assert.match(app, /create-billing-checkout/, "The plan dialog must open secure S
 assert.match(app, /create-billing-portal/, "Active subscribers must manage billing through the portal.");
 assert.match(app, /backline_workspace_access/, "Backline must load the server-enforced workspace access state.");
 assert.match(page, /id="subscriptionGate"/, "Read-only workspaces need a dedicated subscription screen.");
+assert.match(page, /id="subscriptionGatePlanForm"/, "New workspaces need plan selection directly on the subscription screen.");
+assert.match(app, /Start \$\{plan\.label\} trial/, "The selected plan must drive the checkout action label.");
 
 console.log("Stripe billing contracts passed.");

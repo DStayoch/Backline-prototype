@@ -566,6 +566,14 @@ const elements = {
   subscriptionGateTitle: document.querySelector("#subscriptionGateTitle"),
   subscriptionGateDetail: document.querySelector("#subscriptionGateDetail"),
   subscriptionGateStatus: document.querySelector("#subscriptionGateStatus"),
+  subscriptionGatePanelTitle: document.querySelector("#subscriptionGatePanelTitle"),
+  subscriptionGatePanelDetail: document.querySelector("#subscriptionGatePanelDetail"),
+  subscriptionGateTrialBadge: document.querySelector("#subscriptionGateTrialBadge"),
+  subscriptionGatePlanForm: document.querySelector("#subscriptionGatePlanForm"),
+  subscriptionGateRecommendation: document.querySelector("#subscriptionGateRecommendation"),
+  subscriptionGatePlanSummary: document.querySelector("#subscriptionGatePlanSummary"),
+  subscriptionGatePlanPrice: document.querySelector("#subscriptionGatePlanPrice"),
+  subscriptionGateCheckoutNote: document.querySelector("#subscriptionGateCheckoutNote"),
   subscriptionGatePrimary: document.querySelector("#subscriptionGatePrimary"),
   subscriptionGateRefresh: document.querySelector("#subscriptionGateRefresh"),
   subscriptionGateExport: document.querySelector("#subscriptionGateExport"),
@@ -18998,6 +19006,25 @@ function isSubscriptionReadOnly() {
   return state.secureMode && !state.offlineMode && state.billingAccess?.mode === "read_only";
 }
 
+function selectedSubscriptionGatePlan() {
+  return elements.subscriptionGatePlanForm?.querySelector('input[name="subscriptionGatePlan"]:checked')?.value || "";
+}
+
+function renderSubscriptionGatePlanSummary() {
+  const planKey = selectedSubscriptionGatePlan();
+  const plan = billingPlanDetails(planKey);
+  if (!plan) return;
+  const members = activeBacklineMemberCount();
+  const memberDetail = planKey === "shop" && members > plan.memberCap
+    ? `${members} active users. ${members - plan.memberCap} additional ${members - plan.memberCap === 1 ? "user" : "users"} at $${plan.additionalUserPrice}/month.`
+    : planKey === "solo"
+      ? "For one owner-operator."
+      : `For up to ${plan.memberCap} active Backline users.`;
+  elements.subscriptionGatePlanSummary.textContent = memberDetail;
+  elements.subscriptionGatePlanPrice.textContent = `$${plan.price}/month`;
+  elements.subscriptionGatePrimary.textContent = `Start ${plan.label} trial`;
+}
+
 function renderSubscriptionGate() {
   if (!elements.subscriptionGate) return;
   const locked = isSubscriptionReadOnly();
@@ -19009,21 +19036,61 @@ function renderSubscriptionGate() {
   const owner = currentRole() === "owner";
   const neverStarted = ["", "inactive"].includes(status);
   const pastDue = status === "past_due";
+  const canStartTrial = owner && neverStarted;
   const detail = neverStarted
-    ? "Choose a Backline plan to start the 14-day trial and open this workspace."
+    ? "Choose the plan that fits your team. Your 14-day trial opens every core Backline workflow."
     : pastDue
       ? "The payment grace period has ended. Update billing to restore full workspace access."
       : "This workspace is read-only because its Backline subscription is not active.";
 
-  elements.subscriptionGateEyebrow.textContent = pastDue ? "Payment needs attention" : "Backline subscription";
-  elements.subscriptionGateTitle.textContent = neverStarted ? "Choose a Backline plan" : "This workspace is read-only";
+  elements.subscriptionGateEyebrow.textContent = pastDue ? "Payment needs attention" : "Backline for your shop";
+  elements.subscriptionGateTitle.textContent = neverStarted
+    ? "Start with the work that is already waiting."
+    : owner ? "Your workspace is ready when you are." : "Your workspace is read-only.";
   elements.subscriptionGateDetail.textContent = owner
     ? detail
     : `${detail} Ask the workspace owner to update the subscription.`;
-  elements.subscriptionGateStatus.textContent = `Subscription status: ${billingStatusLabel(status)}.`;
+
+  elements.subscriptionGatePlanForm.hidden = !canStartTrial;
+  elements.subscriptionGateRecommendation.hidden = !canStartTrial;
+  elements.subscriptionGateTrialBadge.hidden = !canStartTrial;
+  elements.subscriptionGateStatus.hidden = canStartTrial;
   elements.subscriptionGatePrimary.hidden = !owner;
-  elements.subscriptionGatePrimary.textContent = neverStarted ? "Choose plan" : "Manage billing";
   elements.subscriptionGateExport.hidden = !owner;
+
+  if (canStartTrial) {
+    const members = activeBacklineMemberCount();
+    const recommended = selectRecommendedBillingPlan();
+    let selectedPlan = selectedSubscriptionGatePlan();
+    elements.subscriptionGatePlanForm.querySelectorAll('input[name="subscriptionGatePlan"]').forEach((input) => {
+      input.disabled = !planSupportsMemberCount(input.value, members);
+      input.closest(".subscription-gate-plan-option")?.classList.toggle("is-unavailable", input.disabled);
+      if (input.value === selectedPlan && input.disabled) selectedPlan = "";
+    });
+    if (!selectedPlan) {
+      const recommendedInput = elements.subscriptionGatePlanForm.querySelector(`input[value="${recommended}"]`);
+      recommendedInput.checked = !recommendedInput.disabled;
+    }
+    elements.subscriptionGatePanelTitle.textContent = "Pick a plan for your team";
+    elements.subscriptionGatePanelDetail.textContent = "You can change plans from Backline Settings anytime.";
+    elements.subscriptionGateCheckoutNote.textContent = "Secure checkout is handled by Stripe. You can manage or cancel your subscription from Backline Settings.";
+    renderSubscriptionGatePlanSummary();
+    return;
+  }
+
+  elements.subscriptionGatePanelTitle.textContent = owner ? "Subscription action needed" : "Subscription managed by your owner";
+  elements.subscriptionGatePanelDetail.textContent = owner
+    ? "Update your Backline billing to restore full workspace access."
+    : "Ask the workspace owner to update billing, then check the subscription again.";
+  elements.subscriptionGateStatus.textContent = `Subscription status: ${billingStatusLabel(status)}.`;
+  elements.subscriptionGatePlanSummary.textContent = owner
+    ? "Open Stripe's secure billing portal to update this subscription."
+    : "Workspace access returns after the owner updates the subscription.";
+  elements.subscriptionGatePlanPrice.textContent = billingStatusLabel(status);
+  elements.subscriptionGatePrimary.textContent = "Manage billing";
+  elements.subscriptionGateCheckoutNote.textContent = owner
+    ? "Billing is managed securely through Stripe."
+    : "Your records remain available to view and export while access is read-only.";
 }
 
 function createJob(formData) {
@@ -23850,15 +23917,28 @@ elements.billingPlanForm?.addEventListener("submit", async (event) => {
 });
 
 elements.subscriptionGatePrimary?.addEventListener("click", async () => {
+  const previousText = elements.subscriptionGatePrimary.textContent;
   try {
     if (["", "inactive"].includes(String(state.billingAccess?.status || state.billing?.status || ""))) {
-      openBillingPlanModal();
+      const planKey = selectedSubscriptionGatePlan();
+      if (!planKey) throw new Error("Choose a Backline plan before continuing.");
+      elements.subscriptionGatePrimary.disabled = true;
+      elements.subscriptionGatePrimary.textContent = "Opening secure checkout...";
+      await startBillingCheckout(planKey);
       return;
     }
+    elements.subscriptionGatePrimary.disabled = true;
+    elements.subscriptionGatePrimary.textContent = "Opening billing...";
     await openBillingPortal();
   } catch (error) {
+    elements.subscriptionGatePrimary.disabled = false;
+    elements.subscriptionGatePrimary.textContent = previousText;
     showToast("Billing unavailable", error?.message || "Backline could not open billing right now.", "danger", { timeout: 6500 });
   }
+});
+
+elements.subscriptionGatePlanForm?.addEventListener("change", () => {
+  renderSubscriptionGatePlanSummary();
 });
 
 elements.subscriptionGateRefresh?.addEventListener("click", async () => {
@@ -23975,7 +24055,7 @@ function registerBacklineServiceWorker() {
   if (window.location.protocol === "file:" || !("serviceWorker" in navigator)) return;
   window.addEventListener("load", () => {
     navigator.serviceWorker
-      .register("./service-worker.js?v=20260822-billing-access", { scope: "./" })
+      .register("./service-worker.js?v=20260822-subscription-gate", { scope: "./" })
       .catch((error) => console.warn("Backline service worker registration failed.", error));
   });
 }

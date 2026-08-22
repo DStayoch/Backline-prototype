@@ -6541,14 +6541,21 @@ button.metric-block {
   padding: 28px;
 }
 
-.auth-gate,
-.subscription-gate {
+.auth-gate {
   min-height: 100vh;
   background: var(--bg);
   color: var(--ink);
   padding: 28px;
   display: grid;
   place-items: center;
+}
+
+.subscription-gate {
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--ink);
+  display: grid;
+  grid-template-rows: auto 1fr;
 }
 
 .auth-gate[hidden],
@@ -6613,34 +6620,371 @@ html[data-theme="dark"] .auth-logo {
   padding: 0 12px;
 }
 
-.subscription-gate-card {
-  width: min(500px, 100%);
-  background: var(--surface);
+.subscription-gate-header {
+  min-height: 72px;
+  padding: 0 clamp(22px, 5vw, 72px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+  background: var(--navy);
+  color: #f8fbff;
+}
+
+.subscription-gate-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 11px;
+  font-size: 1.08rem;
+  font-weight: 800;
+}
+
+.subscription-gate-brand-mark {
+  width: 38px;
+  height: 38px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.34);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.subscription-gate-brand-mark img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  object-fit: cover;
+}
+
+.subscription-gate-tagline {
+  color: rgba(248, 251, 255, 0.72);
+  font-size: 0.84rem;
+}
+
+.subscription-gate-layout {
+  width: min(1180px, calc(100% - 48px));
+  margin: auto;
+  padding: clamp(28px, 7vh, 80px) 0;
+  display: grid;
+  grid-template-columns: minmax(260px, 0.8fr) minmax(520px, 1.2fr);
+  gap: clamp(32px, 6vw, 92px);
+  align-items: center;
+}
+
+.subscription-gate-welcome {
+  padding: 12px 0;
+}
+
+.subscription-gate-welcome h1 {
+  max-width: 490px;
+  margin: 0;
+  font-size: clamp(2.1rem, 4vw, 3.55rem);
+  line-height: 1.1;
+}
+
+.subscription-gate-welcome > p:not(.eyebrow) {
+  max-width: 460px;
+  margin: 18px 0 28px;
+  color: var(--muted);
+  font-size: 1.03rem;
+}
+
+.subscription-gate-outcomes {
+  display: grid;
+  gap: 13px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.subscription-gate-outcomes li {
+  display: grid;
+  grid-template-columns: 24px 1fr;
+  align-items: start;
+  gap: 10px;
+  color: var(--ink);
+  font-size: 0.92rem;
+}
+
+.subscription-gate-outcomes li > span:first-child {
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--success-soft);
+  color: var(--teal);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.subscription-gate-trust {
+  margin-top: 30px !important;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+  font-size: 0.8rem !important;
+}
+
+.subscription-gate-surface {
+  overflow: hidden;
   border: 1px solid var(--line);
   border-radius: 8px;
+  background: var(--surface);
   box-shadow: var(--shadow);
-  display: grid;
-  gap: 14px;
-  padding: 24px;
 }
 
-.subscription-gate-card h1 {
-  font-size: 1.75rem;
+.subscription-gate-surface-top {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 26px 28px 20px;
+  border-bottom: 1px solid var(--line);
 }
 
-.subscription-gate-card > div > p:not(.eyebrow) {
+.subscription-gate-surface-top h2 {
+  margin: 0;
+  font-size: 1.4rem;
+}
+
+.subscription-gate-surface-top p {
+  margin: 5px 0 0;
   color: var(--muted);
-  margin-top: 6px;
+  font-size: 0.88rem;
+}
+
+.subscription-gate-trial-badge {
+  flex: 0 0 auto;
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: var(--success-soft);
+  color: var(--teal-dark);
+  font-size: 0.72rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.subscription-gate-plans {
+  display: grid;
+  gap: 10px;
+  padding: 20px 28px;
+}
+
+.subscription-gate-plan-option {
+  position: relative;
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr) auto;
+  gap: 13px;
+  align-items: center;
+  min-height: 76px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.subscription-gate-plan-option:hover {
+  border-color: color-mix(in srgb, var(--blue) 50%, var(--line));
+  background: var(--hover);
+}
+
+.subscription-gate-plan-option:has(input:checked) {
+  border-color: var(--blue);
+  background: var(--blue-soft);
+  box-shadow: inset 0 0 0 1px var(--blue);
+}
+
+.subscription-gate-plan-option.is-unavailable {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+.subscription-gate-plan-option input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.subscription-gate-radio {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--muted);
+  border-radius: 50%;
+  background: var(--surface);
+}
+
+.subscription-gate-plan-option:has(input:checked) .subscription-gate-radio {
+  border: 6px solid var(--blue);
+}
+
+.subscription-gate-plan-option strong,
+.subscription-gate-plan-option small {
+  display: block;
+}
+
+.subscription-gate-plan-option strong {
+  font-size: 0.96rem;
+}
+
+.subscription-gate-plan-option small {
+  margin-top: 1px;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.subscription-gate-plan-option > b {
+  font-size: 1.06rem;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.subscription-gate-plan-option > b small {
+  display: inline;
+  font-size: 0.72rem;
+}
+
+.subscription-gate-recommendation {
+  margin: 0;
+  padding: 0 28px 20px;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.subscription-gate-recommendation strong {
+  color: var(--blue-dark);
 }
 
 .subscription-gate-status {
-  margin: 0;
+  margin: 0 28px 20px;
   padding: 12px;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: var(--surface-muted);
   color: var(--muted);
   font-size: 0.88rem;
+}
+
+.subscription-gate-checkout {
+  display: grid;
+  gap: 13px;
+  padding: 20px 28px 24px;
+  border-top: 1px solid var(--line);
+  background: var(--surface-muted);
+}
+
+.subscription-gate-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  font-size: 0.85rem;
+}
+
+.subscription-gate-summary span,
+.subscription-gate-checkout > p {
+  color: var(--muted);
+}
+
+.subscription-gate-primary {
+  min-height: 50px;
+}
+
+.subscription-gate-secondary-actions {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+}
+
+.subscription-gate-secondary-actions .text-button {
+  min-height: 28px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--blue-dark);
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.subscription-gate-checkout > p {
+  margin: 0;
+  font-size: 0.74rem;
+  text-align: center;
+}
+
+@media (max-width: 840px) {
+  .subscription-gate-layout {
+    width: min(620px, calc(100% - 32px));
+    grid-template-columns: 1fr;
+    gap: 28px;
+    padding: 38px 0;
+  }
+
+  .subscription-gate-welcome {
+    padding: 0;
+  }
+
+  .subscription-gate-welcome > p:not(.eyebrow) {
+    margin-bottom: 22px;
+  }
+
+  .subscription-gate-trust {
+    display: none;
+  }
+}
+
+@media (max-width: 520px) {
+  .subscription-gate-header {
+    min-height: 60px;
+    padding: 0 16px;
+  }
+
+  .subscription-gate-tagline {
+    display: none;
+  }
+
+  .subscription-gate-layout {
+    width: min(100% - 24px, 620px);
+    padding: 24px 0;
+  }
+
+  .subscription-gate-welcome h1 {
+    font-size: 2rem;
+  }
+
+  .subscription-gate-surface-top,
+  .subscription-gate-plans,
+  .subscription-gate-checkout {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+
+  .subscription-gate-recommendation {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+
+  .subscription-gate-status {
+    margin-left: 18px;
+    margin-right: 18px;
+  }
+
+  .subscription-gate-surface-top {
+    display: grid;
+  }
+
+  .subscription-gate-trial-badge {
+    justify-self: start;
+  }
+
+  .subscription-gate-plan-option {
+    grid-template-columns: 20px minmax(0, 1fr);
+  }
+
+  .subscription-gate-plan-option > b {
+    grid-column: 2;
+    text-align: left;
+  }
 }
 
 .offline-unlock-panel {
