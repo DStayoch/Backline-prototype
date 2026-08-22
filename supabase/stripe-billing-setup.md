@@ -4,7 +4,7 @@ Backline uses Stripe only to charge each shop for its Backline subscription. It 
 
 ## Before deploying
 
-1. In Stripe test mode, create three separate products and recurring monthly Prices: `Backline Solo` ($49, one active user), `Backline Crew` ($99, up to five active users), and `Backline Shop` ($179, up to ten active users). Record the non-secret Price IDs, such as `price_...`. Backline's checkout function applies a 14-day trial to each new subscription.
+1. In Stripe test mode, create four separate products and recurring monthly Prices: `Backline Solo` ($49, one active user), `Backline Crew` ($99, up to five active users), `Backline Shop` ($179, includes ten active users), and `Backline Additional User` ($15 for each user above ten). Record the non-secret Price IDs, such as `price_...`. Backline's checkout function applies a 14-day trial to each new subscription.
 2. In Stripe Dashboard, configure the Customer Portal. Enable the actions you want shop owners to use, such as updating payment methods, viewing invoices, cancelling, and switching plans.
 3. Leave `STRIPE_TAX_ENABLED` set to `false` until you have confirmed where Backline must collect tax and added an active Stripe Tax registration. Automatic tax without an active registration does not collect tax.
 
@@ -18,6 +18,7 @@ STRIPE_WEBHOOK_SECRET=whsec_...
 STRIPE_BACKLINE_SOLO_PRICE_ID=price_...
 STRIPE_BACKLINE_CREW_PRICE_ID=price_...
 STRIPE_BACKLINE_SHOP_PRICE_ID=price_...
+STRIPE_BACKLINE_ADDITIONAL_USER_PRICE_ID=price_...
 BACKLINE_APP_URL=https://dstayoch.github.io/Backline-prototype/
 STRIPE_TAX_ENABLED=false
 ```

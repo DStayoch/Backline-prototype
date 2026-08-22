@@ -9,7 +9,7 @@ const SECURE_COMPANY_SETTINGS_KEY_PREFIX = "backline.secureCompanySettings";
 const BACKLINE_BILLING_PLANS = {
   solo: { label: "Solo", price: 49, memberCap: 1 },
   crew: { label: "Crew", price: 99, memberCap: 5 },
-  shop: { label: "Shop", price: 179, memberCap: 10 }
+  shop: { label: "Shop", price: 179, memberCap: 10, additionalUserPrice: 15 }
 };
 const SELECTED_WORKSPACE_KEY_PREFIX = "backline.selectedWorkspace";
 const FOUNDRY_PILOT_CRM_KEY = "backline.foundryPilotCrm.v1";
@@ -3264,7 +3264,16 @@ function billingStatusDetail() {
   const ending = billing.cancel_at_period_end && billing.current_period_end
     ? ` Ends ${formatDate(billing.current_period_end)}.`
     : "";
-  return `${members} of ${plan.memberCap} active users on ${plan.label}.${ending}`;
+  const additionalUsers = Math.max(0, members - plan.memberCap);
+  const additionalUserDetail = additionalUsers && plan.additionalUserPrice
+    ? ` ${additionalUsers} additional ${additionalUsers === 1 ? "user" : "users"} at $${plan.additionalUserPrice}/mo each.`
+    : "";
+  return `${members} active users on ${plan.label}.${additionalUserDetail}${ending}`;
+}
+
+function planSupportsMemberCount(planKey, members = activeBacklineMemberCount()) {
+  const plan = billingPlanDetails(planKey);
+  return Boolean(plan && (members <= plan.memberCap || planKey === "shop"));
 }
 
 function renderBillingSettings() {
@@ -3298,20 +3307,20 @@ function openBillingPlanModal() {
   let hasAvailablePlan = false;
   elements.billingPlanForm?.querySelectorAll('input[name="billingPlan"]').forEach((input) => {
     const plan = billingPlanDetails(input.value);
-    input.disabled = Boolean(plan && members > plan.memberCap);
+    input.disabled = !planSupportsMemberCount(input.value, members);
     input.checked = input.value === recommended && !input.disabled;
     hasAvailablePlan ||= !input.disabled;
   });
   elements.billingCheckoutButton.disabled = !hasAvailablePlan;
   elements.billingPlanNote.textContent = hasAvailablePlan
-    ? `${members} active Backline ${members === 1 ? "user is" : "users are"} counted. Customer portal access never counts toward your plan.`
-    : `${members} active Backline users need an expanded plan. Contact Backline Support to set up a plan above 10 users.`;
+    ? `${members} active Backline ${members === 1 ? "user is" : "users are"} counted. Shop includes 10 users, then adds $15/month for each additional user. Customer portal access never counts toward your plan.`
+    : "Choose a plan that fits the active Backline users in this shop.";
   elements.billingPlanModal?.showModal();
 }
 
 async function startBillingCheckout(planKey) {
   const plan = billingPlanDetails(planKey);
-  if (!plan || activeBacklineMemberCount() > plan.memberCap) {
+  if (!plan || !planSupportsMemberCount(planKey)) {
     throw new Error("Choose a plan that fits the active Backline users in this shop.");
   }
   const client = getSupabaseClient();

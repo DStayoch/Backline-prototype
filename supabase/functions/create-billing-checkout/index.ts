@@ -59,10 +59,10 @@ Deno.serve(async (request) => {
     const body = await request.json().catch(() => ({}));
     const organizationId = String(body.organizationId || "");
     const planKey = String(body.plan || "").toLowerCase();
-    const plans: Record<string, { priceId: string | undefined; memberCap: number }> = {
+    const plans: Record<string, { priceId: string | undefined; memberCap: number; allowsAdditionalUsers?: boolean }> = {
       solo: { priceId: Deno.env.get("STRIPE_BACKLINE_SOLO_PRICE_ID"), memberCap: 1 },
       crew: { priceId: Deno.env.get("STRIPE_BACKLINE_CREW_PRICE_ID"), memberCap: 5 },
-      shop: { priceId: Deno.env.get("STRIPE_BACKLINE_SHOP_PRICE_ID"), memberCap: 10 }
+      shop: { priceId: Deno.env.get("STRIPE_BACKLINE_SHOP_PRICE_ID"), memberCap: 10, allowsAdditionalUsers: true }
     };
     const plan = plans[planKey];
     if (!organizationId || !plan?.priceId) return json({ error: "Choose an available Backline plan before checkout." }, 400);
@@ -75,8 +75,14 @@ Deno.serve(async (request) => {
     const teamResponse = await supabaseRest(`/rest/v1/organization_members?organization_id=eq.${encodeURIComponent(organizationId)}&select=user_id`);
     if (!teamResponse.ok) throw new Error(await teamResponse.text());
     const teamMembers = await teamResponse.json();
-    if (!Array.isArray(teamMembers) || teamMembers.length > plan.memberCap) {
+    if (!Array.isArray(teamMembers)) throw new Error("Backline could not verify the active team size.");
+    const additionalUserCount = Math.max(0, teamMembers.length - plan.memberCap);
+    if (additionalUserCount && !plan.allowsAdditionalUsers) {
       return json({ error: `This shop has more than ${plan.memberCap} active Backline users. Choose a larger plan before checkout.` }, 400);
+    }
+    const additionalUserPriceId = Deno.env.get("STRIPE_BACKLINE_ADDITIONAL_USER_PRICE_ID");
+    if (additionalUserCount && !additionalUserPriceId) {
+      throw new Error("Additional-user billing is not configured for this Backline environment.");
     }
 
     type Organization = { id: string; name: string };
@@ -108,16 +114,19 @@ Deno.serve(async (request) => {
       integration_identifier: "backline_billing_checkout_xvupjldq",
       customer: customerId,
       client_reference_id: organizationId,
-      line_items: [{ price: plan.priceId, quantity: 1 }],
+      line_items: [
+        { price: plan.priceId, quantity: 1 },
+        ...(additionalUserCount ? [{ price: additionalUserPriceId, quantity: additionalUserCount }] : [])
+      ],
       allow_promotion_codes: true,
       billing_address_collection: automaticTax ? "required" : "auto",
       ...(automaticTax ? { automatic_tax: { enabled: true } } : {}),
       success_url: `${appUrl}?billing=success&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${appUrl}?billing=canceled`,
-      metadata: { backline_organization_id: organizationId, backline_plan_key: planKey, backline_member_cap: String(plan.memberCap) },
+      metadata: { backline_organization_id: organizationId, backline_plan_key: planKey, backline_member_cap: String(plan.memberCap), backline_additional_user_count: String(additionalUserCount) },
       subscription_data: {
         trial_period_days: 14,
-        metadata: { backline_organization_id: organizationId, backline_plan_key: planKey, backline_member_cap: String(plan.memberCap) }
+        metadata: { backline_organization_id: organizationId, backline_plan_key: planKey, backline_member_cap: String(plan.memberCap), backline_additional_user_count: String(additionalUserCount) }
       }
     });
     if (!session.url) throw new Error("Stripe did not return a checkout URL.");

@@ -22,7 +22,9 @@ assert.match(checkout, /role=eq\.owner/, "Only a workspace owner may start billi
 assert.match(checkout, /STRIPE_BACKLINE_SOLO_PRICE_ID/, "Checkout must support the Solo plan.");
 assert.match(checkout, /STRIPE_BACKLINE_CREW_PRICE_ID/, "Checkout must support the Crew plan.");
 assert.match(checkout, /STRIPE_BACKLINE_SHOP_PRICE_ID/, "Checkout must support the Shop plan.");
+assert.match(checkout, /STRIPE_BACKLINE_ADDITIONAL_USER_PRICE_ID/, "Checkout must support additional Shop users.");
 assert.match(checkout, /memberCap: 10/, "Checkout must enforce the Shop capacity.");
+assert.match(checkout, /additionalUserCount/, "Checkout must calculate the additional Shop-user quantity.");
 assert.match(checkout, /trial_period_days: 14/, "New subscriptions must receive the advertised trial.");
 assert.match(checkout, /STRIPE_SECRET_KEY/, "Stripe credentials must be server-side secrets.");
 assert.doesNotMatch(checkout, /payment_method_types/, "Checkout must use Stripe dynamic payment methods.");
@@ -44,6 +46,7 @@ assert.match(page, /id="billingPlanModal"/, "Owners need a dedicated billing pla
 assert.match(page, /\$49<span>\/mo<\/span>/, "Solo pricing must be shown in the product.");
 assert.match(page, /\$99<span>\/mo<\/span>/, "Crew pricing must be shown in the product.");
 assert.match(page, /\$179<span>\/mo<\/span>/, "Shop pricing must be shown in the product.");
+assert.match(page, /\$15\/mo per additional user/, "Shop add-on pricing must be shown in the product.");
 assert.match(page, /data-cancel-modal="billing-plan"/, "Billing plan dialog needs a cancel action.");
 assert.match(app, /create-billing-checkout/, "The plan dialog must open secure Stripe Checkout.");
 assert.match(app, /create-billing-portal/, "Active subscribers must manage billing through the portal.");
