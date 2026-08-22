@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Backline Sign In Mock</title>
+    <link rel="icon" type="image/png" href="assets/backline-icon-transparent.png">
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap");
+
+      :root { --ink:#162033; --muted:#63738a; --line:#dce5ef; --panel:#fff; --canvas:#eff3f7; --navy:#10243f; --blue:#2563eb; --blue-soft:#edf3ff; --teal:#0f8f87; --teal-soft:#e5f7f4; --shadow:0 24px 60px rgba(24,42,67,.13); }
+      * { box-sizing: border-box; }
+      body { margin:0; min-width:320px; background:var(--canvas); color:var(--ink); font:500 16px/1.5 Manrope,"Segoe UI",sans-serif; }
+      .shell { min-height:100vh; display:grid; grid-template-rows:auto 1fr; }
+      header { min-height:72px; padding:0 clamp(22px,5vw,72px); display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid rgba(255,255,255,.16); background:var(--navy); color:#f8fbff; }
+      .brand { display:inline-flex; align-items:center; gap:11px; font-size:1.08rem; font-weight:800; }
+      .brand-mark { width:38px; height:38px; overflow:hidden; border:1px solid rgba(255,255,255,.34); border-radius:8px; background:#fff; }
+      .brand-mark img { display:block; width:100%; height:100%; border-radius:inherit; object-fit:cover; }
+      header small { color:rgba(248,251,255,.72); font-size:.84rem; }
+      main { width:min(1120px,calc(100% - 48px)); margin:auto; padding:clamp(28px,7vh,80px) 0; display:grid; grid-template-columns:minmax(260px,.85fr) minmax(420px,1fr); gap:clamp(32px,7vw,112px); align-items:center; }
+      .welcome { padding:12px 0; }
+      .eyebrow { margin:0 0 14px; color:var(--teal); font-size:.78rem; font-weight:800; letter-spacing:.09em; text-transform:uppercase; }
+      h1 { max-width:470px; margin:0; font-size:clamp(2.1rem,4vw,3.45rem); line-height:1.1; letter-spacing:0; }
+      .welcome > p:not(.eyebrow) { max-width:440px; margin:18px 0 28px; color:var(--muted); font-size:1.03rem; }
+      .outcomes { display:grid; gap:13px; margin:0; padding:0; list-style:none; }
+      .outcomes li { display:grid; grid-template-columns:24px 1fr; gap:10px; align-items:start; color:#35455c; font-size:.92rem; }
+      .check { width:24px; height:24px; display:grid; place-items:center; border-radius:50%; background:var(--teal-soft); color:var(--teal); font-size:.78rem; font-weight:800; }
+      .access-note { margin-top:30px; padding-top:20px; border-top:1px solid var(--line); color:var(--muted); font-size:.8rem; }
+      .auth-surface { border:1px solid var(--line); border-radius:8px; background:var(--panel); box-shadow:var(--shadow); overflow:hidden; }
+      .auth-top { padding:26px 28px 20px; border-bottom:1px solid var(--line); }
+      .auth-top h2 { margin:0; font-size:1.42rem; }
+      .auth-top p { margin:5px 0 0; color:var(--muted); font-size:.88rem; }
+      form { display:grid; gap:15px; padding:22px 28px 20px; }
+      label { display:grid; gap:7px; color:#42546a; font-size:.82rem; font-weight:800; }
+      input { width:100%; min-height:46px; padding:0 12px; border:1px solid var(--line); border-radius:8px; background:#fff; color:var(--ink); font:inherit; font-size:.92rem; outline:0; }
+      input:focus { border-color:var(--blue); box-shadow:0 0 0 3px rgba(37,99,235,.12); }
+      .form-row { display:flex; justify-content:space-between; gap:12px; align-items:center; }
+      .form-row label { display:flex; align-items:center; gap:8px; color:var(--muted); font-size:.76rem; font-weight:700; }
+      .form-row input { width:15px; min-height:auto; height:15px; accent-color:var(--blue); }
+      button { min-height:48px; border:0; border-radius:8px; cursor:pointer; font:inherit; font-weight:800; }
+      .primary { background:var(--blue); color:#fff; }
+      .primary:hover { background:#1d4ed8; }
+      .link { min-height:auto; padding:0; background:transparent; color:var(--blue); font-size:.76rem; }
+      .divider { display:grid; grid-template-columns:1fr auto 1fr; gap:12px; align-items:center; padding:0 28px; color:var(--muted); font-size:.74rem; }
+      .divider::before,.divider::after { height:1px; background:var(--line); content:""; }
+      .oauth { display:grid; gap:10px; padding:20px 28px; }
+      .oauth button { min-height:45px; border:1px solid var(--line); background:#fff; color:var(--ink); font-size:.87rem; }
+      .oauth button:hover { border-color:#a4c0f4; background:#fbfdff; }
+      .auth-footer { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:18px 28px; border-top:1px solid var(--line); background:#fbfcfe; color:var(--muted); font-size:.78rem; }
+      .auth-footer button { min-height:auto; padding:0; background:transparent; color:var(--blue); font-size:.78rem; }
+      .offline { padding:0 28px 22px; color:var(--muted); font-size:.74rem; text-align:center; }
+      .offline button { min-height:auto; padding:0; background:transparent; color:var(--blue); font-size:.74rem; }
+      .create-only { display:none; }
+      .create-mode .signin-only { display:none; }
+      .create-mode .create-only { display:grid; }
+      .create-mode .auth-top h2::after { content:"Create your shop workspace"; }
+      .create-mode .auth-top h2 { font-size:0; }
+      .create-mode .auth-top h2::after { font-size:1.42rem; }
+      @media (max-width:840px) { main { width:min(580px,calc(100% - 32px)); grid-template-columns:1fr; gap:28px; padding:38px 0; } .welcome { padding:0; } .access-note { display:none; } }
+      @media (max-width:520px) { header { min-height:60px; padding:0 16px; } header small { display:none; } main { width:min(100% - 24px,580px); padding:24px 0; } h1 { font-size:2rem; } .auth-top,form,.oauth,.auth-footer { padding-left:18px; padding-right:18px; } .offline { padding-left:18px; padding-right:18px; } }
+    </style>
+  </head>
+  <body>
+    <div class="shell" id="shell">
+      <header>
+        <div class="brand"><span class="brand-mark"><img src="assets/backline-icon.png" alt=""></span>BACKLINE</div>
+        <small>Your office, handled</small>
+      </header>
+      <main>
+        <section class="welcome">
+          <p class="eyebrow">Your shop workspace</p>
+          <h1>Pick up where your day left off.</h1>
+          <p>Sign in to the jobs, customers, schedules, and conversations that keep your shop moving.</p>
+          <ul class="outcomes">
+            <li><span class="check">&#10003;</span><span>See today&rsquo;s work and the next best action for every job.</span></li>
+            <li><span class="check">&#10003;</span><span>Keep customer conversations, approvals, and payment history connected.</span></li>
+            <li><span class="check">&#10003;</span><span>Give office staff and technicians the right view of the same shop.</span></li>
+          </ul>
+          <p class="access-note">Your workspace is secured through Backline sign-in. Offline access can be enabled later on a device you trust.</p>
+        </section>
+        <section class="auth-surface" aria-label="Backline account access">
+          <div class="auth-top"><h2>Welcome back</h2><p class="signin-only">Sign in to return to your shop workspace.</p><p class="create-only">Set up your secure Backline workspace in a few steps.</p></div>
+          <form id="authMockForm">
+            <label class="create-only">Your name<input type="text" placeholder="First and last name"></label>
+            <label>Email<input type="email" placeholder="you@yourshop.com"></label>
+            <label>Password<input type="password" placeholder="Enter your password"></label>
+            <label class="create-only">Confirm password<input type="password" placeholder="Re-enter your password"></label>
+            <div class="form-row signin-only"><label><input type="checkbox">Keep me signed in</label><button class="link" type="button">Forgot password?</button></div>
+            <button class="primary" type="button" id="submitMock">Sign in to Backline</button>
+          </form>
+          <div class="divider"><span>or continue with</span></div>
+          <div class="oauth"><button type="button">Continue with Google</button><button type="button">Continue with Apple</button></div>
+          <div class="auth-footer"><span id="authFooterText">New to Backline?</span><button type="button" id="switchMode">Create your workspace</button></div>
+          <div class="offline">Working without service? <button type="button">Unlock saved workspace</button></div>
+        </section>
+      </main>
+    </div>
+    <script>
+      const shell = document.querySelector('#shell');
+      const switchMode = document.querySelector('#switchMode');
+      const footerText = document.querySelector('#authFooterText');
+      const submit = document.querySelector('#submitMock');
+      switchMode.addEventListener('click', () => {
+        const creating = shell.classList.toggle('create-mode');
+        footerText.textContent = creating ? 'Already have a Backline account?' : 'New to Backline?';
+        switchMode.textContent = creating ? 'Sign in instead' : 'Create your workspace';
+        submit.textContent = creating ? 'Create secure workspace' : 'Sign in to Backline';
+      });
+      submit.addEventListener('click', () => alert('Mock only: this would securely sign in or create an account.'));
+    </script>
+  </body>
+</html>
