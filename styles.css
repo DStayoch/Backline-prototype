@@ -6890,6 +6890,7 @@ html[data-theme="dark"] .auth-logo {
 
 .subscription-gate-secondary-actions {
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
   gap: 16px;
 }

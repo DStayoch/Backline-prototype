@@ -577,6 +577,7 @@ const elements = {
   subscriptionGatePrimary: document.querySelector("#subscriptionGatePrimary"),
   subscriptionGateRefresh: document.querySelector("#subscriptionGateRefresh"),
   subscriptionGateExport: document.querySelector("#subscriptionGateExport"),
+  subscriptionGateSwitchAccount: document.querySelector("#subscriptionGateSwitchAccount"),
   toastRegion: document.querySelector("#toastRegion"),
   authForm: document.querySelector("#authForm"),
   authGateHeading: document.querySelector("#authGateHeading"),
@@ -23970,7 +23971,7 @@ elements.subscriptionGateRefresh?.addEventListener("click", async () => {
 
 elements.subscriptionGateExport?.addEventListener("click", exportData);
 
-elements.signOutButton.addEventListener("click", async () => {
+async function signOutOfBackline() {
   setAccountSwitching(true, "Signing out...");
   const client = getSupabaseClient();
   if (client) {
@@ -23990,6 +23991,12 @@ elements.signOutButton.addEventListener("click", async () => {
   await loadDatabaseData();
   routeFromHash();
   setAccountSwitching(false);
+}
+
+elements.subscriptionGateSwitchAccount?.addEventListener("click", signOutOfBackline);
+
+elements.signOutButton.addEventListener("click", async () => {
+  await signOutOfBackline();
 });
 
 document.querySelector("#settingsPrintButton").addEventListener("click", () => {
@@ -24073,7 +24080,7 @@ function registerBacklineServiceWorker() {
   if (window.location.protocol === "file:" || !("serviceWorker" in navigator)) return;
   window.addEventListener("load", () => {
     navigator.serviceWorker
-      .register("./service-worker.js?v=20260822-auth-gate", { scope: "./" })
+      .register("./service-worker.js?v=20260822-switch-account", { scope: "./" })
       .catch((error) => console.warn("Backline service worker registration failed.", error));
   });
 }

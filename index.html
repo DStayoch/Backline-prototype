@@ -12,7 +12,7 @@
     <link rel="icon" type="image/png" href="assets/backline-icon-transparent.png">
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="apple-touch-icon" href="assets/backline-icon-transparent.png">
-    <link rel="stylesheet" href="styles.css?v=20260822-auth-gate">
+    <link rel="stylesheet" href="styles.css?v=20260822-switch-account">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
     <script src="supabase-config.js"></script>
@@ -150,6 +150,7 @@
             <div class="subscription-gate-secondary-actions">
               <button class="text-button" type="button" id="subscriptionGateRefresh">Check subscription</button>
               <button class="text-button" type="button" id="subscriptionGateExport" hidden>Download backup</button>
+              <button class="text-button subscription-gate-switch-account" type="button" id="subscriptionGateSwitchAccount">Switch account</button>
             </div>
             <p id="subscriptionGateCheckoutNote">Secure checkout is handled by Stripe. You can manage or cancel your subscription from Backline Settings.</p>
           </div>
@@ -1352,6 +1353,6 @@
       </section>
     </dialog>
 
-    <script src="app.js?v=20260822-auth-gate"></script>
+    <script src="app.js?v=20260822-switch-account"></script>
   </body>
 </html>
