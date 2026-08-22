@@ -42,6 +42,8 @@ const requiredFiles = [
   "supabase-schema-17-public-token-hardening.sql",
   "supabase-schema-18-activity-append-only.sql",
   "supabase-schema-19-platform-admins.sql",
+  "supabase-schema-20-billing.sql",
+  "supabase-schema-21-billing-access.sql",
   "assets/backline-banner.png",
   "assets/backline-banner-clean.png",
   "assets/backline-banner-clean-grey.png",
@@ -163,11 +165,11 @@ assert.match(css, /\.sidebar \.brand-subtitle/);
 assert.match(css, /html\[data-theme="dark"\] \.brand-mark img/);
 assert.match(css, /content: url\("assets\/backline-icon-dark\.png"\)/);
 assert.match(css, /html\[data-theme="dark"\] \.auth-logo/);
-assert.match(html, /<link rel="stylesheet" href="styles\.css\?v=20260821-stripe-billing">/);
+assert.match(html, /<link rel="stylesheet" href="styles\.css\?v=20260822-billing-access">/);
 assert.match(html, /@supabase\/supabase-js@2/);
 assert.match(html, /jspdf@2\.5\.1/);
 assert.match(html, /<script src="supabase-config\.js"><\/script>/);
-assert.match(html, /<script src="app\.js\?v=20260821-stripe-billing"><\/script>/);
+assert.match(html, /<script src="app\.js\?v=20260822-billing-access"><\/script>/);
 assert.match(html, /id="topbarGreeting"/);
 assert.match(html, /id="topbarInsight"/);
 assert.match(html, /Welcome back\./);

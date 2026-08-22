@@ -500,6 +500,7 @@ let state = {
   organizationId: null,
   userRole: "owner",
   billing: null,
+  billingAccess: { mode: "full", status: "" },
   supabaseClient: null,
   offlineMode: false,
   offlineSyncPending: false,
@@ -560,6 +561,14 @@ let offlineSyncPromise = null;
 
 const elements = {
   authGate: document.querySelector("#authGate"),
+  subscriptionGate: document.querySelector("#subscriptionGate"),
+  subscriptionGateEyebrow: document.querySelector("#subscriptionGateEyebrow"),
+  subscriptionGateTitle: document.querySelector("#subscriptionGateTitle"),
+  subscriptionGateDetail: document.querySelector("#subscriptionGateDetail"),
+  subscriptionGateStatus: document.querySelector("#subscriptionGateStatus"),
+  subscriptionGatePrimary: document.querySelector("#subscriptionGatePrimary"),
+  subscriptionGateRefresh: document.querySelector("#subscriptionGateRefresh"),
+  subscriptionGateExport: document.querySelector("#subscriptionGateExport"),
   toastRegion: document.querySelector("#toastRegion"),
   authForm: document.querySelector("#authForm"),
   authGateStatus: document.querySelector("#authGateStatus"),
@@ -2821,6 +2830,9 @@ function canManageTeamRole(roleSlug = currentRole()) {
 }
 
 function can(action) {
+  if (state.secureMode && !state.offlineMode && state.billingAccess?.mode === "read_only" && action !== "exportData") {
+    return false;
+  }
   if (action === "manageTeam") return canManageTeamRole();
   const role = roleDefinition(currentRole()) || rolePermissions.owner;
   if (action === "createJob") return Boolean(role.createJob);
@@ -3406,6 +3418,8 @@ function resetSecureWorkspaceState() {
   state.offlineUnlockKey = null;
   state.offlineUnlockProfileId = "";
   state.organizationId = null;
+  state.billing = null;
+  state.billingAccess = { mode: "full", status: "" };
   state.jobs = [];
   state.deletedJobs = [];
   state.customers = [];
@@ -3844,12 +3858,16 @@ async function loadRemoteData() {
 async function loadRemoteBillingStatus() {
   const client = getSupabaseClient();
   if (!client || !state.organizationId) return;
+  state.billingAccess = { mode: "full", status: "" };
   try {
-    const { data, error } = await client
-      .from("organization_billing")
-      .select("plan_key,status,cancel_at_period_end,current_period_end,trial_end")
-      .eq("organization_id", state.organizationId)
-      .maybeSingle();
+    const [{ data, error }, accessResult] = await Promise.all([
+      client
+        .from("organization_billing")
+        .select("plan_key,status,cancel_at_period_end,current_period_end,trial_end")
+        .eq("organization_id", state.organizationId)
+        .maybeSingle(),
+      client.rpc("backline_workspace_access", { target_org: state.organizationId })
+    ]);
     if (error) {
       // A workspace can load normally before schema 20 has been applied.
       if (/organization_billing|schema cache|does not exist/i.test(String(error.message || ""))) {
@@ -3859,9 +3877,23 @@ async function loadRemoteBillingStatus() {
       throw error;
     }
     state.billing = data || null;
+
+    if (accessResult.error) {
+      // Keep existing workspaces available until schema 21 is intentionally applied.
+      if (!/backline_workspace_access|schema cache|does not exist/i.test(String(accessResult.error.message || ""))) {
+        throw accessResult.error;
+      }
+      return;
+    }
+    if (accessResult.data?.mode === "read_only") {
+      state.billingAccess = accessResult.data;
+    } else if (accessResult.data) {
+      state.billingAccess = { mode: "full", ...accessResult.data };
+    }
   } catch (error) {
     console.warn("Backline billing status could not load.", error);
     state.billing = null;
+    state.billingAccess = { mode: "full", status: "" };
   }
 }
 
@@ -18931,6 +18963,8 @@ function renderTeam() {
 
 function render() {
   if (document.body.classList.contains("approval-mode")) return;
+  renderSubscriptionGate();
+  if (document.body.classList.contains("subscription-mode")) return;
   updateRoleUI();
   renderTopbar();
   renderBillingSettings();
@@ -18958,6 +18992,38 @@ function render() {
   renderTeam();
   renderActivity();
   renderCreatorConsole();
+}
+
+function isSubscriptionReadOnly() {
+  return state.secureMode && !state.offlineMode && state.billingAccess?.mode === "read_only";
+}
+
+function renderSubscriptionGate() {
+  if (!elements.subscriptionGate) return;
+  const locked = isSubscriptionReadOnly();
+  elements.subscriptionGate.hidden = !locked;
+  document.body.classList.toggle("subscription-mode", locked);
+  if (!locked) return;
+
+  const status = String(state.billingAccess?.status || state.billing?.status || "inactive");
+  const owner = currentRole() === "owner";
+  const neverStarted = ["", "inactive"].includes(status);
+  const pastDue = status === "past_due";
+  const detail = neverStarted
+    ? "Choose a Backline plan to start the 14-day trial and open this workspace."
+    : pastDue
+      ? "The payment grace period has ended. Update billing to restore full workspace access."
+      : "This workspace is read-only because its Backline subscription is not active.";
+
+  elements.subscriptionGateEyebrow.textContent = pastDue ? "Payment needs attention" : "Backline subscription";
+  elements.subscriptionGateTitle.textContent = neverStarted ? "Choose a Backline plan" : "This workspace is read-only";
+  elements.subscriptionGateDetail.textContent = owner
+    ? detail
+    : `${detail} Ask the workspace owner to update the subscription.`;
+  elements.subscriptionGateStatus.textContent = `Subscription status: ${billingStatusLabel(status)}.`;
+  elements.subscriptionGatePrimary.hidden = !owner;
+  elements.subscriptionGatePrimary.textContent = neverStarted ? "Choose plan" : "Manage billing";
+  elements.subscriptionGateExport.hidden = !owner;
 }
 
 function createJob(formData) {
@@ -23783,6 +23849,29 @@ elements.billingPlanForm?.addEventListener("submit", async (event) => {
   }
 });
 
+elements.subscriptionGatePrimary?.addEventListener("click", async () => {
+  try {
+    if (["", "inactive"].includes(String(state.billingAccess?.status || state.billing?.status || ""))) {
+      openBillingPlanModal();
+      return;
+    }
+    await openBillingPortal();
+  } catch (error) {
+    showToast("Billing unavailable", error?.message || "Backline could not open billing right now.", "danger", { timeout: 6500 });
+  }
+});
+
+elements.subscriptionGateRefresh?.addEventListener("click", async () => {
+  elements.subscriptionGateRefresh.disabled = true;
+  elements.subscriptionGateRefresh.textContent = "Checking...";
+  await loadRemoteBillingStatus();
+  elements.subscriptionGateRefresh.disabled = false;
+  elements.subscriptionGateRefresh.textContent = "Check subscription";
+  render();
+});
+
+elements.subscriptionGateExport?.addEventListener("click", exportData);
+
 elements.signOutButton.addEventListener("click", async () => {
   setAccountSwitching(true, "Signing out...");
   const client = getSupabaseClient();
@@ -23886,7 +23975,7 @@ function registerBacklineServiceWorker() {
   if (window.location.protocol === "file:" || !("serviceWorker" in navigator)) return;
   window.addEventListener("load", () => {
     navigator.serviceWorker
-      .register("./service-worker.js?v=20260821-stripe-billing", { scope: "./" })
+      .register("./service-worker.js?v=20260822-billing-access", { scope: "./" })
       .catch((error) => console.warn("Backline service worker registration failed.", error));
   });
 }

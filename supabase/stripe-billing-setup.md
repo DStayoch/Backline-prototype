@@ -37,6 +37,28 @@ stripe-webhook
 
 Deploy `stripe-webhook` with JWT verification disabled because Stripe authenticates it using the webhook signature. The function verifies that signature before it processes any event.
 
+## Subscription access control
+
+Run `supabase-schema-21-billing-access.sql` immediately after schema 20, then redeploy `stripe-webhook`. This enforces the subscription on the server, not just in the browser:
+
+- `trialing` and `active` workspaces have full access.
+- `past_due` workspaces stay fully usable for seven days, then become read-only until the payment is resolved.
+- Canceled, unpaid, paused, incomplete, and never-subscribed workspaces are read-only. They can still view records and download a backup.
+
+Before running schema 21 in your development project, make sure the Backline founder account is in `platform_admins`. That server-controlled role keeps your own development workspace usable without a subscription:
+
+```sql
+insert into public.platform_admins (user_id, email, display_name)
+select id, email, 'Backline creator'
+from auth.users
+where lower(email) = lower('derekstayoch@gmail.com')
+on conflict (user_id) do update
+set email = excluded.email,
+    display_name = excluded.display_name;
+```
+
+Do not add customer accounts to `platform_admins`.
+
 ## Stripe webhook
 
 Create a webhook endpoint in Stripe that points to:

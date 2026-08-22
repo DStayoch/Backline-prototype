@@ -7,6 +7,7 @@ const read = (path) => readFileSync(resolve(root, path), "utf8");
 const app = read("app.js");
 const page = read("index.html");
 const schema = read("supabase-schema-20-billing.sql");
+const accessSchema = read("supabase-schema-21-billing-access.sql");
 const checkout = read("supabase/functions/create-billing-checkout/index.ts");
 const portal = read("supabase/functions/create-billing-portal/index.ts");
 const webhook = read("supabase/functions/stripe-webhook/index.ts");
@@ -16,6 +17,12 @@ assert.match(schema, /create table if not exists public\.organization_billing/i,
 assert.match(schema, /enable row level security/i, "Billing schema must use RLS.");
 assert.match(schema, /for select[\s\S]*organization_members/i, "Workspace members should be able to read their billing status.");
 assert.doesNotMatch(schema, /for (insert|update|delete)[\s\S]*to authenticated/i, "Clients must not directly mutate billing state.");
+assert.match(accessSchema, /add column if not exists access_grace_until/i, "Billing access needs a payment grace deadline.");
+assert.match(accessSchema, /has_backline_full_access/i, "Billing access needs an authoritative server-side access check.");
+assert.match(accessSchema, /backline_workspace_access/i, "The browser needs a read-only access status RPC.");
+assert.match(accessSchema, /before insert or update or delete on public\.jobs/i, "Jobs must be protected by a subscription write trigger.");
+assert.match(accessSchema, /before insert or update or delete on public\.customers/i, "Customers must be protected by a subscription write trigger.");
+assert.match(accessSchema, /public\.is_platform_admin/i, "Founder access must be server controlled.");
 
 assert.match(checkout, /mode: "subscription"/, "Checkout must create subscriptions.");
 assert.match(checkout, /role=eq\.owner/, "Only a workspace owner may start billing checkout.");
@@ -41,6 +48,7 @@ assert.match(webhook, /stripe_webhook_events/, "Webhook delivery must be idempot
 assert.match(webhook, /customer\.subscription\.updated/, "Webhook must track subscription changes.");
 assert.match(webhook, /invoice\.payment_failed/, "Webhook must track failed renewals.");
 assert.match(webhook, /parent\?\.subscription_details/, "Webhook must support the current Stripe invoice subscription shape.");
+assert.match(webhook, /7 \* 24 \* 60 \* 60 \* 1000/, "Webhook must establish the seven-day payment grace period.");
 
 assert.match(setup, /STRIPE_TAX_ENABLED=false/, "Tax must remain off until registrations are confirmed.");
 assert.match(setup, /stripe-webhook/i, "Setup must document webhook deployment.");
@@ -52,5 +60,7 @@ assert.match(page, /\$15\/mo per additional user/, "Shop add-on pricing must be 
 assert.match(page, /data-cancel-modal="billing-plan"/, "Billing plan dialog needs a cancel action.");
 assert.match(app, /create-billing-checkout/, "The plan dialog must open secure Stripe Checkout.");
 assert.match(app, /create-billing-portal/, "Active subscribers must manage billing through the portal.");
+assert.match(app, /backline_workspace_access/, "Backline must load the server-enforced workspace access state.");
+assert.match(page, /id="subscriptionGate"/, "Read-only workspaces need a dedicated subscription screen.");
 
 console.log("Stripe billing contracts passed.");

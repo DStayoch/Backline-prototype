@@ -61,8 +61,12 @@ async function recordEvent(event: Stripe.Event) {
 }
 
 async function billingForOrganization(organizationId: string) {
-  type BillingRow = { last_stripe_event_created_at: string | null };
-  return firstRow<BillingRow>(`/rest/v1/organization_billing?organization_id=eq.${encodeURIComponent(organizationId)}&select=last_stripe_event_created_at&limit=1`);
+  type BillingRow = {
+    status: string | null;
+    access_grace_until: string | null;
+    last_stripe_event_created_at: string | null;
+  };
+  return firstRow<BillingRow>(`/rest/v1/organization_billing?organization_id=eq.${encodeURIComponent(organizationId)}&select=status,access_grace_until,last_stripe_event_created_at&limit=1`);
 }
 
 async function billingForSubscription(subscriptionId: string) {
@@ -99,12 +103,18 @@ async function handleSubscription(subscription: Stripe.Subscription, event: Stri
   const organizationId = organizationIdFromMetadata(subscription.metadata);
   if (!organizationId) return;
   const item = subscription.items.data[0];
+  const existing = await billingForOrganization(organizationId);
+  const shouldStartGracePeriod = subscription.status === "past_due" && existing?.status !== "past_due";
+  const accessGraceUntil = subscription.status === "past_due"
+    ? (shouldStartGracePeriod ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() : existing?.access_grace_until || null)
+    : null;
   await updateBilling(organizationId, {
     stripe_customer_id: stripeId(subscription.customer),
     stripe_subscription_id: subscription.id,
     stripe_price_id: item?.price?.id || null,
     plan_key: asString(subscription.metadata.backline_plan_key) || null,
     status: subscription.status,
+    access_grace_until: accessGraceUntil,
     cancel_at_period_end: subscription.cancel_at_period_end,
     current_period_end: asUnixTimestamp(subscription.current_period_end),
     trial_end: asUnixTimestamp(subscription.trial_end)

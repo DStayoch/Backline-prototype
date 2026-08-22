@@ -12,7 +12,7 @@
     <link rel="icon" type="image/png" href="assets/backline-icon-transparent.png">
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="apple-touch-icon" href="assets/backline-icon-transparent.png">
-    <link rel="stylesheet" href="styles.css?v=20260821-stripe-billing">
+    <link rel="stylesheet" href="styles.css?v=20260822-billing-access">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
     <script src="supabase-config.js"></script>
@@ -70,6 +70,23 @@
           </form>
         </section>
         <p class="settings-note" id="authGateStatus">Secure database mode is ready when Supabase is configured.</p>
+      </section>
+    </main>
+
+    <main class="subscription-gate" id="subscriptionGate" hidden>
+      <section class="subscription-gate-card">
+        <img class="auth-logo" src="assets/backline-banner-clean-outline.png" alt="Backline, Your office handled">
+        <div>
+          <p class="eyebrow" id="subscriptionGateEyebrow">Backline subscription</p>
+          <h1 id="subscriptionGateTitle">Choose a Backline plan</h1>
+          <p id="subscriptionGateDetail">Start the 14-day trial to open this workspace.</p>
+        </div>
+        <p class="subscription-gate-status" id="subscriptionGateStatus"></p>
+        <div class="auth-actions">
+          <button class="primary-button" type="button" id="subscriptionGatePrimary">Choose plan</button>
+          <button class="secondary-button" type="button" id="subscriptionGateRefresh">Check subscription</button>
+          <button class="secondary-button" type="button" id="subscriptionGateExport" hidden>Download backup</button>
+        </div>
       </section>
     </main>
 
@@ -1268,6 +1285,6 @@
       </section>
     </dialog>
 
-    <script src="app.js?v=20260821-stripe-billing"></script>
+    <script src="app.js?v=20260822-billing-access"></script>
   </body>
 </html>
