@@ -2938,34 +2938,37 @@ button.metric-block {
   flex: 1 0 100%;
   width: 100%;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(188px, 220px));
-  justify-content: start;
-  align-items: stretch;
-  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(172px, 1fr));
+  align-items: start;
+  gap: 0;
   margin-top: 6px;
-  padding: 10px;
-  background: var(--surface-muted);
+  padding: 5px;
+  background: color-mix(in srgb, var(--surface-muted) 72%, var(--surface));
   border: 1px solid var(--line);
   border-radius: 8px;
-  box-shadow: none;
+  box-shadow: 0 10px 20px color-mix(in srgb, var(--shadow) 5%, transparent);
 }
 
 .job-action-menu-group {
   display: grid;
   align-content: start;
-  gap: 10px;
-  min-height: 100%;
-  padding: 10px;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 8px;
+  gap: 6px;
+  min-width: 0;
+  padding: 10px 12px 12px;
+  background: transparent;
+  border: 0;
+  border-left: 1px solid var(--line);
+}
+
+.job-action-menu-group:first-child {
+  border-left: 0;
 }
 
 .job-action-menu-group span {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  color: var(--muted);
+  color: var(--blue-dark);
   font-size: 0.68rem;
   font-weight: 950;
   letter-spacing: 0;
@@ -2975,13 +2978,25 @@ button.metric-block {
 .job-action-menu-group div {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 8px;
+  gap: 3px;
 }
 
 .job-action-menu-group .action-button {
-  background: var(--field);
+  min-height: 34px;
+  padding: 6px 9px;
+  border-color: transparent;
+  background: transparent;
+  color: var(--ink);
   width: 100%;
-  justify-self: stretch;
+  justify-content: flex-start;
+  text-align: left;
+}
+
+.job-action-menu-group .action-button:hover,
+.job-action-menu-group .action-button:focus-visible {
+  border-color: var(--line);
+  background: var(--field);
+  color: var(--blue-dark);
 }
 
 .job-action-menu-group .action-button.accent {
@@ -2990,6 +3005,13 @@ button.metric-block {
 }
 
 .job-action-menu-group .action-button.danger {
+  color: var(--coral);
+}
+
+.job-action-menu-group .action-button.danger:hover,
+.job-action-menu-group .action-button.danger:focus-visible {
+  border-color: color-mix(in srgb, var(--coral) 35%, var(--line));
+  background: var(--danger-soft);
   color: var(--coral);
 }
 
@@ -11090,18 +11112,25 @@ html[data-theme="dark"] .approval-logo-full {
     max-width: 100%;
     margin-top: 0;
     grid-template-columns: 1fr;
-    padding: 0;
-    border: 0;
-    background: transparent;
+    gap: 0;
+    padding: 5px;
+    border: 1px solid var(--line);
+    background: color-mix(in srgb, var(--surface-muted) 72%, var(--surface));
   }
 
   .job-action-menu-group {
-    padding: 9px;
-    gap: 8px;
+    padding: 10px;
+    gap: 6px;
+    border-left: 0;
+    border-top: 1px solid var(--line);
+  }
+
+  .job-action-menu-group:first-child {
+    border-top: 0;
   }
 
   .job-action-menu-group div {
-    gap: 7px;
+    gap: 3px;
   }
 
   .portal-file-actions {
