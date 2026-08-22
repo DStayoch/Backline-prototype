@@ -49,6 +49,7 @@ assert.match(webhook, /customer\.subscription\.updated/, "Webhook must track sub
 assert.match(webhook, /invoice\.payment_failed/, "Webhook must track failed renewals.");
 assert.match(webhook, /parent\?\.subscription_details/, "Webhook must support the current Stripe invoice subscription shape.");
 assert.match(webhook, /7 \* 24 \* 60 \* 60 \* 1000/, "Webhook must establish the seven-day payment grace period.");
+assert.match(webhook, /stripe\.subscriptions\.retrieve\(subscriptionId\)/, "Checkout completion must record the current subscription status without waiting for another webhook.");
 
 assert.match(setup, /STRIPE_TAX_ENABLED=false/, "Tax must remain off until registrations are confirmed.");
 assert.match(setup, /stripe-webhook/i, "Setup must document webhook deployment.");

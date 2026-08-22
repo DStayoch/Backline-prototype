@@ -121,14 +121,23 @@ async function handleSubscription(subscription: Stripe.Subscription, event: Stri
   }, event.created);
 }
 
-async function handleCheckout(session: Stripe.Checkout.Session, event: Stripe.Event) {
+async function handleCheckout(session: Stripe.Checkout.Session, event: Stripe.Event, stripe: Stripe) {
   const organizationId = organizationIdFromMetadata(session.metadata) || asString(session.client_reference_id);
   const subscriptionId = stripeId(session.subscription);
   if (!organizationId || !subscriptionId || session.payment_status === "unpaid") return;
+  // Do not rely on a separate subscription event arriving first. Checkout can
+  // establish the plan and current status in one signed webhook delivery.
+  const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+  const item = subscription.items.data[0];
   await updateBilling(organizationId, {
     stripe_customer_id: stripeId(session.customer),
     stripe_subscription_id: subscriptionId,
-    plan_key: asString(session.metadata?.backline_plan_key) || null
+    stripe_price_id: item?.price?.id || null,
+    plan_key: asString(subscription.metadata.backline_plan_key) || asString(session.metadata?.backline_plan_key) || null,
+    status: subscription.status,
+    cancel_at_period_end: subscription.cancel_at_period_end,
+    current_period_end: asUnixTimestamp(subscription.current_period_end),
+    trial_end: asUnixTimestamp(subscription.trial_end)
   }, event.created);
 }
 
@@ -168,7 +177,7 @@ Deno.serve(async (request) => {
     switch (event.type) {
       case "checkout.session.completed":
       case "checkout.session.async_payment_succeeded":
-        await handleCheckout(event.data.object as Stripe.Checkout.Session, event);
+        await handleCheckout(event.data.object as Stripe.Checkout.Session, event, stripe);
         break;
       case "customer.subscription.created":
       case "customer.subscription.updated":
