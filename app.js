@@ -13995,8 +13995,8 @@ function renderDetail() {
         <div class="detail-actions">
           ${renderJobActions()}
         </div>
-        ${renderJobSummaryBar(job)}
       </div>
+      ${renderJobSummaryBar(job)}
       ${state.jobActionNotice?.jobId === job.id ? `
         <div class="job-action-notice">
           <span>${escapeHtml(state.jobActionNotice.message)}</span>
@@ -24080,7 +24080,7 @@ function registerBacklineServiceWorker() {
   if (window.location.protocol === "file:" || !("serviceWorker" in navigator)) return;
   window.addEventListener("load", () => {
     navigator.serviceWorker
-      .register("./service-worker.js?v=20260822-job-summary", { scope: "./" })
+      .register("./service-worker.js?v=20260822-scrollable-summary", { scope: "./" })
       .catch((error) => console.warn("Backline service worker registration failed.", error));
   });
 }
