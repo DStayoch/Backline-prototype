@@ -32,7 +32,7 @@ const rolloutSteps = [
   },
   {
     name: "Schedule and assign technician",
-    app: [/book: \{[\s\S]*?title: isReschedule \? "Reschedule job" : "Book job"/, /name: "scheduleDate"/, /name: "startTime"/, /name: "durationMinutes"/, /name: "technician"/, /recordAssignmentUpdate\(job, nextTechnician\)/, /queueJobNotification\(job, "customer_confirmation"\)/, /queueJobNotification\(job, "tech_assignment"\)/]
+    app: [/book: \{[\s\S]*?title: isReschedule \? terms\.rescheduleWorkItem : terms\.bookWorkItem/, /name: "scheduleDate"/, /name: "startTime"/, /name: "durationMinutes"/, /name: "technician"/, /recordAssignmentUpdate\(job, nextTechnician\)/, /queueJobNotification\(job, "customer_confirmation"\)/, /queueJobNotification\(job, "tech_assignment"\)/]
   },
   {
     name: "Technician starts and completes work",

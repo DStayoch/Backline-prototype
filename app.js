@@ -229,9 +229,93 @@ const deploymentEnvironmentLabels = {
 
 const FOUNDRY_SNAPSHOT_LIMIT = 12;
 
+const BUSINESS_TERMINOLOGY = {
+  trades: {
+    workItem: "job",
+    workItemCapital: "Job",
+    workItemsPlural: "Jobs",
+    newWorkItem: "New job",
+    createWorkItem: "Create job",
+    newWorkItemHeading: "Add recovered job",
+    newWorkItemGuide: "Start with the customer's name, phone, and issue. You can schedule and assign a technician now or come back to it later.",
+    workItemType: "Job type",
+    workItemTemplate: "Job template",
+    workTemplates: "Job templates",
+    assignee: "Technician",
+    assignees: "Technicians",
+    bookWorkItem: "Book job",
+    rescheduleWorkItem: "Reschedule job"
+  },
+  appointments: {
+    workItem: "appointment",
+    workItemCapital: "Appointment",
+    workItemsPlural: "Appointments",
+    newWorkItem: "New appointment",
+    createWorkItem: "Create appointment",
+    newWorkItemHeading: "Add an appointment",
+    newWorkItemGuide: "Start with the customer's name, phone, and request. You can schedule and assign a team member now or come back to it later.",
+    workItemType: "Appointment type",
+    workItemTemplate: "Appointment template",
+    workTemplates: "Appointment templates",
+    assignee: "Team member",
+    assignees: "Team members",
+    bookWorkItem: "Schedule appointment",
+    rescheduleWorkItem: "Reschedule appointment"
+  },
+  professional: {
+    workItem: "project",
+    workItemCapital: "Project",
+    workItemsPlural: "Projects",
+    newWorkItem: "New project",
+    createWorkItem: "Create project",
+    newWorkItemHeading: "Add a project",
+    newWorkItemGuide: "Start with the client's name, contact details, and request. You can set a schedule and assign a team member now or come back to it later.",
+    workItemType: "Project type",
+    workItemTemplate: "Project template",
+    workTemplates: "Project templates",
+    assignee: "Team member",
+    assignees: "Team members",
+    bookWorkItem: "Plan project",
+    rescheduleWorkItem: "Update schedule"
+  },
+  automotive: {
+    workItem: "work order",
+    workItemCapital: "Work order",
+    workItemsPlural: "Work orders",
+    newWorkItem: "New work order",
+    createWorkItem: "Create work order",
+    newWorkItemHeading: "Add a work order",
+    newWorkItemGuide: "Start with the customer's name, phone, and service need. You can schedule and assign a technician now or come back to it later.",
+    workItemType: "Service type",
+    workItemTemplate: "Work order template",
+    workTemplates: "Work order templates",
+    assignee: "Technician",
+    assignees: "Technicians",
+    bookWorkItem: "Schedule work order",
+    rescheduleWorkItem: "Reschedule work order"
+  },
+  general: {
+    workItem: "work item",
+    workItemCapital: "Work item",
+    workItemsPlural: "Work items",
+    newWorkItem: "New work item",
+    createWorkItem: "Create work item",
+    newWorkItemHeading: "Add a work item",
+    newWorkItemGuide: "Start with the customer's name, contact details, and request. You can schedule and assign a team member now or come back to it later.",
+    workItemType: "Work type",
+    workItemTemplate: "Work template",
+    workTemplates: "Work templates",
+    assignee: "Team member",
+    assignees: "Team members",
+    bookWorkItem: "Schedule work item",
+    rescheduleWorkItem: "Reschedule work item"
+  }
+};
+
 const defaultCompanySettings = {
   companyName: "Backline",
   companySlogan: "",
+  businessType: "trades",
   legalName: "",
   phone: "",
   email: "",
@@ -1722,6 +1806,7 @@ function normalizeCompanySettings(settings = {}) {
     ...settings,
     companyName: String(settings.companyName || settings.name || defaultCompanySettings.companyName).trim() || defaultCompanySettings.companyName,
     companySlogan: String(settings.companySlogan || settings.tagline || "").trim(),
+    businessType: BUSINESS_TERMINOLOGY[settings.businessType] ? settings.businessType : defaultCompanySettings.businessType,
     legalName: String(settings.legalName || "").trim(),
     phone: formatPhoneNumber(settings.phone),
     email: String(settings.email || "").trim(),
@@ -1764,6 +1849,20 @@ function normalizeCompanySettings(settings = {}) {
 function companySettings() {
   state.companySettings = normalizeCompanySettings(state.companySettings);
   return state.companySettings;
+}
+
+function businessTerminology(type = state.companySettings?.businessType) {
+  return BUSINESS_TERMINOLOGY[type] || BUSINESS_TERMINOLOGY.trades;
+}
+
+function applyBusinessTerminology() {
+  const terms = businessTerminology();
+  document.querySelectorAll("[data-business-term]").forEach((element) => {
+    const value = terms[element.dataset.businessTerm];
+    if (value) element.textContent = value;
+  });
+  const workItemsNav = document.querySelector('[data-view="jobsdb"]');
+  if (workItemsNav) workItemsNav.title = terms.workItemsPlural;
 }
 
 function customerFacingShopLine(company = companySettings()) {
@@ -2901,17 +3000,18 @@ function roleName(role) {
     owner: "Owner",
     admin: "Admin",
     dispatcher: "Dispatcher",
-    tech: "Technician"
+    tech: businessTerminology().assignee
   };
   return builtInRoleOverride(role)?.label || labels[role] || customRoleMap()[role]?.label || "Owner";
 }
 
 function roleSummary(role) {
+  const terms = businessTerminology();
   const summaries = {
     owner: "Full access, team controls, exports, money, and insights.",
     admin: "Full workspace access and team controls, except ownership transfer.",
     dispatcher: "Books jobs, manages schedule, handles inbox, follow-ups, and customers.",
-    tech: "Sees assigned jobs only, completes field work, uploads proof, and logs parts."
+    tech: `Sees assigned ${terms.workItemsPlural.toLowerCase()} only, completes assigned work, uploads proof, and logs parts.`
   };
   return builtInRoleOverride(role)?.summary || summaries[role] || customRoleMap()[role]?.summary || "Custom permissions set by the owner.";
 }
@@ -4726,6 +4826,7 @@ function companySettingsDraftFromForm(form = elements.companySettingsForm) {
     ...companySettings(),
     companyName: data.get("companyName"),
     companySlogan: data.get("companySlogan"),
+    businessType: data.get("businessType"),
     legalName: data.get("legalName"),
     phone: data.get("phone"),
     email: data.get("email"),
@@ -4954,6 +5055,7 @@ function companySettingsFromForm(form) {
     ...companySettings(),
     companyName: data.get("companyName"),
     companySlogan: data.get("companySlogan"),
+    businessType: data.get("businessType"),
     legalName: data.get("legalName"),
     phone: formatPhoneNumber(data.get("phone")),
     email: data.get("email"),
@@ -6481,6 +6583,7 @@ function technicianWorkloadRows(jobs, day = todayISO()) {
 }
 
 function renderTechnicianWorkload(jobs) {
+  const terms = businessTerminology();
   const rows = technicianWorkloadRows(jobs)
     .filter((row) => row.technician !== "To Be Determined" || row.jobs.length > 0);
   const unassignedCount = rows.find((row) => row.technician === "To Be Determined")?.jobs.length || 0;
@@ -6491,10 +6594,10 @@ function renderTechnicianWorkload(jobs) {
     .filter((row) => row.technician !== "To Be Determined")
     .reduce((total, row) => total + row.bookedMinutes, 0);
   return `
-    <section class="workload-board" aria-label="Technician workload">
+    <section class="workload-board" aria-label="${escapeHtml(terms.assignee)} workload">
       <div class="workload-header">
         <div>
-          <h3>Technician workload</h3>
+          <h3>${escapeHtml(terms.assignee)} workload</h3>
           <p>${scheduledCount || unassignedCount ? `${scheduledCount} scheduled today · ${durationLabel(bookedMinutes)} booked · ${unassignedCount} waiting for assignment.` : "No scheduled work today. Open capacity is clear."}</p>
         </div>
         <span>${formatDateLabel(todayISO(), { includeYear: true })}</span>
@@ -6507,7 +6610,7 @@ function renderTechnicianWorkload(jobs) {
               <span>${escapeHtml(row.statusLabel)}</span>
             </div>
             <div class="workload-metrics">
-              <b>${row.jobs.length} job${row.jobs.length === 1 ? "" : "s"}</b>
+              <b>${row.jobs.length} ${row.jobs.length === 1 ? terms.workItem : terms.workItemsPlural.toLowerCase()}</b>
               ${row.technician === "To Be Determined"
                 ? '<small>Assign before dispatch</small>'
                 : `<small>${escapeHtml(durationLabel(row.bookedMinutes))} booked · ${escapeHtml(durationLabel(row.remainingMinutes))} open</small>`}
@@ -6517,7 +6620,7 @@ function renderTechnicianWorkload(jobs) {
         `).join("") : `
           <div class="empty-state compact-empty">
             <strong>No workload to show</strong>
-            <span>Book jobs or assign technicians to build today's board.</span>
+            <span>${escapeHtml(terms.bookWorkItem)} or assign ${escapeHtml(terms.assignees.toLowerCase())} to build today's board.</span>
           </div>
         `}
       </div>
@@ -9914,6 +10017,7 @@ function activeShopJobs(jobs = roleScopedJobs()) {
 }
 
 function topbarDataPoint() {
+  const terms = businessTerminology();
   const jobs = roleScopedJobs();
   const activeJobs = activeShopJobs(jobs);
   const attentionCount = attentionItems().length;
@@ -9922,13 +10026,13 @@ function topbarDataPoint() {
   const openBalance = jobs.reduce((sum, job) => sum + invoiceBalance(job), 0);
 
   if (attentionCount > 0) {
-    return `${attentionCount} item${attentionCount === 1 ? "" : "s"} need attention across ${activeJobs.length} active job${activeJobs.length === 1 ? "" : "s"}.`;
+    return `${attentionCount} item${attentionCount === 1 ? "" : "s"} need attention across ${activeJobs.length} active ${activeJobs.length === 1 ? terms.workItem : terms.workItemsPlural.toLowerCase()}.`;
   }
   if (unreadCount > 0) {
     return `${unreadCount} unread customer message${unreadCount === 1 ? "" : "s"} waiting for a reply.`;
   }
   if (todayJobs > 0) {
-    return `${todayJobs} job${todayJobs === 1 ? "" : "s"} scheduled today${openBalance > 0 ? ` with ${formatMoney(openBalance)} open balance` : ""}.`;
+    return `${todayJobs} ${todayJobs === 1 ? terms.workItem : terms.workItemsPlural.toLowerCase()} scheduled today${openBalance > 0 ? ` with ${formatMoney(openBalance)} open balance` : ""}.`;
   }
   if (openBalance > 0) {
     return `${formatMoney(openBalance)} open balance across customer accounts.`;
@@ -11503,17 +11607,18 @@ function renderEstimatePanel(job) {
 
 function renderJobActions() {
   const job = selectedJob();
+  const terms = businessTerminology();
   const lockedBilling = job && isLockedBillingJob(job);
   const closeAction = job && canCloseJob(job)
-    ? { action: "close", label: "Close job", tone: "accent", group: "primary" }
+    ? { action: "close", label: `Close ${terms.workItem}`, tone: "accent", group: "primary" }
     : lockedBilling
-      ? { action: "reopen", label: "Reopen job", tone: "accent", group: "primary" }
+      ? { action: "reopen", label: `Reopen ${terms.workItem}`, tone: "accent", group: "primary" }
       : null;
   const actions = [
     closeAction,
-    { action: "book", label: isScheduled(job || {}) ? "Reschedule" : "Book", tone: "accent", group: "primary" },
+    { action: "book", label: isScheduled(job || {}) ? terms.rescheduleWorkItem : terms.bookWorkItem, tone: "accent", group: "primary" },
     { action: "start", label: "Start", tone: "", group: "primary" },
-    { action: "complete", label: "Job completed", tone: "", group: "primary" },
+    { action: "complete", label: `Complete ${terms.workItem}`, tone: "", group: "primary" },
     { action: "portal", label: "Portal link", tone: "", group: "Customer" },
     { action: "portal-update", label: "Send portal update", tone: "", group: "Customer" },
     { action: "estimate", label: "Estimate", tone: "", group: "Estimate" },
@@ -13565,10 +13670,11 @@ function renderJobs() {
 }
 
 function nextBestAction(job = {}) {
+  const terms = businessTerminology();
   ensureJobDefaults(job);
   if (isLockedBillingJob(job) && can("reopen")) {
     return {
-      label: "Reopen job",
+      label: `Reopen ${terms.workItem}`,
       detail: "Unlock billing or field changes",
       action: "reopen",
       tone: "accent"
@@ -13577,8 +13683,8 @@ function nextBestAction(job = {}) {
 
   if (!isScheduled(job) && can("book")) {
     return {
-      label: "Book job",
-      detail: "Set the appointment and technician",
+      label: terms.bookWorkItem,
+      detail: `Set the schedule and ${terms.assignee.toLowerCase()}`,
       action: "book",
       tone: "accent"
     };
@@ -13605,7 +13711,7 @@ function nextBestAction(job = {}) {
 
   if (job.status === "booked" && can("start")) {
     return {
-      label: "Start job",
+      label: `Start ${terms.workItem}`,
       detail: "Begin field workflow",
       action: "start",
       tone: ""
@@ -13660,6 +13766,7 @@ function renderNextBestActionButton(nextAction) {
 
 function renderJobSummaryBar(job) {
   ensureJobDefaults(job);
+  const terms = businessTerminology();
   const invoice = invoiceRecord(job);
   const balance = invoiceBalance(job);
   const nextAction = nextBestAction(job);
@@ -13678,7 +13785,7 @@ function renderJobSummaryBar(job) {
           : `<strong>${escapeHtml(scheduleValue)}</strong>`}
       </div>
       <div class="job-summary-card">
-        <span>Technician</span>
+        <span>${escapeHtml(terms.assignee)}</span>
         <strong>${escapeHtml(technician)}</strong>
       </div>
       <div class="job-summary-card ${balance ? "due" : "paid"}">
@@ -14406,6 +14513,7 @@ function renderTechnicianWorkPanel() {
 }
 
 function renderSchedule() {
+  const terms = businessTerminology();
   renderTechnicianWorkPanel();
   const scheduleJobs = roleScopedJobs()
     .filter((job) => !["closed", "paid"].includes(job.status))
@@ -14455,7 +14563,7 @@ function renderSchedule() {
     ${can("book") ? renderTechnicianWorkload(scheduleJobs) : ""}
     <div class="schedule-toolbar">
       <div>
-        <strong>${scheduleFilter === "today" ? "Today" : scheduleFilter === "unscheduled" ? "Unscheduled jobs" : "This week"}</strong>
+        <strong>${scheduleFilter === "today" ? "Today" : scheduleFilter === "unscheduled" ? `Unscheduled ${terms.workItemsPlural.toLowerCase()}` : "This week"}</strong>
         <span>${todayCount} today - ${scheduleFilter === "unscheduled" ? unscheduledJobs.length : weekCount} in view - ${unscheduledJobs.length} need scheduling</span>
       </div>
       <div class="schedule-filters" role="group" aria-label="Schedule filter">
@@ -14476,14 +14584,14 @@ function renderSchedule() {
         <small>${conflictCount ? "Needs review" : "Clear"}</small>
       </div>
       <div class="${tbdCount ? "attention" : ""}">
-        <span>Tech TBD</span>
+        <span>${escapeHtml(terms.assignee)} TBD</span>
         <strong>${tbdCount}</strong>
         <small>Needs assignment</small>
       </div>
       <div>
         <span>Today booked</span>
         <strong>${escapeHtml(durationLabel(scheduledMinutesToday))}</strong>
-        <small>${todayCount} job${todayCount === 1 ? "" : "s"}</small>
+        <small>${todayCount} ${todayCount === 1 ? terms.workItem : terms.workItemsPlural.toLowerCase()}</small>
       </div>
       <div class="${readinessSummary["needs-parts"] ? "attention" : ""}">
         <span>Needs parts</span>
@@ -14507,7 +14615,7 @@ function renderSchedule() {
         <section class="unscheduled-column" data-schedule-drop-day="unscheduled">
           <div class="day-header">
             <strong>Needs scheduling</strong>
-            <span>${unscheduledJobs.length} job${unscheduledJobs.length === 1 ? "" : "s"}</span>
+            <span>${unscheduledJobs.length} ${unscheduledJobs.length === 1 ? terms.workItem : terms.workItemsPlural.toLowerCase()}</span>
           </div>
           <div class="day-jobs">
             ${unscheduledJobs.length
@@ -14523,7 +14631,7 @@ function renderSchedule() {
               <section class="day-column" data-schedule-drop-day="${escapeHtml(day)}">
                 <div class="day-header">
                   <strong>${formatDateLabel(day, { includeYear: true })}</strong>
-                  <span>${jobs.length} job${jobs.length === 1 ? "" : "s"}</span>
+                  <span>${jobs.length} ${jobs.length === 1 ? terms.workItem : terms.workItemsPlural.toLowerCase()}</span>
                 </div>
                 <div class="day-jobs">
                   ${jobs.length
@@ -15591,6 +15699,7 @@ function renderCommunications() {
 
 function renderJobsDatabase() {
   if (!elements.jobsDatabaseList) return;
+  const terms = businessTerminology();
   const jobs = roleScopedJobs().sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
   const deleted = can("delete") ? state.deletedJobs.map(ensureDeletedJobDefaults) : [];
   const groups = {
@@ -15615,7 +15724,7 @@ function renderJobsDatabase() {
     </button>
   `).join("");
 
-  elements.jobsDatabaseList.closest(".database-section").querySelector("h3").textContent = `${jobDatabaseGroupLabel(activeFilter)} jobs`;
+  elements.jobsDatabaseList.closest(".database-section").querySelector("h3").textContent = `${jobDatabaseGroupLabel(activeFilter)} ${terms.workItemsPlural.toLowerCase()}`;
   elements.deletedJobsList.closest(".database-section").hidden = !showingDeleted;
 
   elements.jobsDatabaseList.innerHTML = !showingDeleted && visibleJobs.length
@@ -15633,13 +15742,13 @@ function renderJobsDatabase() {
     `).join("")
     : showingDeleted
       ? ""
-      : `<div class="empty-state compact-empty"><strong>No ${jobDatabaseGroupLabel(activeFilter).toLowerCase()} jobs</strong><span>Jobs in this group will appear here.</span></div>`;
+    : `<div class="empty-state compact-empty"><strong>No ${jobDatabaseGroupLabel(activeFilter).toLowerCase()} ${escapeHtml(terms.workItemsPlural.toLowerCase())}</strong><span>${escapeHtml(terms.workItemsPlural)} in this group will appear here.</span></div>`;
 
   elements.deletedJobsList.innerHTML = deleted.length
     ? deleted.map((record) => `
       <div class="database-row deleted">
         <span>
-          <strong>${escapeHtml(record.job.name || "Deleted job")}</strong>
+          <strong>${escapeHtml(record.job.name || `Deleted ${terms.workItem}`)}</strong>
           <small>${escapeHtml(record.job.issue || "No issue recorded")}</small>
         </span>
         <span class="pill invoiced">Deleted</span>
@@ -15648,7 +15757,7 @@ function renderJobsDatabase() {
         ${can("delete") ? `<button class="utility-button" type="button" data-restore-job="${escapeHtml(record.id)}">Restore</button>` : ""}
       </div>
     `).join("")
-    : `<div class="empty-state compact-empty"><strong>No deleted jobs</strong><span>Deleted jobs will be archived here from now on.</span></div>`;
+    : `<div class="empty-state compact-empty"><strong>No deleted ${escapeHtml(terms.workItemsPlural.toLowerCase())}</strong><span>Deleted ${escapeHtml(terms.workItemsPlural.toLowerCase())} will be archived here from now on.</span></div>`;
 }
 
 function activityTypeLabel(type) {
@@ -18190,12 +18299,13 @@ function renderCustomersLegacy() {
 }
 
 function renderCustomers() {
+  const terms = businessTerminology();
   const rows = buildCustomersFromJobs(roleScopedJobs())
     .sort((a, b) => b.jobCount - a.jobCount);
   if (!rows.length) {
     state.selectedCustomerId = null;
     elements.customerList.innerHTML = "";
-    elements.customerProfile.innerHTML = `<div class="empty-state"><strong>No customers yet</strong><span>Create a job to start building customer history.</span></div>`;
+    elements.customerProfile.innerHTML = `<div class="empty-state"><strong>No customers yet</strong><span>${escapeHtml(terms.createWorkItem)} to start building customer history.</span></div>`;
     return;
   }
 
@@ -18209,7 +18319,7 @@ function renderCustomers() {
         <strong>${escapeHtml(customer.name)}</strong>
         <small>${escapeHtml(customer.phone || "No phone")} - ${escapeHtml(customer.address || "No address")}</small>
       </span>
-      <em>${customer.jobCount} job${customer.jobCount === 1 ? "" : "s"}${customer.unpaidBalance ? ` - ${formatMoney(customer.unpaidBalance)} due` : ""}</em>
+      <em>${customer.jobCount} ${customer.jobCount === 1 ? terms.workItem : terms.workItemsPlural.toLowerCase()}${customer.unpaidBalance ? ` - ${formatMoney(customer.unpaidBalance)} due` : ""}</em>
     </button>
   `).join("");
 
@@ -18643,6 +18753,7 @@ function renderCustomerProfileLegacy(customer) {
 }
 
 function renderCustomerProfile(customer) {
+  const terms = businessTerminology();
   const normalizedCustomer = normalizeCustomerRecord(customer);
   const jobs = customerJobs(normalizedCustomer.id);
   const nextJob = jobs
@@ -18672,11 +18783,11 @@ function renderCustomerProfile(customer) {
         </div>
       </div>
       <div class="customer-quick-actions">
-        ${can("createJob") ? `<button class="primary-button" type="button" data-create-customer-job="${escapeHtml(normalizedCustomer.id)}">Create job</button>` : ""}
+        ${can("createJob") ? `<button class="primary-button" type="button" data-create-customer-job="${escapeHtml(normalizedCustomer.id)}">${escapeHtml(terms.createWorkItem)}</button>` : ""}
         ${portalJob && can("portal") ? `<button class="secondary-button" type="button" data-customer-portal="${escapeHtml(normalizedCustomer.id)}">Portal link</button>` : ""}
         ${messageJob && can("portal-update") ? `<button class="secondary-button" type="button" data-customer-message="${escapeHtml(normalizedCustomer.id)}">Send update</button>` : ""}
         ${balanceJob && invoiceBalance(balanceJob) > 0 && can("payment-request") ? `<button class="secondary-button" type="button" data-customer-payment="${escapeHtml(normalizedCustomer.id)}">Request payment</button>` : ""}
-        ${currentJob ? `<button class="secondary-button" type="button" data-job-id="${escapeHtml(currentJob.id)}" aria-label="Open current job for ${escapeHtml(normalizedCustomer.name)}">Open current job</button>` : ""}
+        ${currentJob ? `<button class="secondary-button" type="button" data-job-id="${escapeHtml(currentJob.id)}" aria-label="Open current ${escapeHtml(terms.workItem)} for ${escapeHtml(normalizedCustomer.name)}">Open current ${escapeHtml(terms.workItem)}</button>` : ""}
       </div>
     </div>
     <div class="customer-demographics">
@@ -18687,7 +18798,7 @@ function renderCustomerProfile(customer) {
       <div><span>Preferred contact</span><strong>${escapeHtml(normalizedCustomer.preferredContact || "Not set")}</strong></div>
       <div><span>Preferred trade</span><strong>${escapeHtml(topTrade)}</strong></div>
       <div><span>First seen</span><strong>${escapeHtml(normalizedCustomer.firstJobAt ? new Date(normalizedCustomer.firstJobAt).toLocaleDateString() : "Not set")}</strong></div>
-      <div><span>Last job</span><strong>${escapeHtml(lastJob ? `${statusLabel(lastJob.status)} - ${new Date(lastJob.createdAt).toLocaleDateString()}` : "None")}</strong></div>
+      <div><span>Last ${escapeHtml(terms.workItem)}</span><strong>${escapeHtml(lastJob ? `${statusLabel(lastJob.status)} - ${new Date(lastJob.createdAt).toLocaleDateString()}` : "None")}</strong></div>
       <div><span>Next visit</span><strong>${escapeHtml(nextJob ? scheduleText(nextJob, { includeYear: true }) : "None scheduled")}</strong></div>
     </div>
     <div class="customer-stats">
@@ -18695,14 +18806,14 @@ function renderCustomerProfile(customer) {
       <div><span>Collected</span><strong>${escapeHtml(formatMoney(money.collected))}</strong></div>
       <div><span>Open balance</span><strong>${escapeHtml(formatMoney(money.balance))}</strong></div>
       <div><span>Estimated</span><strong>${escapeHtml(formatMoney(money.estimated))}</strong></div>
-      <div><span>Jobs</span><strong>${normalizedCustomer.jobCount}</strong></div>
+      <div><span>${escapeHtml(terms.workItemsPlural)}</span><strong>${normalizedCustomer.jobCount}</strong></div>
       <div><span>Files</span><strong>${fileCount}</strong></div>
     </div>
     <div class="customer-profile-section">
       <div class="section-heading">
         <div>
           <h4>Account profile</h4>
-          <p>Customer-level details that stay with the account across jobs.</p>
+          <p>Customer-level details that stay with the account across ${escapeHtml(terms.workItemsPlural.toLowerCase())}.</p>
         </div>
       </div>
       ${renderCustomerAccountForm(normalizedCustomer)}
@@ -18725,7 +18836,7 @@ function renderCustomerProfile(customer) {
       ${renderCustomerEquipment(normalizedCustomer.id)}
     </div>
     <div class="customer-profile-section">
-      <h4>Job history</h4>
+      <h4>${escapeHtml(terms.workItemCapital)} history</h4>
       <div class="customer-history-list">
         ${jobs.map((job) => `
           <button class="customer-history-row" type="button" data-job-id="${escapeHtml(job.id)}">
@@ -18817,6 +18928,7 @@ async function copyCustomerPortalLink(customerId) {
 
 function renderTechnicianOptions(selectedValue = "") {
   if (!elements.technicianOptions) return;
+  const terms = businessTerminology();
   const currentInput = elements.technicianOptions.querySelector('input[name="technician"]');
   const selected = normalizeTechnician(selectedValue || currentInput?.value || "To Be Determined");
   elements.technicianOptions.innerHTML = backlineDropdown({
@@ -18824,7 +18936,7 @@ function renderTechnicianOptions(selectedValue = "") {
     name: "technician",
     value: selected,
     options: technicianOptionItems(selected),
-    placeholder: "Technician",
+    placeholder: terms.assignee,
     direction: "up"
   });
 }
@@ -18982,6 +19094,7 @@ function renderTeam() {
 
 function render() {
   if (document.body.classList.contains("approval-mode")) return;
+  applyBusinessTerminology();
   renderSubscriptionGate();
   if (document.body.classList.contains("subscription-mode")) return;
   updateRoleUI();
@@ -20335,6 +20448,7 @@ function inputField({ label, name, type = "text", value = "", placeholder = "", 
 }
 
 function actionModalConfig(action, job) {
+  const terms = businessTerminology();
   const isReschedule = action === "book" && isScheduled(job);
   const estimate = normalizeEstimateRecord(job.estimate || {}, job);
   const company = companySettings();
@@ -20348,15 +20462,15 @@ function actionModalConfig(action, job) {
   const configs = {
     book: {
       eyebrow: "Schedule",
-      title: isReschedule ? "Reschedule job" : "Book job",
-      subtitle: isReschedule ? "Move the appointment and notify the right people." : "Set the appointment window and assigned technician.",
-      submit: isReschedule ? "Save reschedule" : "Book job",
+      title: isReschedule ? terms.rescheduleWorkItem : terms.bookWorkItem,
+      subtitle: isReschedule ? "Move the scheduled time and notify the right people." : `Set the schedule and assigned ${terms.assignee.toLowerCase()}.`,
+      submit: isReschedule ? `Save ${terms.rescheduleWorkItem.toLowerCase()}` : terms.bookWorkItem,
       fields: [
         isReschedule ? `<div class="schedule-context wide"><span>Current appointment</span><strong>${escapeHtml(scheduleText(job, { includeYear: true }))}</strong></div>` : "",
         inputField({ label: "Schedule date", name: "scheduleDate", type: "date", value: actionDraft.scheduleDate ?? (job.scheduleDate || todayISO()), required: true }),
         inputField({ label: "Start time", name: "startTime", type: "time", value: actionDraft.startTime ?? (job.startTime || "09:00"), required: true }),
         inputField({ label: "Duration", name: "durationMinutes", value: actionDraft.durationMinutes ?? String(jobDurationMinutes(job)), options: durationOptionItems(actionDraft.durationMinutes ?? jobDurationMinutes(job)) }),
-        inputField({ label: "Technician", name: "technician", value: actionDraft.technician ?? normalizeTechnician(job.technician), options: technicianOptionItems(actionDraft.technician ?? job.technician) }),
+        inputField({ label: terms.assignee, name: "technician", value: actionDraft.technician ?? normalizeTechnician(job.technician), options: technicianOptionItems(actionDraft.technician ?? job.technician) }),
         renderScheduleImpactWarning(job),
         inputField({ label: "Customer message", name: "message", value: actionDraft.message ?? (isReschedule ? `Hi ${job.name}, your appointment has been updated. We will send a confirmation shortly.` : `Booked for ${job.name}. We will send a confirmation shortly.`), wide: true })
       ].filter(Boolean)
@@ -24080,7 +24194,7 @@ function registerBacklineServiceWorker() {
   if (window.location.protocol === "file:" || !("serviceWorker" in navigator)) return;
   window.addEventListener("load", () => {
     navigator.serviceWorker
-      .register("./service-worker.js?v=20260822-action-menu", { scope: "./" })
+      .register("./service-worker.js?v=20260822-business-terms", { scope: "./" })
       .catch((error) => console.warn("Backline service worker registration failed.", error));
   });
 }

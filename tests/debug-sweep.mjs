@@ -724,7 +724,7 @@ assert.match(js, /function renderScheduleImpactWarning\(/);
 assert.match(js, /function scheduleTechnicianNames\(/);
 assert.match(js, /function technicianWorkloadRows\(/);
 assert.match(js, /function renderTechnicianWorkload\(/);
-assert.match(js, /Technician workload/);
+assert.match(js, /terms\.assignee\)} workload/);
 assert.match(js, /Reschedule job/);
 assert.match(js, /data-reschedule-job/);
 assert.match(js, /function refreshActionScheduleWarning\(/);

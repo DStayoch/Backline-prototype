@@ -12,7 +12,7 @@
     <link rel="icon" type="image/png" href="assets/backline-icon-transparent.png">
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="apple-touch-icon" href="assets/backline-icon-transparent.png">
-    <link rel="stylesheet" href="styles.css?v=20260822-action-menu">
+    <link rel="stylesheet" href="styles.css?v=20260822-business-terms">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
     <script src="supabase-config.js"></script>
@@ -208,7 +208,7 @@
           </button>
           <button class="nav-item" type="button" data-view="jobsdb" title="Jobs">
             <span class="nav-icon" aria-hidden="true">☑</span>
-            <span>Jobs</span>
+            <span data-business-term="workItemsPlural">Jobs</span>
           </button>
           <button class="nav-item" type="button" data-view="customers" title="Customers">
             <span class="nav-icon" aria-hidden="true">◎</span>
@@ -316,7 +316,7 @@
                 <p class="settings-note">Local settings stay on this device.</p>
               </div>
             </div>
-            <button class="primary-button" type="button" id="newJobButton">New job</button>
+            <button class="primary-button" type="button" id="newJobButton" data-business-term="newWorkItem">New job</button>
           </div>
         </header>
 
@@ -723,6 +723,16 @@
             <input name="companySlogan" placeholder="Fast, honest service. Done right.">
           </label>
           <label>
+            Business type
+            <select name="businessType">
+              <option value="trades">Trades &amp; field service</option>
+              <option value="appointments">Appointment-based service</option>
+              <option value="professional">Professional service</option>
+              <option value="automotive">Automotive &amp; repair</option>
+              <option value="general">Other small business</option>
+            </select>
+          </label>
+          <label>
             Legal business name
             <input name="legalName" placeholder="Legal name for customer documents">
           </label>
@@ -835,7 +845,7 @@
         <section class="template-settings-section">
           <div class="section-heading">
             <div>
-              <h3>Job templates</h3>
+              <h3 data-business-term="workTemplates">Job templates</h3>
               <p>Customize the default checklists and task playbooks Backline applies by trade.</p>
             </div>
             <button class="secondary-button" type="button" data-add-template-card>Add template</button>
@@ -949,7 +959,7 @@
         <div class="modal-header modal-header-with-close">
           <div>
             <p class="eyebrow">New request</p>
-            <h2>Add recovered job</h2>
+            <h2 data-business-term="newWorkItemHeading">Add recovered job</h2>
           </div>
           <button class="modal-close-button" type="button" data-cancel-modal="job" aria-label="Close new job form">&times;</button>
         </div>
@@ -959,7 +969,7 @@
             <span>Quick guide</span>
             <button class="contextual-guide-dismiss" type="button" data-dismiss-new-job-guide aria-label="Dismiss new job help" title="Dismiss help">&times;</button>
           </div>
-          <p>Start with the customer's name, phone, and issue. You can schedule and assign a technician now or come back to it later.</p>
+          <p data-business-term="newWorkItemGuide">Start with the customer's name, phone, and issue. You can schedule and assign a technician now or come back to it later.</p>
         </aside>
 
         <div class="form-grid">
@@ -980,11 +990,11 @@
             <div class="backline-picker-field" id="jobTradePicker"></div>
           </label>
           <label>
-            Job type
+            <span data-business-term="workItemType">Job type</span>
             <div class="backline-picker-field" id="jobTypePicker"></div>
           </label>
           <label>
-            Job template
+            <span data-business-term="workItemTemplate">Job template</span>
             <div class="backline-picker-field" id="jobTemplatePicker"></div>
           </label>
           <label>
@@ -1008,7 +1018,7 @@
             <div class="backline-picker-field" id="jobDurationPicker"></div>
           </label>
           <label>
-            Technician
+            <span data-business-term="assignee">Technician</span>
             <div class="backline-picker-field" id="technicianOptions" data-technician-select></div>
           </label>
           <label>
@@ -1027,7 +1037,7 @@
 
         <div class="modal-actions">
           <button class="secondary-button" type="button" data-cancel-modal="job">Cancel</button>
-          <button class="primary-button" type="submit">Create job</button>
+          <button class="primary-button" type="submit" data-business-term="createWorkItem">Create job</button>
         </div>
       </form>
     </dialog>
@@ -1353,6 +1363,6 @@
       </section>
     </dialog>
 
-    <script src="app.js?v=20260822-action-menu"></script>
+    <script src="app.js?v=20260822-business-terms"></script>
   </body>
 </html>
