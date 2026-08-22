@@ -6545,9 +6545,8 @@ button.metric-block {
   min-height: 100vh;
   background: var(--bg);
   color: var(--ink);
-  padding: 28px;
   display: grid;
-  place-items: center;
+  grid-template-rows: auto 1fr;
 }
 
 .subscription-gate {
@@ -7104,6 +7103,286 @@ html[data-theme="dark"] .auth-logo {
   border-bottom: 2px solid currentColor;
   transform: rotate(45deg);
   margin-left: 2px;
+}
+
+.auth-gate-header {
+  min-height: 72px;
+  padding: 0 clamp(22px, 5vw, 72px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+  background: var(--navy);
+  color: #f8fbff;
+}
+
+.auth-gate-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 11px;
+  font-size: 1.08rem;
+  font-weight: 800;
+}
+
+.auth-gate-brand-mark {
+  width: 38px;
+  height: 38px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.34);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.auth-gate-brand-mark img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  object-fit: cover;
+}
+
+.auth-gate-tagline {
+  color: rgba(248, 251, 255, 0.72);
+  font-size: 0.84rem;
+}
+
+.auth-gate-layout {
+  width: min(1120px, calc(100% - 48px));
+  margin: auto;
+  padding: clamp(28px, 7vh, 80px) 0;
+  display: grid;
+  grid-template-columns: minmax(260px, 0.85fr) minmax(420px, 1fr);
+  gap: clamp(32px, 7vw, 112px);
+  align-items: center;
+}
+
+.auth-gate-welcome {
+  padding: 12px 0;
+}
+
+.auth-gate-welcome h1 {
+  max-width: 470px;
+  margin: 0;
+  font-size: clamp(2.1rem, 4vw, 3.45rem);
+  line-height: 1.1;
+}
+
+.auth-gate-welcome > p:not(.eyebrow) {
+  max-width: 440px;
+  margin: 18px 0 28px;
+  color: var(--muted);
+  font-size: 1.03rem;
+}
+
+.auth-gate-outcomes {
+  display: grid;
+  gap: 13px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.auth-gate-outcomes li {
+  display: grid;
+  grid-template-columns: 24px 1fr;
+  align-items: start;
+  gap: 10px;
+  color: var(--ink);
+  font-size: 0.92rem;
+}
+
+.auth-gate-outcomes li > span:first-child {
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--success-soft);
+  color: var(--teal);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.auth-gate-access-note {
+  margin-top: 30px !important;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+  font-size: 0.8rem !important;
+}
+
+.auth-surface {
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.auth-surface-top {
+  padding: 26px 28px 20px;
+  border-bottom: 1px solid var(--line);
+}
+
+.auth-surface-top h2 {
+  margin: 0;
+  font-size: 1.42rem;
+}
+
+.auth-surface-top p {
+  margin: 5px 0 0;
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.auth-surface .auth-form {
+  gap: 15px;
+  padding: 22px 28px 20px;
+}
+
+.auth-surface .auth-form label {
+  color: #42546a;
+  font-size: 0.82rem;
+}
+
+.auth-surface .auth-form input {
+  min-height: 46px;
+  border-radius: 8px;
+  background: var(--field);
+  font-size: 0.92rem;
+}
+
+.auth-surface .auth-form input:focus {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--blue) 13%, transparent);
+}
+
+.auth-submit-button {
+  min-height: 48px;
+  margin-top: 2px;
+}
+
+.auth-surface .auth-divider {
+  padding: 0 28px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  text-transform: none;
+}
+
+.auth-surface .oauth-actions {
+  grid-template-columns: 1fr;
+  gap: 10px;
+  padding: 20px 28px;
+}
+
+.auth-surface .oauth-button {
+  min-height: 45px;
+  background: var(--field);
+  font-size: 0.87rem;
+}
+
+.auth-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 28px;
+  border-top: 1px solid var(--line);
+  background: var(--surface-muted);
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.auth-switch-button,
+.auth-surface .auth-back-button {
+  min-height: auto;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--blue-dark);
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.auth-surface .auth-back-button::before {
+  display: none;
+}
+
+.auth-gate-status {
+  min-height: 20px;
+  margin: 0;
+  padding: 0 28px 20px;
+  color: var(--muted);
+  font-size: 0.76rem;
+  text-align: center;
+}
+
+.auth-surface .offline-unlock-panel {
+  margin: 20px 28px;
+}
+
+.auth-gate.offline-unlock-mode .auth-footer {
+  display: none;
+}
+
+.auth-gate.auth-create-mode .auth-gate-welcome h1 {
+  max-width: 500px;
+}
+
+@media (max-width: 840px) {
+  .auth-gate-layout {
+    width: min(580px, calc(100% - 32px));
+    grid-template-columns: 1fr;
+    gap: 28px;
+    padding: 38px 0;
+  }
+
+  .auth-gate-welcome {
+    padding: 0;
+  }
+
+  .auth-gate-access-note {
+    display: none;
+  }
+}
+
+@media (max-width: 520px) {
+  .auth-gate-header {
+    min-height: 60px;
+    padding: 0 16px;
+  }
+
+  .auth-gate-tagline {
+    display: none;
+  }
+
+  .auth-gate-layout {
+    width: min(100% - 24px, 580px);
+    padding: 24px 0;
+  }
+
+  .auth-gate-welcome h1 {
+    font-size: 2rem;
+  }
+
+  .auth-surface-top,
+  .auth-surface .auth-form,
+  .auth-surface .oauth-actions,
+  .auth-footer {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+
+  .auth-surface .auth-divider,
+  .auth-gate-status {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+
+  .auth-surface .offline-unlock-panel {
+    margin-left: 18px;
+    margin-right: 18px;
+  }
 }
 
 .account-section > span:last-of-type {

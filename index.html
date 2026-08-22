@@ -12,65 +12,85 @@
     <link rel="icon" type="image/png" href="assets/backline-icon-transparent.png">
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="apple-touch-icon" href="assets/backline-icon-transparent.png">
-    <link rel="stylesheet" href="styles.css?v=20260822-subscription-gate">
+    <link rel="stylesheet" href="styles.css?v=20260822-auth-gate">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
     <script src="supabase-config.js"></script>
   </head>
   <body class="app-loading">
     <main class="auth-gate" id="authGate" hidden>
-      <section class="auth-card">
-        <img class="auth-logo" src="assets/backline-banner-clean-outline.png" alt="Backline, Your office handled">
-        <div>
-          <p class="eyebrow">Secure Backline</p>
-          <h1>Sign in to your shop workspace</h1>
-          <p>Use a secure database for customers, jobs, approvals, schedules, and history.</p>
+      <header class="auth-gate-header">
+        <div class="auth-gate-brand">
+          <span class="auth-gate-brand-mark"><img src="assets/backline-icon.png" alt=""></span>
+          <span>BACKLINE</span>
         </div>
-        <form class="auth-form" id="authForm">
-          <label data-username-field hidden>
-            Username
-            <input name="displayName" autocomplete="username" placeholder="first.last">
-          </label>
-          <label>
-            Email
-            <input type="email" name="email" autocomplete="email" required>
-          </label>
-          <label>
-            Password
-            <input type="password" name="password" autocomplete="current-password" required minlength="6">
-          </label>
-          <label data-confirm-password-field hidden>
-            Re-enter password
-            <input type="password" name="confirmPassword" autocomplete="new-password" minlength="6">
-          </label>
-          <div class="auth-actions">
-            <button class="primary-button" type="submit" data-auth-mode="signin" data-auth-signin-button>Sign in</button>
-            <button class="secondary-button auth-back-button" type="button" data-auth-back-login hidden>Back to login</button>
-            <button class="secondary-button" type="submit" data-auth-mode="signup" data-auth-signup-button>Create account</button>
-          </div>
-        </form>
-        <div class="auth-divider"><span>or</span></div>
-        <div class="oauth-actions" aria-label="Single sign-on options">
-          <button class="oauth-button" type="button" data-oauth-provider="google">Continue with Google</button>
-          <button class="oauth-button" type="button" data-oauth-provider="apple">Continue with Apple</button>
-        </div>
-        <section class="offline-unlock-panel" id="offlineUnlockPanel" hidden aria-labelledby="offlineUnlockHeading">
-          <p class="eyebrow">Offline access</p>
-          <h2 id="offlineUnlockHeading">Unlock saved workspace</h2>
-          <p id="offlineUnlockProfile"></p>
-          <form id="offlineUnlockForm">
-            <label>
-              Offline PIN
-              <input name="pin" type="password" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" minlength="6" maxlength="6" required>
-            </label>
-            <div class="auth-actions">
-              <button class="primary-button" type="submit">Unlock workspace</button>
-              <button class="secondary-button" type="button" data-offline-unlock-online>Use online sign in</button>
-            </div>
-          </form>
+        <span class="auth-gate-tagline">Your office, handled</span>
+      </header>
+      <div class="auth-gate-layout">
+        <section class="auth-gate-welcome" aria-labelledby="authGateHeading">
+          <p class="eyebrow">Your shop workspace</p>
+          <h1 id="authGateHeading">Pick up where your day left off.</h1>
+          <p>Sign in to the jobs, customers, schedules, and conversations that keep your shop moving.</p>
+          <ul class="auth-gate-outcomes">
+            <li><span aria-hidden="true">&#10003;</span><span>See today's work and the next best action for every job.</span></li>
+            <li><span aria-hidden="true">&#10003;</span><span>Keep customer conversations, approvals, and payment history connected.</span></li>
+            <li><span aria-hidden="true">&#10003;</span><span>Give office staff and technicians the right view of the same shop.</span></li>
+          </ul>
+          <p class="auth-gate-access-note">Your workspace is secured through Backline sign-in. Offline access can be enabled later on a device you trust.</p>
         </section>
-        <p class="settings-note" id="authGateStatus">Secure database mode is ready when Supabase is configured.</p>
-      </section>
+
+        <section class="auth-surface" aria-label="Backline account access">
+          <div class="auth-surface-top">
+            <h2 id="authGatePanelHeading">Welcome back</h2>
+            <p id="authGatePanelDetail">Sign in to return to your shop workspace.</p>
+          </div>
+          <form class="auth-form" id="authForm">
+            <label data-username-field hidden>
+              Workspace username
+              <input name="displayName" autocomplete="username" placeholder="first.last">
+            </label>
+            <label>
+              Email
+              <input type="email" name="email" autocomplete="email" placeholder="you@yourshop.com" required>
+            </label>
+            <label>
+              Password
+              <input type="password" name="password" autocomplete="current-password" placeholder="Enter your password" required minlength="6">
+            </label>
+            <label data-confirm-password-field hidden>
+              Confirm password
+              <input type="password" name="confirmPassword" autocomplete="new-password" placeholder="Re-enter your password" minlength="6">
+            </label>
+            <button class="primary-button auth-submit-button" type="submit" data-auth-mode="signin" data-auth-signin-button>Sign in to Backline</button>
+          </form>
+          <div class="auth-divider"><span>or continue with</span></div>
+          <div class="oauth-actions" aria-label="Single sign-on options">
+            <button class="oauth-button" type="button" data-oauth-provider="google">Continue with Google</button>
+            <button class="oauth-button" type="button" data-oauth-provider="apple">Continue with Apple</button>
+          </div>
+          <div class="auth-footer">
+            <span id="authGateFooterPrompt">New to Backline?</span>
+            <button class="auth-back-button" type="button" data-auth-back-login hidden>Sign in instead</button>
+            <button class="auth-switch-button" type="submit" form="authForm" data-auth-mode="signup" data-auth-signup-button>Create your workspace</button>
+          </div>
+          <section class="offline-unlock-panel" id="offlineUnlockPanel" hidden aria-labelledby="offlineUnlockHeading">
+            <p class="eyebrow">Offline access</p>
+            <h2 id="offlineUnlockHeading">Unlock saved workspace</h2>
+            <p id="offlineUnlockProfile"></p>
+            <form id="offlineUnlockForm">
+              <label>
+                Offline PIN
+                <input name="pin" type="password" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" minlength="6" maxlength="6" required>
+              </label>
+              <div class="auth-actions">
+                <button class="primary-button" type="submit">Unlock workspace</button>
+                <button class="secondary-button" type="button" data-offline-unlock-online>Use online sign in</button>
+              </div>
+            </form>
+          </section>
+          <p class="auth-gate-status" id="authGateStatus">Secure database mode is ready when Supabase is configured.</p>
+        </section>
+      </div>
     </main>
 
     <main class="subscription-gate" id="subscriptionGate" hidden>
@@ -1332,6 +1352,6 @@
       </section>
     </dialog>
 
-    <script src="app.js?v=20260822-subscription-gate"></script>
+    <script src="app.js?v=20260822-auth-gate"></script>
   </body>
 </html>

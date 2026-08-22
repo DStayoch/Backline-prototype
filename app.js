@@ -579,6 +579,10 @@ const elements = {
   subscriptionGateExport: document.querySelector("#subscriptionGateExport"),
   toastRegion: document.querySelector("#toastRegion"),
   authForm: document.querySelector("#authForm"),
+  authGateHeading: document.querySelector("#authGateHeading"),
+  authGatePanelHeading: document.querySelector("#authGatePanelHeading"),
+  authGatePanelDetail: document.querySelector("#authGatePanelDetail"),
+  authGateFooterPrompt: document.querySelector("#authGateFooterPrompt"),
   authGateStatus: document.querySelector("#authGateStatus"),
   offlineUnlockPanel: document.querySelector("#offlineUnlockPanel"),
   offlineUnlockProfile: document.querySelector("#offlineUnlockProfile"),
@@ -3370,9 +3374,10 @@ function resetAuthCreateAccountState() {
   const usernameField = elements.authForm?.querySelector("[data-username-field]");
   const confirmPasswordField = elements.authForm?.querySelector("[data-confirm-password-field]");
   const signInButton = elements.authForm?.querySelector("[data-auth-signin-button]");
-  const backButton = elements.authForm?.querySelector("[data-auth-back-login]");
-  const signupButton = elements.authForm?.querySelector("[data-auth-signup-button]");
+  const backButton = elements.authGate?.querySelector("[data-auth-back-login]");
+  const signupButton = elements.authGate?.querySelector("[data-auth-signup-button]");
   elements.authForm?.classList.remove("signup-mode");
+  elements.authGate?.classList.remove("auth-create-mode");
   if (usernameField) {
     usernameField.hidden = true;
   }
@@ -3381,14 +3386,19 @@ function resetAuthCreateAccountState() {
   }
   if (signInButton) {
     signInButton.hidden = false;
+    signInButton.dataset.authMode = "signin";
+    signInButton.textContent = "Sign in to Backline";
   }
   if (backButton) {
     backButton.hidden = true;
   }
   if (signupButton) {
-    signupButton.classList.remove("primary-button");
-    signupButton.classList.add("secondary-button");
+    signupButton.hidden = false;
   }
+  elements.authGateHeading.textContent = "Pick up where your day left off.";
+  elements.authGatePanelHeading.textContent = "Welcome back";
+  elements.authGatePanelDetail.textContent = "Sign in to return to your shop workspace.";
+  elements.authGateFooterPrompt.textContent = "New to Backline?";
   if (elements.authForm.elements.displayName) {
     elements.authForm.elements.displayName.value = "";
   }
@@ -21337,24 +21347,32 @@ document.addEventListener("click", async (event) => {
   }
 
   const authButton = event.target.closest("[data-auth-mode]");
-  if (authButton && elements.authForm?.contains(authButton)) {
+  if (authButton && (elements.authForm?.contains(authButton) || authButton.form === elements.authForm)) {
     const usernameField = elements.authForm.querySelector("[data-username-field]");
     const confirmPasswordField = elements.authForm.querySelector("[data-confirm-password-field]");
     const signInButton = elements.authForm.querySelector("[data-auth-signin-button]");
-    const backButton = elements.authForm.querySelector("[data-auth-back-login]");
-    const signupButton = elements.authForm.querySelector("[data-auth-signup-button]");
+    const backButton = elements.authGate.querySelector("[data-auth-back-login]");
+    const signupButton = elements.authGate.querySelector("[data-auth-signup-button]");
     if (authButton.dataset.authMode === "signup" && (usernameField?.hidden || confirmPasswordField?.hidden)) {
       event.preventDefault();
       elements.authForm.classList.add("signup-mode");
+      elements.authGate.classList.add("auth-create-mode");
       if (usernameField) usernameField.hidden = false;
       if (confirmPasswordField) confirmPasswordField.hidden = false;
-      if (signInButton) signInButton.hidden = true;
+      if (signInButton) {
+        signInButton.hidden = false;
+        signInButton.dataset.authMode = "signup";
+        signInButton.textContent = "Create secure workspace";
+      }
       if (backButton) backButton.hidden = false;
       if (signupButton) {
-        signupButton.classList.remove("secondary-button");
-        signupButton.classList.add("primary-button");
+        signupButton.hidden = true;
       }
-      elements.authGateStatus.textContent = "Choose a username like first.last, then create the account.";
+      elements.authGateHeading.textContent = "Set up the office your shop deserves.";
+      elements.authGatePanelHeading.textContent = "Create your shop workspace";
+      elements.authGatePanelDetail.textContent = "Set up your secure Backline workspace in a few steps.";
+      elements.authGateFooterPrompt.textContent = "Already have a Backline account?";
+      elements.authGateStatus.textContent = "Choose a workspace username, then enter your email and password to create the account.";
       elements.authForm.elements.displayName?.focus();
       return;
     }
@@ -24055,7 +24073,7 @@ function registerBacklineServiceWorker() {
   if (window.location.protocol === "file:" || !("serviceWorker" in navigator)) return;
   window.addEventListener("load", () => {
     navigator.serviceWorker
-      .register("./service-worker.js?v=20260822-subscription-gate", { scope: "./" })
+      .register("./service-worker.js?v=20260822-auth-gate", { scope: "./" })
       .catch((error) => console.warn("Backline service worker registration failed.", error));
   });
 }
