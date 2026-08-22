@@ -27,11 +27,13 @@ assert.match(checkout, /memberCap: 10/, "Checkout must enforce the Shop capacity
 assert.match(checkout, /additionalUserCount/, "Checkout must calculate the additional Shop-user quantity.");
 assert.match(checkout, /trial_period_days: 14/, "New subscriptions must receive the advertised trial.");
 assert.match(checkout, /STRIPE_SECRET_KEY/, "Stripe credentials must be server-side secrets.");
+assert.match(checkout, /new URL\(appUrl\)\.origin/, "Checkout CORS must allow the Backline browser origin.");
 assert.doesNotMatch(checkout, /payment_method_types/, "Checkout must use Stripe dynamic payment methods.");
 assert.match(checkout, /STRIPE_TAX_ENABLED/, "Tax must be a deliberate server-side setting.");
 
 assert.match(portal, /billingPortal\.sessions\.create/, "Billing management must use Stripe Customer Portal.");
 assert.match(portal, /role=eq\.owner/, "Only a workspace owner may open billing management.");
+assert.match(portal, /new URL\(appUrl\)\.origin/, "Portal CORS must allow the Backline browser origin.");
 
 assert.match(webhook, /constructEventAsync/, "Webhook signatures must be verified.");
 assert.match(webhook, /await request\.text\(\)/, "Webhook verification must use the raw request body.");

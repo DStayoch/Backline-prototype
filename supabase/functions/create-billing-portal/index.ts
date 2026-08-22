@@ -1,7 +1,17 @@
 import Stripe from "npm:stripe@22.4.0";
 
+function backlineAppOrigin() {
+  const appUrl = Deno.env.get("BACKLINE_APP_URL");
+  if (!appUrl) return "*";
+  try {
+    return new URL(appUrl).origin;
+  } catch {
+    return "*";
+  }
+}
+
 const corsHeaders = {
-  "Access-Control-Allow-Origin": Deno.env.get("BACKLINE_APP_URL") || "*",
+  "Access-Control-Allow-Origin": backlineAppOrigin(),
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS"
 };
