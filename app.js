@@ -241,6 +241,14 @@ const BUSINESS_TERMINOLOGY = {
     workItemType: "Job type",
     workItemTemplate: "Job template",
     workTemplates: "Job templates",
+    workCategory: "Trade",
+    workDetails: "Issue",
+    workMaterials: "Parts/tools",
+    contactLabel: "Site contact",
+    workDetailsPlaceholder: "What did the customer need?",
+    workMaterialsPlaceholder: "Capacitor, auger, water heater...",
+    contactPlaceholder: "Tenant, manager, spouse",
+    templateSettingsHint: "Customize the default checklists and task playbooks Backline applies by trade.",
     assignee: "Technician",
     assignees: "Technicians",
     bookWorkItem: "Book job",
@@ -257,6 +265,14 @@ const BUSINESS_TERMINOLOGY = {
     workItemType: "Appointment type",
     workItemTemplate: "Appointment template",
     workTemplates: "Appointment templates",
+    workCategory: "Service category",
+    workDetails: "Appointment notes",
+    workMaterials: "Supplies / room notes",
+    contactLabel: "Appointment contact",
+    workDetailsPlaceholder: "What does the client need from this appointment?",
+    workMaterialsPlaceholder: "Supplies, room, or preparation notes",
+    contactPlaceholder: "Client, guardian, or contact person",
+    templateSettingsHint: "Customize the appointment checklists and team tasks Backline starts with.",
     assignee: "Team member",
     assignees: "Team members",
     bookWorkItem: "Schedule appointment",
@@ -273,6 +289,14 @@ const BUSINESS_TERMINOLOGY = {
     workItemType: "Project type",
     workItemTemplate: "Project template",
     workTemplates: "Project templates",
+    workCategory: "Service category",
+    workDetails: "Project request",
+    workMaterials: "Resources / file notes",
+    contactLabel: "Client contact",
+    workDetailsPlaceholder: "What outcome does the client need?",
+    workMaterialsPlaceholder: "Files, references, or resources needed",
+    contactPlaceholder: "Client, manager, or decision maker",
+    templateSettingsHint: "Customize the project checklists and team tasks Backline starts with.",
     assignee: "Team member",
     assignees: "Team members",
     bookWorkItem: "Plan project",
@@ -289,6 +313,14 @@ const BUSINESS_TERMINOLOGY = {
     workItemType: "Service type",
     workItemTemplate: "Work order template",
     workTemplates: "Work order templates",
+    workCategory: "Vehicle service",
+    workDetails: "Service concern",
+    workMaterials: "Parts / materials",
+    contactLabel: "Vehicle contact",
+    workDetailsPlaceholder: "What concern did the customer report?",
+    workMaterialsPlaceholder: "Parts, fluids, or materials needed",
+    contactPlaceholder: "Owner, driver, or fleet contact",
+    templateSettingsHint: "Customize the work-order checklists and shop tasks Backline starts with.",
     assignee: "Technician",
     assignees: "Technicians",
     bookWorkItem: "Schedule work order",
@@ -305,6 +337,14 @@ const BUSINESS_TERMINOLOGY = {
     workItemType: "Work type",
     workItemTemplate: "Work template",
     workTemplates: "Work templates",
+    workCategory: "Work category",
+    workDetails: "Customer request",
+    workMaterials: "Materials / notes",
+    contactLabel: "Primary contact",
+    workDetailsPlaceholder: "What does the customer need?",
+    workMaterialsPlaceholder: "Materials, files, or helpful notes",
+    contactPlaceholder: "Customer, manager, or contact person",
+    templateSettingsHint: "Customize the checklists and team tasks Backline starts with for your business.",
     assignee: "Team member",
     assignees: "Team members",
     bookWorkItem: "Schedule work item",
@@ -1861,6 +1901,10 @@ function applyBusinessTerminology() {
     const value = terms[element.dataset.businessTerm];
     if (value) element.textContent = value;
   });
+  document.querySelectorAll("[data-business-placeholder]").forEach((element) => {
+    const value = terms[element.dataset.businessPlaceholder];
+    if (value) element.placeholder = value;
+  });
   const workItemsNav = document.querySelector('[data-view="jobsdb"]');
   if (workItemsNav) workItemsNav.title = terms.workItemsPlural;
 }
@@ -2871,7 +2915,8 @@ function customerFacingTechnicianName(value) {
   const technician = normalizeTechnician(value);
   if (technician === "To Be Determined") return technician;
   const first = displayFirstName(technician);
-  return first === "there" ? "Technician" : `Technician ${first}`;
+  const label = businessTerminology().assignee;
+  return first === "there" ? label : `${label} ${first}`;
 }
 
 function internalActorDisplayName(value) {
@@ -4921,6 +4966,7 @@ function renderTemplateSettingsCard(template, settings = templateSettings()) {
   const merged = workspaceTemplate(template, settings);
   const checklist = merged.checklist || {};
   const tasks = merged.tasks.length ? merged.tasks : normalizedTemplateTasks(template.tasks, template);
+  const terms = businessTerminology();
   return `
     <article class="template-settings-card ${template.custom ? "custom-template" : ""}" data-template-settings-card="${escapeHtml(template.key)}" data-template-custom="${template.custom ? "true" : "false"}">
       <div class="template-settings-header">
@@ -4928,7 +4974,7 @@ function renderTemplateSettingsCard(template, settings = templateSettings()) {
           <input type="checkbox" name="template-${escapeHtml(template.key)}-enabled" ${merged.enabled ? "checked" : ""}>
           <span>
             <strong>${escapeHtml(merged.title)}</strong>
-            <small>${escapeHtml(merged.trade)} ${template.custom ? "custom" : "default"} template</small>
+          <small>${escapeHtml(merged.trade)} ${template.custom ? "custom" : "default"} ${escapeHtml(terms.workItem)} template</small>
           </span>
         </label>
         <div class="template-card-actions">
@@ -4942,7 +4988,7 @@ function renderTemplateSettingsCard(template, settings = templateSettings()) {
           <input name="template-${escapeHtml(template.key)}-title" value="${escapeHtml(merged.title)}">
         </label>
         <label>
-          Trade
+          ${escapeHtml(terms.workCategory)}
           ${backlineDropdown({
             id: `template-trade-${template.key}`,
             name: `template-${template.key}-trade`,
@@ -4953,7 +4999,7 @@ function renderTemplateSettingsCard(template, settings = templateSettings()) {
           })}
         </label>
         <label>
-          Job types
+          ${escapeHtml(terms.workItemCapital)} types
           <input name="template-${escapeHtml(template.key)}-jobTypes" value="${escapeHtml(templateJobTypeDisplay(merged.jobTypes))}" placeholder="diagnostic, repair">
         </label>
         <label class="wide">
@@ -4965,15 +5011,15 @@ function renderTemplateSettingsCard(template, settings = templateSettings()) {
           <input name="template-${escapeHtml(template.key)}-recommendations" value="${escapeHtml(templateRecommendationsFromValue(merged.recommendations).join(", "))}" placeholder="Diagnostic, capacitor, install">
         </label>
         <label>
-          Diagnosis checklist
+          Work notes checklist
           <input name="template-${escapeHtml(template.key)}-checklist-diagnosis" value="${escapeHtml(checklist.diagnosis || "")}">
         </label>
         <label>
-          Photos checklist
+          Documentation checklist
           <input name="template-${escapeHtml(template.key)}-checklist-photos" value="${escapeHtml(checklist.photos || "")}">
         </label>
         <label>
-          Signature checklist
+          Customer confirmation checklist
           <input name="template-${escapeHtml(template.key)}-checklist-signature" value="${escapeHtml(checklist.signature || "")}">
         </label>
       </div>
@@ -5005,8 +5051,8 @@ function renderTemplateSettingsTaskRow(templateKey, task = {}, index = 0) {
       ${backlineDropdown({
         id: `template-task-role-${safeKey}`,
         name: `template-${templateKey}-task-role`,
-        value: templateRoleDropdownValue(task.role),
-        options: ["Technician", "Dispatcher", "Owner/Admin", "Any role"],
+        value: templateRoleValue(task.role),
+        options: templateRoleOptions(),
         placeholder: "Role"
       })}
       <button class="invoice-remove-button" type="button" data-remove-template-task>Remove</button>
@@ -6753,6 +6799,170 @@ const jobTemplates = [
   }
 ];
 
+const businessWorkflowTemplates = [
+  {
+    key: "client_appointment",
+    businessTypes: ["appointments"],
+    trade: "Appointments",
+    jobTypes: ["new_appointment", "consultation", "follow_up", "recurring"],
+    title: "Client appointment",
+    description: "A clear appointment workflow with client preferences, preparation notes, and follow-up.",
+    checklist: {
+      diagnosis: "Client request and desired outcome noted",
+      photos: "Relevant notes or consent captured",
+      signature: "Client confirmation captured"
+    },
+    tasks: [
+      { title: "Confirm client details, service requested, and appointment preferences", phase: "prep", role: "dispatcher" },
+      { title: "Prepare the room, supplies, or resources needed", phase: "prep", role: "tech" },
+      { title: "Record service notes and any recommended follow-up", phase: "closeout", role: "tech" }
+    ],
+    recommendations: ["Appointment reminder", "Client follow-up"]
+  },
+  {
+    key: "recurring_appointment",
+    businessTypes: ["appointments"],
+    trade: "Appointments",
+    jobTypes: ["recurring", "follow_up"],
+    title: "Recurring appointment",
+    description: "A repeat-visit workflow that records outcomes and prepares the next appointment.",
+    checklist: {
+      diagnosis: "Previous notes and today's goal reviewed",
+      photos: "Progress notes captured",
+      signature: "Next appointment confirmed"
+    },
+    tasks: [
+      { title: "Review prior appointment notes before the visit", phase: "prep", role: "tech" },
+      { title: "Record the outcome and client feedback", phase: "field", role: "tech" },
+      { title: "Schedule the next visit or follow-up", phase: "closeout", role: "dispatcher" }
+    ],
+    recommendations: ["Recurring booking", "Client follow-up"]
+  },
+  {
+    key: "client_project",
+    businessTypes: ["professional"],
+    trade: "Professional services",
+    jobTypes: ["project_intake", "delivery", "review"],
+    title: "Client project",
+    description: "A project workflow for defining scope, sharing deliverables, and confirming the next step.",
+    checklist: {
+      diagnosis: "Project scope and outcome documented",
+      photos: "Relevant files or reference material attached",
+      signature: "Client approval or next step confirmed"
+    },
+    tasks: [
+      { title: "Confirm the client goal, scope, timeline, and decision maker", phase: "prep", role: "dispatcher" },
+      { title: "Complete the planned work and record progress notes", phase: "field", role: "tech" },
+      { title: "Share deliverables or recommendations with the client", phase: "closeout", role: "tech" }
+    ],
+    recommendations: ["Project estimate", "Client review"]
+  },
+  {
+    key: "client_consultation",
+    businessTypes: ["professional"],
+    trade: "Professional services",
+    jobTypes: ["consultation", "follow_up"],
+    title: "Client consultation",
+    description: "A simple consultation workflow for capturing needs, advice, and a clear follow-up.",
+    checklist: {
+      diagnosis: "Client needs and key facts documented",
+      photos: "Supporting files or notes attached",
+      signature: "Recommended next step confirmed"
+    },
+    tasks: [
+      { title: "Review the client background and consultation goal", phase: "prep", role: "tech" },
+      { title: "Document recommendations, decisions, and open questions", phase: "field", role: "tech" },
+      { title: "Send a recap and schedule any needed follow-up", phase: "closeout", role: "dispatcher" }
+    ],
+    recommendations: ["Consultation recap", "Follow-up appointment"]
+  },
+  {
+    key: "vehicle_service",
+    businessTypes: ["automotive"],
+    trade: "Vehicle service",
+    jobTypes: ["diagnostic", "maintenance", "repair", "inspection"],
+    title: "Vehicle service",
+    description: "A vehicle-service workflow with concern notes, inspection evidence, parts, and customer approval.",
+    checklist: {
+      diagnosis: "Customer concern and inspection findings noted",
+      photos: "Vehicle condition and relevant parts documented",
+      signature: "Customer authorization or pickup confirmation captured"
+    },
+    tasks: [
+      { title: "Record vehicle details, mileage, and customer concern", phase: "prep", role: "dispatcher" },
+      { title: "Inspect, diagnose, and document recommended work", phase: "field", role: "tech" },
+      { title: "Log parts used and confirm repair or maintenance outcome", phase: "closeout", role: "tech" }
+    ],
+    recommendations: ["Inspection report", "Parts log", "Maintenance follow-up"]
+  },
+  {
+    key: "customer_request",
+    businessTypes: ["general"],
+    trade: "General business",
+    jobTypes: ["request", "consultation", "follow_up", "delivery"],
+    title: "Customer request",
+    description: "A flexible workflow for handling a customer request, documenting progress, and closing the loop.",
+    checklist: {
+      diagnosis: "Request and next step documented",
+      photos: "Relevant notes, photos, or files attached",
+      signature: "Customer confirmation captured"
+    },
+    tasks: [
+      { title: "Confirm the customer request, contact details, and due date", phase: "prep", role: "dispatcher" },
+      { title: "Complete the requested work and record the outcome", phase: "field", role: "tech" },
+      { title: "Confirm delivery, pickup, or follow-up with the customer", phase: "closeout", role: "tech" }
+    ],
+    recommendations: ["Customer update", "Follow-up"]
+  },
+  {
+    key: "customer_delivery",
+    businessTypes: ["general"],
+    trade: "General business",
+    jobTypes: ["delivery", "follow_up"],
+    title: "Customer delivery",
+    description: "A handoff workflow for preparing an order or deliverable and confirming the customer received it.",
+    checklist: {
+      diagnosis: "Order or deliverable reviewed",
+      photos: "Delivery or handoff proof attached",
+      signature: "Receipt or completion confirmed"
+    },
+    tasks: [
+      { title: "Confirm what is being delivered and when it is due", phase: "prep", role: "dispatcher" },
+      { title: "Prepare the order, deliverable, or customer handoff", phase: "field", role: "tech" },
+      { title: "Record completion and resolve any follow-up need", phase: "closeout", role: "tech" }
+    ],
+    recommendations: ["Delivery confirmation", "Customer follow-up"]
+  }
+];
+
+const businessWorkflowOptions = {
+  trades: {
+    category: "HVAC",
+    categories: ["HVAC", "Plumbing", "Electrical", "Roofing", "Other"],
+    jobTypes: ["tbd", "diagnostic", "repair", "replacement", "maintenance", "emergency"]
+  },
+  appointments: {
+    category: "Appointments",
+    categories: ["Appointments", "Wellness", "Personal care", "Lessons", "Cleaning", "Other"],
+    jobTypes: ["new_appointment", "consultation", "follow_up", "recurring"]
+  },
+  professional: {
+    category: "Professional services",
+    categories: ["Professional services", "Consulting", "Creative", "Financial", "Legal", "Other"],
+    jobTypes: ["project_intake", "consultation", "review", "delivery", "follow_up"]
+  },
+  automotive: {
+    category: "Vehicle service",
+    categories: ["Vehicle service", "Maintenance", "Repair", "Inspection", "Other"],
+    jobTypes: ["diagnostic", "maintenance", "repair", "inspection"]
+  },
+  general: {
+    category: "General business",
+    categories: ["General business", "Sales", "Delivery", "Customer service", "Other"],
+    jobTypes: ["request", "consultation", "delivery", "follow_up"]
+  }
+};
+
 function normalizedTemplateText(value = "") {
   return String(value || "").trim().toLowerCase();
 }
@@ -6774,7 +6984,8 @@ function templateSettingFor(template, settings = templateSettings()) {
 }
 
 function templateTradeOptions(value = "") {
-  return [...new Set(["HVAC", "Plumbing", "Electrical", "Roofing", "Other", value].filter(Boolean))];
+  const workflow = businessWorkflowOptions[companySettings().businessType] || businessWorkflowOptions.trades;
+  return [...new Set([...workflow.categories, value].filter(Boolean))];
 }
 
 function templateJobTypes(value = []) {
@@ -6782,7 +6993,7 @@ function templateJobTypes(value = []) {
   const normalized = raw
     .map((item) => normalizedTemplateText(item).replaceAll(" ", "_"))
     .filter(Boolean);
-  return normalized.length ? [...new Set(normalized)] : ["tbd", "diagnostic", "repair", "replacement", "maintenance", "emergency"];
+  return normalized.length ? [...new Set(normalized)] : workflowOptions().jobTypes;
 }
 
 function templateJobTypeDisplay(value = []) {
@@ -6819,7 +7030,8 @@ function templateRoleValue(value = "tech") {
     admin: "owner",
     dispatcher: "dispatcher",
     tech: "tech",
-    technician: "tech"
+    technician: "tech",
+    "team member": "tech"
   };
   return map[normalized] || "tech";
 }
@@ -6839,12 +7051,31 @@ function templateRoleDropdownValue(value = "tech") {
     any: "Any role",
     owner: "Owner/Admin",
     dispatcher: "Dispatcher",
-    tech: "Technician"
+    tech: businessTerminology().assignee
   };
   return labels[templateRoleValue(value)];
 }
 
-function normalizedTemplateTasks(tasks = [], template = jobTemplates[0]) {
+function templateRoleOptions() {
+  return [
+    { value: "tech", label: businessTerminology().assignee },
+    { value: "dispatcher", label: "Dispatcher" },
+    { value: "owner", label: "Owner/Admin" },
+    { value: "any", label: "Any role" }
+  ];
+}
+
+function activeDefaultJobTemplates() {
+  const businessType = companySettings().businessType;
+  const businessTemplates = businessWorkflowTemplates.filter((template) => template.businessTypes.includes(businessType));
+  return businessType === "trades" ? jobTemplates : businessTemplates;
+}
+
+function allDefaultJobTemplates() {
+  return [...jobTemplates, ...businessWorkflowTemplates];
+}
+
+function normalizedTemplateTasks(tasks = [], template = activeDefaultJobTemplates()[0] || jobTemplates[0]) {
   return (Array.isArray(tasks) ? tasks : [])
     .map((task) => normalizeTemplateTask({
       ...task,
@@ -6864,9 +7095,9 @@ function customTemplateDefinitions(settings = templateSettings()) {
       title: String(template.title || `Custom template ${index + 1}`).trim() || `Custom template ${index + 1}`,
       description: String(template.description || "Custom workflow for this shop.").trim(),
       checklist: {
-        diagnosis: template.checklist?.diagnosis || "Issue and next step noted",
-        photos: template.checklist?.photos || "Relevant photos captured",
-        signature: template.checklist?.signature || "Customer sign-off captured"
+        diagnosis: template.checklist?.diagnosis || "Request and next step noted",
+        photos: template.checklist?.photos || "Relevant notes or files attached",
+        signature: template.checklist?.signature || "Customer confirmation captured"
       },
       tasks: normalizedTemplateTasks(template.tasks || [], { key: template.key || `custom_template_${index + 1}` }),
       recommendations: templateRecommendationsFromValue(template.recommendations).length
@@ -6879,14 +7110,15 @@ function customTemplateDefinitions(settings = templateSettings()) {
 
 function templateDefinitionsForSettings(settings = templateSettings(), options = {}) {
   const custom = customTemplateDefinitions(settings);
-  const defaults = jobTemplates.map((template) => workspaceTemplate(template, settings));
+  const source = options.includeAll ? allDefaultJobTemplates() : activeDefaultJobTemplates();
+  const defaults = source.map((template) => workspaceTemplate(template, settings));
   return options.customFirst ? [...custom, ...defaults] : [...defaults, ...custom];
 }
 
 function jobTemplateByKey(key = "") {
   const templateKey = String(key || "").trim();
   if (!templateKey || templateKey === "__auto") return null;
-  const template = templateDefinitionsForSettings(templateSettings(), { customFirst: true })
+  const template = templateDefinitionsForSettings(templateSettings(), { customFirst: true, includeAll: true })
     .find((item) => item.key === templateKey);
   return template ? workspaceTemplate(template) : null;
 }
@@ -6920,19 +7152,19 @@ function suggestedJobTemplateKeyFromForm(form = elements.jobForm) {
   return candidate?.key || "__auto";
 }
 
+function workflowOptions() {
+  return businessWorkflowOptions[companySettings().businessType] || businessWorkflowOptions.trades;
+}
+
 function jobTradeOptions() {
-  return ["HVAC", "Plumbing", "Electrical", "Roofing", "Other"].map((value) => ({ value, label: value }));
+  return workflowOptions().categories.map((value) => ({ value, label: value }));
 }
 
 function jobTypeOptions() {
-  return [
-    { value: "tbd", label: "To Be Determined" },
-    { value: "diagnostic", label: "Diagnostic" },
-    { value: "repair", label: "Repair" },
-    { value: "replacement", label: "Replacement" },
-    { value: "maintenance", label: "Maintenance" },
-    { value: "emergency", label: "Emergency" }
-  ];
+  return workflowOptions().jobTypes.map((value) => ({
+    value,
+    label: value === "tbd" ? "To Be Determined" : value.replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase())
+  }));
 }
 
 function urgencyOptions() {
@@ -6956,9 +7188,9 @@ function renderNewJobPickers(values = {}) {
     elements.jobTradePicker.innerHTML = backlineDropdown({
       id: "new-job-trade",
       name: "trade",
-      value: nextValues.trade || "HVAC",
+      value: nextValues.trade || workflowOptions().category,
       options: jobTradeOptions(),
-      placeholder: "Trade",
+      placeholder: businessTerminology().workCategory,
       direction: "up"
     });
   }
@@ -6966,9 +7198,9 @@ function renderNewJobPickers(values = {}) {
     elements.jobTypePicker.innerHTML = backlineDropdown({
       id: "new-job-type",
       name: "jobType",
-      value: nextValues.jobType || "tbd",
+      value: nextValues.jobType || workflowOptions().jobTypes[0],
       options: jobTypeOptions(),
-      placeholder: "Job type",
+      placeholder: businessTerminology().workItemType,
       direction: "up"
     });
   }
@@ -7003,7 +7235,7 @@ function renderJobTemplatePicker(selectedKey = "") {
     name: "jobTemplateKey",
     value,
     options: jobTemplatePickerOptions(value),
-    placeholder: "Job template",
+      placeholder: businessTerminology().workItemTemplate,
     direction: "up"
   });
 }
@@ -7013,18 +7245,18 @@ function newCustomTemplateDefinition() {
   return {
     key,
     custom: true,
-    trade: "Other",
-    jobTypes: ["diagnostic", "repair"],
+    trade: workflowOptions().category,
+    jobTypes: workflowOptions().jobTypes.slice(0, 2),
     title: "New custom template",
     description: "Custom workflow for this shop.",
     checklist: {
-      diagnosis: "Issue and next step noted",
-      photos: "Relevant photos captured",
-      signature: "Customer sign-off captured"
+      diagnosis: "Request and next step noted",
+      photos: "Relevant notes or files attached",
+      signature: "Customer confirmation captured"
     },
     tasks: [
-      { title: "Confirm site contact, issue, and access notes", phase: "prep", role: "dispatcher" },
-      { title: "Capture field notes and proof photos", phase: "field", role: "tech" }
+      { title: "Confirm the request, contact, and next step", phase: "prep", role: "dispatcher" },
+      { title: "Record progress notes and supporting details", phase: "field", role: "tech" }
     ],
     recommendations: ["Custom workflow"],
     enabled: true
@@ -7066,10 +7298,10 @@ function jobTemplateFor(job = {}) {
   );
   if (exact) return workspaceTemplate(exact);
   const tradeDefault = templates.find((template) => normalizedTemplateText(template.trade) === trade);
-  return workspaceTemplate(tradeDefault || jobTemplates.find((template) => template.key === "general_service"));
+  return workspaceTemplate(tradeDefault || activeDefaultJobTemplates()[0] || jobTemplates.find((template) => template.key === "general_service"));
 }
 
-function normalizeTemplateTask(task = {}, template = jobTemplates[0]) {
+function normalizeTemplateTask(task = {}, template = activeDefaultJobTemplates()[0] || jobTemplates[0]) {
   return {
     id: task.id || createId(),
     title: String(task.title || "").trim(),
@@ -7126,7 +7358,7 @@ function applyJobTemplate(job, options = {}) {
 }
 
 function templateChecklist(job = {}) {
-  return jobTemplateFor(job).checklist || jobTemplates[jobTemplates.length - 1].checklist;
+  return jobTemplateFor(job).checklist || activeDefaultJobTemplates().at(-1)?.checklist || jobTemplates[jobTemplates.length - 1].checklist;
 }
 
 function fallbackInvoiceNumber(job = {}) {
@@ -12892,8 +13124,8 @@ function openNewJobModal() {
     elements.jobFormGuide.hidden = Boolean(state.tutorialGuideDismissals["new-job"]);
   }
   renderNewJobPickers({
-    trade: "HVAC",
-    jobType: "tbd",
+    trade: workflowOptions().category,
+    jobType: workflowOptions().jobTypes[0],
     urgency: "normal",
     durationMinutes: String(DEFAULT_JOB_DURATION_MINUTES),
     technician: "To Be Determined"
@@ -24199,7 +24431,7 @@ function registerBacklineServiceWorker() {
   if (window.location.protocol === "file:" || !("serviceWorker" in navigator)) return;
   window.addEventListener("load", () => {
     navigator.serviceWorker
-      .register("./service-worker.js?v=20260822-post-subscription-setup", { scope: "./" })
+      .register("./service-worker.js?v=20260822-adaptive-workflows", { scope: "./" })
       .catch((error) => console.warn("Backline service worker registration failed.", error));
   });
 }

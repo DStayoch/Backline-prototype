@@ -12,7 +12,7 @@
     <link rel="icon" type="image/png" href="assets/backline-icon-transparent.png">
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="apple-touch-icon" href="assets/backline-icon-transparent.png">
-    <link rel="stylesheet" href="styles.css?v=20260822-post-subscription-setup">
+    <link rel="stylesheet" href="styles.css?v=20260822-adaptive-workflows">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
     <script src="supabase-config.js"></script>
@@ -846,7 +846,7 @@
           <div class="section-heading">
             <div>
               <h3 data-business-term="workTemplates">Job templates</h3>
-              <p>Customize the default checklists and task playbooks Backline applies by trade.</p>
+              <p data-business-term="templateSettingsHint">Customize the default checklists and task playbooks Backline applies by trade.</p>
             </div>
             <button class="secondary-button" type="button" data-add-template-card>Add template</button>
           </div>
@@ -986,7 +986,7 @@
             <input name="address" required autocomplete="street-address">
           </label>
           <label>
-            Trade
+            <span data-business-term="workCategory">Trade</span>
             <div class="backline-picker-field" id="jobTradePicker"></div>
           </label>
           <label>
@@ -1022,16 +1022,16 @@
             <div class="backline-picker-field" id="technicianOptions" data-technician-select></div>
           </label>
           <label>
-            Site contact
-            <input name="siteContact" placeholder="Tenant, manager, spouse">
+            <span data-business-term="contactLabel">Site contact</span>
+            <input name="siteContact" placeholder="Tenant, manager, spouse" data-business-placeholder="contactPlaceholder">
           </label>
           <label>
-            Parts/tools
-            <input name="partsNote" placeholder="Capacitor, auger, water heater...">
+            <span data-business-term="workMaterials">Parts/tools</span>
+            <input name="partsNote" placeholder="Capacitor, auger, water heater..." data-business-placeholder="workMaterialsPlaceholder">
           </label>
           <label class="wide">
-            Issue
-            <textarea name="issue" rows="4" required placeholder="What did the customer need?"></textarea>
+            <span data-business-term="workDetails">Issue</span>
+            <textarea name="issue" rows="4" required placeholder="What did the customer need?" data-business-placeholder="workDetailsPlaceholder"></textarea>
           </label>
         </div>
 
@@ -1363,6 +1363,6 @@
       </section>
     </dialog>
 
-    <script src="app.js?v=20260822-post-subscription-setup"></script>
+    <script src="app.js?v=20260822-adaptive-workflows"></script>
   </body>
 </html>

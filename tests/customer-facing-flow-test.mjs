@@ -18,7 +18,7 @@ assert.match(app, /const decisionSent =[\s\S]*?options\.linkStatus === "used"/);
 assert.match(app, /function approvalPdfLines\(job, company = companySettings\(\)\)/);
 assert.match(app, /function approvalPdfSections\(job, company = companySettings\(\)\)/);
 assert.match(app, /function customerFacingTechnicianName\(value\)/);
-assert.match(app, /return first === "there" \? "Technician" : `Technician \$\{first\}`/);
+assert.match(app, /const label = businessTerminology\(\)\.assignee;\s+return first === "there" \? label : `\$\{label\} \$\{first\}`/s, "Customer-facing assignment names should use the workspace's terminology.");
 assert.match(app, /\["Technician", customerFacingTechnicianName\(job\.technician\)\]/);
 assert.match(app, /customerFacingTechnicianName\(job\.technician\)\s+\]\);/);
 assert.match(app, /title: "Service provider"/);

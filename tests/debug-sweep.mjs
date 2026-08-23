@@ -1756,7 +1756,7 @@ assert.match(js, /data-customer-message/);
 assert.match(js, /data-customer-payment/);
 assert.match(js, /Service reminders/);
 assert.match(js, /Account profile/);
-assert.match(js, /function jobTypeOptions[\s\S]*value:\s*"tbd"[\s\S]*label:\s*"To Be Determined"/);
+assert.match(js, /function jobTypeOptions\(\)[\s\S]*workflowOptions\(\)\.jobTypes/);
 assert.match(html, /class="customer-directory"/);
 assert.match(html, /id="customerProfile"/);
 assert.match(html, /id="workGrid"/);
