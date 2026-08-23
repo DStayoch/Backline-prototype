@@ -9004,6 +9004,12 @@ function isLockedBillingJob(job = {}) {
   return ["paid", "closed"].includes(job.status);
 }
 
+function canReviewLockedJob(job = {}, action = "") {
+  return isLockedBillingJob(job)
+    && ["owner", "admin"].includes(currentRole())
+    && ["portal", "note"].includes(action);
+}
+
 function canCloseJob(job = {}) {
   if (!can("close") || job.status === "closed") return false;
   const invoice = invoiceRecord(job);
@@ -11865,7 +11871,7 @@ function renderJobActions() {
     { action: "book", label: isScheduled(job || {}) ? terms.rescheduleWorkItem : terms.bookWorkItem, tone: "accent", group: "primary" },
     { action: "start", label: "Start", tone: "", group: "primary" },
     { action: "complete", label: `Complete ${terms.workItem}`, tone: "", group: "primary" },
-    { action: "portal", label: "Portal link", tone: "", group: "Customer" },
+    { action: "portal", label: canReviewLockedJob(job, "portal") ? "View customer portal" : "Portal link", tone: "", group: "Customer" },
     { action: "portal-update", label: "Send portal update", tone: "", group: "Customer" },
     { action: "note", label: "View notes", tone: "", group: "Internal" },
     { action: "estimate", label: "Estimate", tone: "", group: "Estimate" },
@@ -11879,7 +11885,7 @@ function renderJobActions() {
     { action: "delete", label: "Delete", tone: "danger", group: "Admin" }
   ].filter(Boolean)
     .filter(({ action }) => action === "note" ? canAddInternalNote() : can(action))
-    .filter(({ action }) => !lockedBilling || ["reopen", "close", "delete"].includes(action));
+    .filter(({ action }) => !lockedBilling || ["reopen", "close", "delete"].includes(action) || canReviewLockedJob(job, action));
 
   const actionButton = ({ action, label, tone }, extraClass = "") => `
     <button class="action-button ${tone} ${extraClass}" type="button" data-action="${action}">${label}</button>
@@ -23158,6 +23164,11 @@ document.addEventListener("click", async (event) => {
     const job = selectedJob();
     if (!job) return;
     const url = customerPortalUrl(job);
+    if (canReviewLockedJob(job, "portal")) {
+      window.open(url, "_blank", "noopener");
+      showToast("Customer portal opened", "The customer portal was opened in a new tab for review.", "success");
+      return;
+    }
     const copied = await copyTextToClipboard(url);
     state.jobActionNotice = {
       jobId: job.id,
@@ -24539,7 +24550,7 @@ function registerBacklineServiceWorker() {
   if (window.location.protocol === "file:" || !("serviceWorker" in navigator)) return;
   window.addEventListener("load", () => {
     navigator.serviceWorker
-      .register("./service-worker.js?v=20260822-view-notes", { scope: "./" })
+      .register("./service-worker.js?v=20260822-locked-review", { scope: "./" })
       .catch((error) => console.warn("Backline service worker registration failed.", error));
   });
 }

@@ -1163,6 +1163,8 @@ assert.match(js, /Line items control the invoice total/);
 assert.doesNotMatch(js, /name: "invoiceAmount"/);
 assert.match(js, /amount > 0 \? Math\.min\(rawDepositRequested, amount\) : 0/);
 assert.match(js, /function isLockedBillingJob\(/);
+assert.match(js, /function canReviewLockedJob\(job = \{\}, action = ""\)/);
+assert.match(js, /canReviewLockedJob\(job, action\)/);
 assert.match(js, /data-action="reopen"/);
 assert.match(js, /Job reopened for invoice edits/);
 assert.match(js, /status: isPaidInFull \? "paid" : "partial"/);
