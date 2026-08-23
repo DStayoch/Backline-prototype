@@ -11867,7 +11867,7 @@ function renderJobActions() {
     { action: "complete", label: `Complete ${terms.workItem}`, tone: "", group: "primary" },
     { action: "portal", label: "Portal link", tone: "", group: "Customer" },
     { action: "portal-update", label: "Send portal update", tone: "", group: "Customer" },
-    { action: "note", label: "Add note", tone: "", group: "Internal" },
+    { action: "note", label: "View notes", tone: "", group: "Internal" },
     { action: "estimate", label: "Estimate", tone: "", group: "Estimate" },
     { action: "approval", label: "Approval link", tone: "", group: "Estimate" },
     { action: "approve", label: "Mark approved", tone: "", group: "Estimate" },
@@ -24539,7 +24539,7 @@ function registerBacklineServiceWorker() {
   if (window.location.protocol === "file:" || !("serviceWorker" in navigator)) return;
   window.addEventListener("load", () => {
     navigator.serviceWorker
-      .register("./service-worker.js?v=20260822-note-history", { scope: "./" })
+      .register("./service-worker.js?v=20260822-view-notes", { scope: "./" })
       .catch((error) => console.warn("Backline service worker registration failed.", error));
   });
 }

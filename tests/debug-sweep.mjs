@@ -1012,7 +1012,7 @@ assert.match(js, /jobActionMenuOpen/);
 assert.match(js, /data-toggle-job-action-menu/);
 assert.match(js, /state\.jobActionMenuOpen = !state\.jobActionMenuOpen/);
 assert.match(js, /\["Customer", "Internal", "Estimate", "Billing", "Field", "Admin"\]/);
-assert.match(js, /action: "note", label: "Add note", tone: "", group: "Internal"/);
+assert.match(js, /action: "note", label: "View notes", tone: "", group: "Internal"/);
 assert.match(js, /function canAddInternalNote\(/);
 assert.match(js, /function canRemoveInternalNote\(/);
 assert.match(js, /data-remove-job-note/);
