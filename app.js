@@ -2998,6 +2998,15 @@ function can(action) {
   return role.actions.includes(action);
 }
 
+function canAddInternalNote() {
+  if (state.secureMode && !state.offlineMode && state.billingAccess?.mode === "read_only") return false;
+  return Boolean(roleDefinition(currentRole()));
+}
+
+function canRemoveInternalNote() {
+  return ["owner", "admin"].includes(currentRole()) && canAddInternalNote();
+}
+
 function denyAction(action, detail = "") {
   recordActivity({
     type: "updated",
@@ -9281,7 +9290,8 @@ function normalizeJobMessage(message = {}) {
     seenBy: { ...(message.seenBy || {}) },
     reviewStatus: message.reviewStatus || "",
     reviewedAt: message.reviewedAt || "",
-    reviewedBy: message.reviewedBy || ""
+    reviewedBy: message.reviewedBy || "",
+    userNote: Boolean(message.userNote)
   };
 }
 
@@ -11857,6 +11867,7 @@ function renderJobActions() {
     { action: "complete", label: `Complete ${terms.workItem}`, tone: "", group: "primary" },
     { action: "portal", label: "Portal link", tone: "", group: "Customer" },
     { action: "portal-update", label: "Send portal update", tone: "", group: "Customer" },
+    { action: "note", label: "Add note", tone: "", group: "Internal" },
     { action: "estimate", label: "Estimate", tone: "", group: "Estimate" },
     { action: "approval", label: "Approval link", tone: "", group: "Estimate" },
     { action: "approve", label: "Mark approved", tone: "", group: "Estimate" },
@@ -11867,14 +11878,14 @@ function renderJobActions() {
     { action: "parts", label: "Log parts", tone: "", group: "Field" },
     { action: "delete", label: "Delete", tone: "danger", group: "Admin" }
   ].filter(Boolean)
-    .filter(({ action }) => can(action))
+    .filter(({ action }) => action === "note" ? canAddInternalNote() : can(action))
     .filter(({ action }) => !lockedBilling || ["reopen", "close", "delete"].includes(action));
 
   const actionButton = ({ action, label, tone }, extraClass = "") => `
     <button class="action-button ${tone} ${extraClass}" type="button" data-action="${action}">${label}</button>
   `;
   const primaryActions = actions.filter((item) => item.group === "primary").map((item) => actionButton(item)).join("");
-  const secondaryGroups = ["Customer", "Estimate", "Billing", "Field", "Admin"]
+  const secondaryGroups = ["Customer", "Internal", "Estimate", "Billing", "Field", "Admin"]
     .map((group) => {
       const groupActions = actions.filter((item) => item.group === group);
       if (!groupActions.length) return "";
@@ -14553,6 +14564,9 @@ function renderMessage(job, message) {
         <small>
           <b>${escapeHtml(actor)}</b>
           <em>${escapeHtml(normalized.createdAt)}</em>
+          ${isNote && normalized.userNote && canRemoveInternalNote() ? `
+            <button class="message-note-remove" type="button" data-remove-job-note="${escapeHtml(normalized.id)}" aria-label="Remove note" title="Remove note">&times;</button>
+          ` : ""}
         </small>
       </div>
       ${isOutbound ? `<span class="avatar">${label}</span>` : ""}
@@ -20697,6 +20711,15 @@ function actionModalConfig(action, job) {
   const invoice = invoiceRecord(job);
   const paymentDraftAmount = actionDraft.paidAmount ?? (invoiceBalance(job) || invoice.amount || estimate.amount || "");
   const configs = {
+    note: {
+      eyebrow: "Internal note",
+      title: "Add note",
+      subtitle: "Keep a private job and customer note that the customer cannot see.",
+      submit: "Add note",
+      fields: [
+        inputField({ label: "Note", name: "body", value: actionDraft.body ?? "", rows: 5, wide: true, required: true, placeholder: "Add context, a handoff, or a follow-up detail" })
+      ]
+    },
     book: {
       eyebrow: "Schedule",
       title: isReschedule ? terms.rescheduleWorkItem : terms.bookWorkItem,
@@ -20877,7 +20900,7 @@ function actionModalConfig(action, job) {
 }
 
 function openActionModal(action) {
-  if (!can(action)) return false;
+  if (action === "note" ? !canAddInternalNote() : !can(action)) return false;
   const job = selectedJob();
   const hasMatchingDraft = state.actionDraft?.action === action && state.actionDraft?.jobId === job?.id;
   if (!hasMatchingDraft && (!elements.actionModal.open || state.actionDraft?.action !== action || state.actionDraft?.jobId !== job?.id)) {
@@ -20973,8 +20996,18 @@ function openDeleteModal() {
 }
 
 function applyActionForm(action, data) {
-  if (!can(action)) return;
+  if (action === "note" ? !canAddInternalNote() : !can(action)) return;
   updateSelectedJob((job) => {
+    if (action === "note") {
+      const body = String(data.get("body") || "").trim();
+      if (!body) return job;
+      addJobMessage(job, {
+        direction: "note",
+        body,
+        userNote: true
+      });
+    }
+
     if (action === "book") {
       const wasScheduled = isScheduled(job);
       const previousSchedule = scheduleText(job, { includeYear: true });
@@ -21844,6 +21877,20 @@ document.addEventListener("click", async (event) => {
   if (event.target.closest("#collapseInboxButton")) {
     state.inboxCollapsed = !state.inboxCollapsed;
     renderJobs();
+    return;
+  }
+
+  const removeJobNote = event.target.closest("[data-remove-job-note]")?.dataset.removeJobNote;
+  if (removeJobNote) {
+    if (!canRemoveInternalNote()) return;
+    updateSelectedJob((job) => {
+      const note = (job.messages || []).map(normalizeJobMessage)
+        .find((message) => message.id === removeJobNote && message.direction === "note" && message.userNote);
+      if (!note) return job;
+      job.messages = job.messages.filter((message) => normalizeJobMessage(message).id !== removeJobNote);
+      return job;
+    });
+    showToast("Note removed", "The internal note was removed from this job and customer history.", "success");
     return;
   }
 
@@ -23024,9 +23071,9 @@ document.addEventListener("click", async (event) => {
 
   const action = event.target.closest("[data-action]")?.dataset.action;
   if (!action) return;
-  if (!canOrRecord(action, "job action")) return;
+  if (action === "note" ? !canAddInternalNote() : !canOrRecord(action, "job action")) return;
 
-  if (["book", "estimate", "invoice", "paid", "payment-request", "change", "parts", "portal-update", "complete", "check-diagnosis"].includes(action)) {
+  if (["note", "book", "estimate", "invoice", "paid", "payment-request", "change", "parts", "portal-update", "complete", "check-diagnosis"].includes(action)) {
     openActionModal(action);
     return;
   }
@@ -23440,8 +23487,12 @@ document.addEventListener("submit", async (event) => {
   if (actionForm) {
     event.preventDefault();
     const action = actionForm.dataset.action;
-    if (!canOrRecord(action, "submit action form")) return;
+    if (action === "note" ? !canAddInternalNote() : !canOrRecord(action, "submit action form")) return;
     const data = new FormData(actionForm);
+    if (action === "note" && !String(data.get("body") || "").trim()) {
+      showToast("Note needed", "Write a note before saving it.", "warning");
+      return;
+    }
     if (action === "paid" && normalizeValue(data.get("paidAmount")) <= 0) {
       showToast("Payment amount needed", "Enter the amount received before recording payment.", "warning");
       return;
@@ -23891,7 +23942,8 @@ document.addEventListener("submit", async (event) => {
       body: data.get("body").trim(),
       createdBy: direction === "in" ? job.name : accountDisplayName(),
       customerVisible: messageType !== "note",
-      seenBy: {}
+      seenBy: {},
+      userNote: messageType === "note"
     });
     if (messageType === "portal") {
       state.jobActionNotice = {
@@ -24431,7 +24483,7 @@ function registerBacklineServiceWorker() {
   if (window.location.protocol === "file:" || !("serviceWorker" in navigator)) return;
   window.addEventListener("load", () => {
     navigator.serviceWorker
-      .register("./service-worker.js?v=20260822-adaptive-workflows", { scope: "./" })
+      .register("./service-worker.js?v=20260822-job-notes", { scope: "./" })
       .catch((error) => console.warn("Backline service worker registration failed.", error));
   });
 }
