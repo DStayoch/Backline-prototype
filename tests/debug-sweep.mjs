@@ -1016,6 +1016,8 @@ assert.match(js, /action: "note", label: "Add note", tone: "", group: "Internal"
 assert.match(js, /function canAddInternalNote\(/);
 assert.match(js, /function canRemoveInternalNote\(/);
 assert.match(js, /data-remove-job-note/);
+assert.match(js, /function renderInternalJobNoteHistory\(/);
+assert.match(css, /\.internal-note-history/);
 assert.match(js, /My work today/);
 assert.match(js, /No task blockers today/);
 assert.match(js, /tech-work-summary/);

@@ -20698,6 +20698,38 @@ function inputField({ label, name, type = "text", value = "", placeholder = "", 
   `;
 }
 
+function internalJobNotes(job = {}) {
+  return (job.messages || [])
+    .map(normalizeJobMessage)
+    .filter((message) => message.direction === "note" && message.userNote);
+}
+
+function renderInternalJobNoteHistory(job = {}) {
+  const notes = internalJobNotes(job);
+  return `
+    <section class="internal-note-history wide" aria-label="Internal notes">
+      <div class="internal-note-history-header">
+        <div>
+          <span>Internal notes</span>
+          <strong>${notes.length} note${notes.length === 1 ? "" : "s"}</strong>
+        </div>
+      </div>
+      <div class="internal-note-history-list">
+        ${notes.length ? notes.map((note) => `
+          <article class="internal-note-history-item">
+            <p>${escapeHtml(note.body)}</p>
+            <small>
+              <b>${escapeHtml(internalActorDisplayName(note.createdBy || "Backline"))}</b>
+              <em>${escapeHtml(note.createdAt)}</em>
+              ${canRemoveInternalNote() ? `<button class="message-note-remove" type="button" data-remove-job-note="${escapeHtml(note.id)}" aria-label="Remove note" title="Remove note">&times;</button>` : ""}
+            </small>
+          </article>
+        `).join("") : '<div class="internal-note-empty">No internal notes have been added yet.</div>'}
+      </div>
+    </section>
+  `;
+}
+
 function actionModalConfig(action, job) {
   const terms = businessTerminology();
   const isReschedule = action === "book" && isScheduled(job);
@@ -20717,6 +20749,7 @@ function actionModalConfig(action, job) {
       subtitle: "Keep a private job and customer note that the customer cannot see.",
       submit: "Add note",
       fields: [
+        renderInternalJobNoteHistory(job),
         inputField({ label: "Note", name: "body", value: actionDraft.body ?? "", rows: 5, wide: true, required: true, placeholder: "Add context, a handoff, or a follow-up detail" })
       ]
     },
@@ -20917,6 +20950,15 @@ function openActionModal(action) {
   refreshActionScheduleWarning();
   elements.actionModal.showModal();
   return true;
+}
+
+function refreshOpenInternalNotesModal() {
+  if (!elements.actionModal?.open || elements.actionForm?.dataset.action !== "note") return;
+  captureActionFormDraft();
+  const job = selectedJob();
+  const config = job ? actionModalConfig("note", job) : null;
+  if (!config) return;
+  elements.actionModalFields.innerHTML = config.fields.join("");
 }
 
 function hasOpenModalForm() {
@@ -21890,6 +21932,7 @@ document.addEventListener("click", async (event) => {
       job.messages = job.messages.filter((message) => normalizeJobMessage(message).id !== removeJobNote);
       return job;
     });
+    refreshOpenInternalNotesModal();
     showToast("Note removed", "The internal note was removed from this job and customer history.", "success");
     return;
   }
@@ -23502,6 +23545,19 @@ document.addEventListener("submit", async (event) => {
       return;
     }
     applyActionForm(action, data);
+    if (action === "note") {
+      state.actionDraft = {
+        action: "note",
+        jobId: state.selectedJobId,
+        values: { body: "" }
+      };
+      const config = actionModalConfig("note", selectedJob());
+      if (config) {
+        elements.actionModalFields.innerHTML = config.fields.join("");
+        elements.actionModalFields.querySelector('[name="body"]')?.focus();
+      }
+      return;
+    }
     if (action === "paid" && state.pendingPaymentReview?.jobId === state.selectedJobId) {
       markPaymentReviewMessage(state.pendingPaymentReview.jobId, state.pendingPaymentReview.messageId, "recorded");
       state.pendingPaymentReview = null;
@@ -24483,7 +24539,7 @@ function registerBacklineServiceWorker() {
   if (window.location.protocol === "file:" || !("serviceWorker" in navigator)) return;
   window.addEventListener("load", () => {
     navigator.serviceWorker
-      .register("./service-worker.js?v=20260822-job-notes", { scope: "./" })
+      .register("./service-worker.js?v=20260822-note-history", { scope: "./" })
       .catch((error) => console.warn("Backline service worker registration failed.", error));
   });
 }
