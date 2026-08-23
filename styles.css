@@ -2988,8 +2988,8 @@ button.metric-block {
   background: transparent;
   color: var(--ink);
   width: 100%;
-  justify-content: flex-start;
-  text-align: left;
+  justify-content: center;
+  text-align: center;
 }
 
 .job-action-menu-group .action-button:hover,
