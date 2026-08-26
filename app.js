@@ -4081,9 +4081,29 @@ async function syncCurrentMemberDisplayName() {
   }
 }
 
+function fieldRoleJobPayload(job, payload) {
+  if (!isFieldScopedRole() || !job._remotePayload || typeof job._remotePayload !== "object") return payload;
+
+  const nextPayload = JSON.parse(JSON.stringify(job._remotePayload));
+  const allowedKeys = new Set(["messages", "assignmentSeenBy"]);
+  if (can("start")) ["status", "startedAt", "notifications"].forEach((key) => allowedKeys.add(key));
+  if (can("complete")) ["status", "completedAt", "fieldChecklist", "notifications"].forEach((key) => allowedKeys.add(key));
+  if (can("parts")) ["parts", "partsNote", "equipment", "reservations"].forEach((key) => allowedKeys.add(key));
+  if (can("task") || can("task-toggle")) allowedKeys.add("tasks");
+  if (can("check-diagnosis") || can("check-photos") || can("check-signature")) allowedKeys.add("fieldChecklist");
+  if (can("uploadFiles")) allowedKeys.add("files");
+
+  allowedKeys.forEach((key) => {
+    if (Object.hasOwn(payload, key)) nextPayload[key] = payload[key];
+    else delete nextPayload[key];
+  });
+  return nextPayload;
+}
+
 function jobToRemoteRow(job) {
   ensureJobDefaults(job);
-  const { _remoteRevision, _remoteFingerprint, ...payload } = job;
+  const { _remoteRevision, _remoteFingerprint, _remotePayload, ...payload } = job;
+  const syncPayload = fieldRoleJobPayload(job, payload);
   return {
     id: job.id,
     organization_id: state.organizationId,
@@ -4097,7 +4117,7 @@ function jobToRemoteRow(job) {
     technician: job.technician || null,
     estimated_value: normalizeValue(job.value),
     approval_status: job.approvalStatus,
-    payload,
+    payload: syncPayload,
     created_at: job.createdAt || new Date().toISOString(),
     updated_at: new Date().toISOString()
   };
@@ -4541,14 +4561,15 @@ async function persistRemoteData() {
 
   const dirtyJobs = state.jobs.filter(remoteRecordIsDirty);
   for (const job of dirtyJobs) {
+    const remoteRow = jobToRemoteRow(job);
     const { data, error } = await client.rpc("sync_job_if_revision", {
-      input_row: jobToRemoteRow(job),
+      input_row: remoteRow,
       expected_revision: Number(job._remoteRevision) || 0
     });
     if (error) throw error;
     if (data?.status === "conflict") throw remoteSyncConflictError("job", data);
     if (data?.status !== "saved") throw new Error("Backline could not confirm the job sync.");
-    markRemoteRecordSynced(job, data.revision);
+    markRemoteRecordSynced(job, data.revision, remoteRow.payload);
   }
 
   if (state.deletedJobs.length) {
@@ -9529,19 +9550,23 @@ function normalizeJobMessage(message = {}) {
 }
 
 function remoteRecordFingerprint(record) {
-  const { _remoteRevision, _remoteFingerprint, ...payload } = record || {};
+  const { _remoteRevision, _remoteFingerprint, _remotePayload, ...payload } = record || {};
   return JSON.stringify(payload);
 }
 
-function markRemoteRecordSynced(record, revision) {
+function markRemoteRecordSynced(record, revision, remotePayload = null) {
   if (!record) return;
   record._remoteRevision = Math.max(0, Number(revision) || 0);
+  if (remotePayload && typeof remotePayload === "object") {
+    record._remotePayload = JSON.parse(JSON.stringify(remotePayload));
+  }
   record._remoteFingerprint = remoteRecordFingerprint(record);
 }
 
 function hydrateRemoteJob(row = {}) {
-  const job = ensureJobDefaults(row.payload || {});
-  markRemoteRecordSynced(job, row.revision || 1);
+  const remotePayload = JSON.parse(JSON.stringify(row.payload || {}));
+  const job = ensureJobDefaults(JSON.parse(JSON.stringify(remotePayload)));
+  markRemoteRecordSynced(job, row.revision || 1, remotePayload);
   return job;
 }
 
@@ -24853,7 +24878,7 @@ function registerBacklineServiceWorker() {
   if (window.location.protocol === "file:" || !("serviceWorker" in navigator)) return;
   window.addEventListener("load", () => {
     navigator.serviceWorker
-      .register("./service-worker.js?v=20260826-tech-save", { scope: "./" })
+      .register("./service-worker.js?v=20260826-tech-start-payload", { scope: "./" })
       .catch((error) => console.warn("Backline service worker registration failed.", error));
   });
 }
