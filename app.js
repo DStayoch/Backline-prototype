@@ -352,6 +352,144 @@ const BUSINESS_TERMINOLOGY = {
   }
 };
 
+const BUSINESS_WORKSPACE_CARDS = {
+  trades: {
+    asset: {
+      title: "Equipment and property",
+      subtitle: "HVAC units, water heaters, panels, fixtures, warranty notes, and site details.",
+      empty: "No equipment or property records yet.",
+      recordLabel: "equipment",
+      typePlaceholder: "Type, e.g. AC unit",
+      namePlaceholder: "Name, e.g. Upstairs condenser",
+      modelPlaceholder: "Model",
+      serialPlaceholder: "Serial",
+      installDateLabel: "Install date",
+      warrantyPlaceholder: "Warranty",
+      locationPlaceholder: "Location",
+      conditionPlaceholder: "Condition, e.g. Good / aging",
+      serviceIntervalPlaceholder: "Service every days",
+      lastServiceLabel: "Last service date",
+      nextServiceLabel: "Next service date",
+      notesPlaceholder: "Notes, filter size, refrigerant, capacity, condition",
+      detailLabels: { model: "Model", serial: "Serial", warranty: "Warranty", nextService: "Next service" },
+      followupAction: "Create maintenance job"
+    },
+    files: { title: "Photos and files", subtitle: "Before/after photos, equipment labels, permits, and signed documents.", notePlaceholder: "Optional note" },
+    parts: { title: "Parts and tools", subtitle: "Lightweight on-hand material tracking before full inventory.", actionLabel: "Log parts", itemPlural: "parts", planningHint: "Reserve likely materials before the truck rolls." },
+    estimate: { title: "Estimate", subtitle: "Customer-facing package, terms, and approval defaults.", editLabel: "Edit estimate", totalLabel: "Estimate total", createInvoiceLabel: "Create invoice from approved estimate" },
+    history: { title: "Customer history", subtitle: "Quickly find what happened last time." },
+    communications: { title: "Communications", subtitle: "Customer contact, unread replies, and send exceptions." }
+  },
+  appointments: {
+    asset: {
+      title: "Client details and preferences",
+      subtitle: "Visit preferences, room details, follow-up needs, and client-specific service notes.",
+      empty: "No client details or preferences recorded yet.",
+      recordLabel: "client detail",
+      typePlaceholder: "Detail type, e.g. preference",
+      namePlaceholder: "Detail, e.g. quiet appointment",
+      modelPlaceholder: "Category",
+      serialPlaceholder: "Reference ID",
+      installDateLabel: "Effective date",
+      warrantyPlaceholder: "Consent or policy note",
+      locationPlaceholder: "Room or location",
+      conditionPlaceholder: "Status",
+      serviceIntervalPlaceholder: "Follow up every days",
+      lastServiceLabel: "Last appointment date",
+      nextServiceLabel: "Next follow-up date",
+      notesPlaceholder: "Preferences, preparation, or service notes",
+      detailLabels: { model: "Category", serial: "Reference", warranty: "Consent / policy", nextService: "Next follow-up" },
+      followupAction: "Create follow-up appointment"
+    },
+    files: { title: "Photos and client files", subtitle: "Consultation photos, intake forms, signed consents, and customer documents.", notePlaceholder: "Describe this client file" },
+    parts: { title: "Supplies and session notes", subtitle: "Track consumables, products used, and preparation notes for the appointment.", actionLabel: "Log supplies", itemPlural: "supplies", planningHint: "Reserve supplies and prepare the appointment." },
+    estimate: { title: "Service estimate", subtitle: "Customer-facing service options, terms, and approval defaults.", editLabel: "Edit service estimate", totalLabel: "Service estimate total", createInvoiceLabel: "Create invoice from approved service estimate" },
+    history: { title: "Appointment history", subtitle: "Review previous visits, preferences, and follow-up notes." },
+    communications: { title: "Client communications", subtitle: "Client contact, unread replies, and send exceptions." }
+  },
+  professional: {
+    asset: {
+      title: "Project details and references",
+      subtitle: "Requirements, stakeholders, project references, and ongoing service notes.",
+      empty: "No project details or references recorded yet.",
+      recordLabel: "project reference",
+      typePlaceholder: "Reference type, e.g. requirement",
+      namePlaceholder: "Detail or reference name",
+      modelPlaceholder: "Category",
+      serialPlaceholder: "Reference ID",
+      installDateLabel: "Start date",
+      warrantyPlaceholder: "Agreement or coverage",
+      locationPlaceholder: "Project area or location",
+      conditionPlaceholder: "Status",
+      serviceIntervalPlaceholder: "Review every days",
+      lastServiceLabel: "Last review date",
+      nextServiceLabel: "Next review date",
+      notesPlaceholder: "Requirements, decisions, or reference notes",
+      detailLabels: { model: "Category", serial: "Reference", warranty: "Agreement", nextService: "Next review" },
+      followupAction: "Create follow-up project"
+    },
+    files: { title: "Files and deliverables", subtitle: "Briefs, proposals, source files, deliverables, and signed agreements.", notePlaceholder: "Describe this file or deliverable" },
+    parts: { title: "Resources and expenses", subtitle: "Track billable resources, expenses, and materials tied to this project.", actionLabel: "Log resource", itemPlural: "resources", planningHint: "Plan the resources needed for this project." },
+    estimate: { title: "Proposal", subtitle: "Client-facing scope, pricing, terms, and approval defaults.", editLabel: "Edit proposal", totalLabel: "Proposal total", createInvoiceLabel: "Create invoice from approved proposal" },
+    history: { title: "Project history", subtitle: "Review earlier work, decisions, and delivered outcomes." },
+    communications: { title: "Client communications", subtitle: "Client contact, unread replies, and send exceptions." }
+  },
+  automotive: {
+    asset: {
+      title: "Vehicle details and service history",
+      subtitle: "Vehicle identification, condition, warranty coverage, and recommended maintenance.",
+      empty: "No vehicle details or service records yet.",
+      recordLabel: "vehicle",
+      typePlaceholder: "Vehicle type, e.g. SUV",
+      namePlaceholder: "Vehicle, e.g. 2021 Ford F-150",
+      modelPlaceholder: "Trim or engine",
+      serialPlaceholder: "VIN",
+      installDateLabel: "In-service date",
+      warrantyPlaceholder: "Warranty coverage",
+      locationPlaceholder: "Mileage or bay",
+      conditionPlaceholder: "Condition",
+      serviceIntervalPlaceholder: "Maintenance interval (days)",
+      lastServiceLabel: "Last service date",
+      nextServiceLabel: "Next service date",
+      notesPlaceholder: "Inspection notes, diagnostics, mileage, or customer concerns",
+      detailLabels: { model: "Trim / engine", serial: "VIN", warranty: "Coverage", nextService: "Next service" },
+      followupAction: "Create maintenance work order"
+    },
+    files: { title: "Inspection photos and documents", subtitle: "Inspection photos, damage photos, repair orders, warranties, and signed authorizations.", notePlaceholder: "Describe this inspection photo or document" },
+    parts: { title: "Parts, fluids, and shop supplies", subtitle: "Track repair parts, fluids, supplies, and materials used on the vehicle.", actionLabel: "Log vehicle parts", itemPlural: "parts", planningHint: "Reserve the parts and fluids needed for this repair." },
+    estimate: { title: "Repair estimate", subtitle: "Customer-facing repair scope, pricing, terms, and approval defaults.", editLabel: "Edit repair estimate", totalLabel: "Repair estimate total", createInvoiceLabel: "Create invoice from approved repair estimate" },
+    history: { title: "Vehicle service history", subtitle: "Review previous visits, repairs, and maintenance recommendations." },
+    communications: { title: "Customer communications", subtitle: "Customer contact, unread replies, and send exceptions." }
+  },
+  general: {
+    asset: {
+      title: "Service details and records",
+      subtitle: "Important customer details, service context, business records, and follow-up needs.",
+      empty: "No service details or records yet.",
+      recordLabel: "business record",
+      typePlaceholder: "Record type",
+      namePlaceholder: "Detail or record name",
+      modelPlaceholder: "Category",
+      serialPlaceholder: "Reference ID",
+      installDateLabel: "Start date",
+      warrantyPlaceholder: "Coverage or policy",
+      locationPlaceholder: "Location or area",
+      conditionPlaceholder: "Status",
+      serviceIntervalPlaceholder: "Follow up every days",
+      lastServiceLabel: "Last service date",
+      nextServiceLabel: "Next follow-up date",
+      notesPlaceholder: "Helpful details, preferences, or service notes",
+      detailLabels: { model: "Category", serial: "Reference", warranty: "Coverage / policy", nextService: "Next follow-up" },
+      followupAction: "Create follow-up work item"
+    },
+    files: { title: "Files and records", subtitle: "Customer documents, photos, receipts, signed forms, and supporting records.", notePlaceholder: "Describe this file or record" },
+    parts: { title: "Materials and expenses", subtitle: "Track supplies, products, materials, and other costs connected to this work.", actionLabel: "Log item", itemPlural: "items", planningHint: "Plan the materials and supplies needed for this work." },
+    estimate: { title: "Quote", subtitle: "Customer-facing scope, pricing, terms, and approval defaults.", editLabel: "Edit quote", totalLabel: "Quote total", createInvoiceLabel: "Create invoice from approved quote" },
+    history: { title: "Customer history", subtitle: "Review previous work, requests, and follow-up notes." },
+    communications: { title: "Customer communications", subtitle: "Customer contact, unread replies, and send exceptions." }
+  }
+};
+
 const defaultCompanySettings = {
   companyName: "Backline",
   companySlogan: "",
@@ -1893,6 +2031,23 @@ function companySettings() {
 
 function businessTerminology(type = state.companySettings?.businessType) {
   return BUSINESS_TERMINOLOGY[type] || BUSINESS_TERMINOLOGY.trades;
+}
+
+function jobBusinessType(job = {}) {
+  return BUSINESS_TERMINOLOGY[job.businessType]
+    ? job.businessType
+    : companySettings().businessType;
+}
+
+function businessWorkspaceCards(job = {}) {
+  return BUSINESS_WORKSPACE_CARDS[jobBusinessType(job)] || BUSINESS_WORKSPACE_CARDS.trades;
+}
+
+function preserveLegacyJobBusinessTypes(businessType = companySettings().businessType) {
+  const fallback = BUSINESS_TERMINOLOGY[businessType] ? businessType : defaultCompanySettings.businessType;
+  state.jobs.forEach((job) => {
+    if (!BUSINESS_TERMINOLOGY[job.businessType]) job.businessType = fallback;
+  });
 }
 
 function applyBusinessTerminology() {
@@ -9195,6 +9350,7 @@ function paymentMethodLabel(method) {
 
 function ensureJobDefaults(job) {
   ensureJobPortalToken(job);
+  job.businessType = jobBusinessType(job);
   job.jobType ||= job.urgency === "urgent" ? "emergency" : "diagnostic";
   job.durationMinutes = job.durationMinutes ? normalizeDurationMinutes(job.durationMinutes) : inferDurationMinutes(job);
   job.siteContact ||= "";
@@ -9265,10 +9421,10 @@ function normalizeEquipmentRecord(record = {}) {
   };
 }
 
-function equipmentRecordFromForm(form) {
+function equipmentRecordFromForm(form, fallbackType = "Equipment") {
   const data = new FormData(form);
   return normalizeEquipmentRecord({
-    type: String(data.get("type") || "").trim() || "Equipment",
+    type: String(data.get("type") || "").trim() || fallbackType,
     name: String(data.get("name") || "").trim(),
     model: String(data.get("model") || "").trim(),
     serial: String(data.get("serial") || "").trim(),
@@ -10601,8 +10757,9 @@ function materialSourceLabel(source = "") {
 
 function renderPartsList(job) {
   ensureJobDefaults(job);
+  const panel = businessWorkspaceCards(job).parts;
   if (!job.parts.length && !job.partsNote) {
-    return '<div class="empty-note">No parts logged yet.</div>';
+    return `<div class="empty-note">No ${escapeHtml(panel.itemPlural)} logged yet.</div>`;
   }
 
   const sourceOptions = ["truck stock", "supplier", "warehouse", "customer supplied"];
@@ -10615,7 +10772,7 @@ function renderPartsList(job) {
           <span>${escapeHtml(job.partsNote)}</span>
         </div>
       ` : ""}
-      ${!hasLoggedParts ? '<div class="empty-note">No logged parts yet. Use Log parts when material is actually used or pulled.</div>' : ""}
+      ${!hasLoggedParts ? `<div class="empty-note">No logged ${escapeHtml(panel.itemPlural)} yet. Use ${escapeHtml(panel.actionLabel)} when something is used or pulled.</div>` : ""}
       ${job.parts.map((part, index) => {
         const normalizedPart = normalizeJobPart(part, index);
         const source = normalizedPart.source || "truck stock";
@@ -10674,6 +10831,7 @@ function renderPartsList(job) {
 
 function renderReservationPickList(job = {}) {
   ensureJobDefaults(job);
+  const panel = businessWorkspaceCards(job).parts;
   const rows = jobReservationRows(job);
   const summary = jobPickListSummary(job);
   const recommendations = recommendedReservationItems(job);
@@ -10685,7 +10843,7 @@ function renderReservationPickList(job = {}) {
       <div class="pick-list-header">
         <span>
           <strong>Pick list</strong>
-          <small>${escapeHtml(summary.total ? `${summary.label}${summary.shortages ? ` - ${summary.shortages} shortage${summary.shortages === 1 ? "" : "s"}` : ""}` : "Reserve likely materials before the truck rolls.")}</small>
+          <small>${escapeHtml(summary.total ? `${summary.label}${summary.shortages ? ` - ${summary.shortages} shortage${summary.shortages === 1 ? "" : "s"}` : ""}` : panel.planningHint)}</small>
         </span>
         <span class="pill ${escapeHtml(summary.shortages ? "urgent" : summary.total ? "booked" : "estimated")}">${escapeHtml(summary.shortages ? "Shortage" : summary.total ? summary.label : "Planning")}</span>
       </div>
@@ -11811,14 +11969,15 @@ function renderEstimateHistory(job) {
 
 function renderEstimatePanel(job) {
   ensureJobDefaults(job);
+  const panel = businessWorkspaceCards(job).estimate;
   const estimate = latestEstimateRevision(job) || normalizeEstimateRecord(job.estimate || {}, job);
   const expires = estimate.expiresAt ? new Date(`${estimate.expiresAt}T12:00:00`).toLocaleDateString() : "Not set";
   return `
     <section class="field-panel invoice-panel">
       <div class="section-heading">
         <div>
-          <h3>Estimate</h3>
-          <p>Customer-facing package, terms, and approval defaults.</p>
+          <h3>${escapeHtml(panel.title)}</h3>
+          <p>${escapeHtml(panel.subtitle)}</p>
         </div>
         <span class="pill estimated">${escapeHtml(job.approvalStatus.replaceAll("_", " "))}</span>
       </div>
@@ -11829,7 +11988,7 @@ function renderEstimatePanel(job) {
           <small>${escapeHtml(estimate.updatedAt ? `Updated by ${estimate.updatedBy || "Backline"}` : "Uses workspace defaults")}</small>
         </div>
         <div class="invoice-summary-card">
-          <span>Estimate total</span>
+          <span>${escapeHtml(panel.totalLabel)}</span>
           <strong>${escapeHtml(formatMoney(estimate.amount))}</strong>
           <small>${escapeHtml(`${companySettings().defaultTaxRate}% default tax setting`)}</small>
         </div>
@@ -11849,8 +12008,8 @@ function renderEstimatePanel(job) {
       ${renderEstimateHistory(job)}
       ${can("estimate") || canCreateInvoiceFromEstimate(job) ? `
         <div class="invoice-actions">
-          ${can("estimate") ? '<button class="action-button" type="button" data-action="estimate">Edit estimate</button>' : ""}
-          ${canCreateInvoiceFromEstimate(job) ? '<button class="action-button accent" type="button" data-create-invoice-from-estimate>Create invoice from approved estimate</button>' : ""}
+          ${can("estimate") ? `<button class="action-button" type="button" data-action="estimate">${escapeHtml(panel.editLabel)}</button>` : ""}
+          ${canCreateInvoiceFromEstimate(job) ? `<button class="action-button accent" type="button" data-create-invoice-from-estimate>${escapeHtml(panel.createInvoiceLabel)}</button>` : ""}
         </div>
       ` : ""}
     </section>
@@ -11859,7 +12018,8 @@ function renderEstimatePanel(job) {
 
 function renderJobActions() {
   const job = selectedJob();
-  const terms = businessTerminology();
+  const terms = businessTerminology(jobBusinessType(job));
+  const workspaceCards = businessWorkspaceCards(job);
   const lockedBilling = job && isLockedBillingJob(job);
   const closeAction = job && canCloseJob(job)
     ? { action: "close", label: `Close ${terms.workItem}`, tone: "accent", group: "primary" }
@@ -11874,14 +12034,14 @@ function renderJobActions() {
     { action: "portal", label: canReviewLockedJob(job, "portal") ? "View customer portal" : "Portal link", tone: "", group: "Customer" },
     { action: "portal-update", label: "Send portal update", tone: "", group: "Customer" },
     { action: "note", label: "View notes", tone: "", group: "Internal" },
-    { action: "estimate", label: "Estimate", tone: "", group: "Estimate" },
+    { action: "estimate", label: workspaceCards.estimate.title, tone: "", group: "Estimate" },
     { action: "approval", label: "Approval link", tone: "", group: "Estimate" },
     { action: "approve", label: "Mark approved", tone: "", group: "Estimate" },
     { action: "change", label: "Change order", tone: "", group: "Estimate" },
     { action: "payment-request", label: "Request payment", tone: "accent", group: "Billing" },
     { action: "invoice", label: "Invoice", tone: "", group: "Billing" },
     { action: "paid", label: "Mark paid", tone: "", group: "Billing" },
-    { action: "parts", label: "Log parts", tone: "", group: "Field" },
+    { action: "parts", label: workspaceCards.parts.actionLabel, tone: "", group: "Field" },
     { action: "delete", label: "Delete", tone: "danger", group: "Admin" }
   ].filter(Boolean)
     .filter(({ action }) => action === "note" ? canAddInternalNote() : can(action))
@@ -12266,8 +12426,9 @@ function equipmentAssetKey(record = {}) {
 
 function renderEquipmentList(job) {
   ensureJobDefaults(job);
+  const asset = businessWorkspaceCards(job).asset;
   if (!job.equipment.length) {
-    return `<div class="empty-note">No equipment or property records yet.</div>`;
+    return `<div class="empty-note">${escapeHtml(asset.empty)}</div>`;
   }
   const canEditEquipment = can("customer-profile");
   return `
@@ -12284,34 +12445,34 @@ function renderEquipmentList(job) {
               <span class="equipment-badges">${equipmentMaintenanceBadge(equipment)}</span>
             </div>
             <dl>
-              <div><dt>Model</dt><dd>${escapeHtml(equipment.model || "Not set")}</dd></div>
-              <div><dt>Serial</dt><dd>${escapeHtml(equipment.serial || "Not set")}</dd></div>
-              <div><dt>Warranty</dt><dd>${escapeHtml(equipment.warranty || "Not set")}</dd></div>
-              <div><dt>Next service</dt><dd>${escapeHtml(equipment.nextServiceDate ? formatDateLabel(equipment.nextServiceDate, { includeYear: true }) : "Not set")}</dd></div>
+              <div><dt>${escapeHtml(asset.detailLabels.model)}</dt><dd>${escapeHtml(equipment.model || "Not set")}</dd></div>
+              <div><dt>${escapeHtml(asset.detailLabels.serial)}</dt><dd>${escapeHtml(equipment.serial || "Not set")}</dd></div>
+              <div><dt>${escapeHtml(asset.detailLabels.warranty)}</dt><dd>${escapeHtml(equipment.warranty || "Not set")}</dd></div>
+              <div><dt>${escapeHtml(asset.detailLabels.nextService)}</dt><dd>${escapeHtml(equipment.nextServiceDate ? formatDateLabel(equipment.nextServiceDate, { includeYear: true }) : "Not set")}</dd></div>
             </dl>
             <p>${escapeHtml(equipmentServiceSummary(equipment))}</p>
             ${equipment.notes ? `<p>${escapeHtml(equipment.notes)}</p>` : ""}
             <div class="equipment-card-actions">
-              ${can("createJob") ? `<button class="utility-button" type="button" data-create-equipment-maintenance="${escapeHtml(equipment.id)}" data-source-job-id="${escapeHtml(job.id)}">Create maintenance job</button>` : ""}
+              ${can("createJob") ? `<button class="utility-button" type="button" data-create-equipment-maintenance="${escapeHtml(equipment.id)}" data-source-job-id="${escapeHtml(job.id)}">${escapeHtml(asset.followupAction)}</button>` : ""}
             </div>
             ${canEditEquipment ? `<details class="equipment-editor" ${detailExpandedAttributes(`job:${job.id}:equipment:${equipment.id}:edit`)}>
-              <summary>Edit equipment</summary>
+              <summary>Edit ${escapeHtml(asset.recordLabel)}</summary>
               <form class="equipment-form" data-equipment-edit-form="${escapeHtml(equipment.id)}">
-                <input name="type" value="${escapeHtml(equipment.type)}" placeholder="Type">
-                <input name="name" value="${escapeHtml(equipment.name)}" placeholder="Name">
-                <input name="model" value="${escapeHtml(equipment.model)}" placeholder="Model">
-                <input name="serial" value="${escapeHtml(equipment.serial)}" placeholder="Serial">
-                <input name="installDate" type="date" value="${escapeHtml(equipment.installDate)}" aria-label="Install date">
-                <input name="warranty" value="${escapeHtml(equipment.warranty)}" placeholder="Warranty">
-                <input name="location" value="${escapeHtml(equipment.location)}" placeholder="Location">
-                <input name="condition" value="${escapeHtml(equipment.condition)}" placeholder="Condition">
-                <input name="serviceIntervalDays" type="number" min="0" value="${escapeHtml(equipment.serviceIntervalDays || "")}" placeholder="Service every days">
-                <input name="lastServiceDate" type="date" value="${escapeHtml(equipment.lastServiceDate)}" aria-label="Last service date">
-                <input name="nextServiceDate" type="date" value="${escapeHtml(equipment.nextServiceDate)}" aria-label="Next service date">
-                <input class="wide" name="notes" value="${escapeHtml(equipment.notes)}" placeholder="Notes">
+                <input name="type" value="${escapeHtml(equipment.type)}" placeholder="${escapeHtml(asset.typePlaceholder)}">
+                <input name="name" value="${escapeHtml(equipment.name)}" placeholder="${escapeHtml(asset.namePlaceholder)}">
+                <input name="model" value="${escapeHtml(equipment.model)}" placeholder="${escapeHtml(asset.modelPlaceholder)}">
+                <input name="serial" value="${escapeHtml(equipment.serial)}" placeholder="${escapeHtml(asset.serialPlaceholder)}">
+                <input name="installDate" type="date" value="${escapeHtml(equipment.installDate)}" aria-label="${escapeHtml(asset.installDateLabel)}">
+                <input name="warranty" value="${escapeHtml(equipment.warranty)}" placeholder="${escapeHtml(asset.warrantyPlaceholder)}">
+                <input name="location" value="${escapeHtml(equipment.location)}" placeholder="${escapeHtml(asset.locationPlaceholder)}">
+                <input name="condition" value="${escapeHtml(equipment.condition)}" placeholder="${escapeHtml(asset.conditionPlaceholder)}">
+                <input name="serviceIntervalDays" type="number" min="0" value="${escapeHtml(equipment.serviceIntervalDays || "")}" placeholder="${escapeHtml(asset.serviceIntervalPlaceholder)}">
+                <input name="lastServiceDate" type="date" value="${escapeHtml(equipment.lastServiceDate)}" aria-label="${escapeHtml(asset.lastServiceLabel)}">
+                <input name="nextServiceDate" type="date" value="${escapeHtml(equipment.nextServiceDate)}" aria-label="${escapeHtml(asset.nextServiceLabel)}">
+                <input class="wide" name="notes" value="${escapeHtml(equipment.notes)}" placeholder="${escapeHtml(asset.notesPlaceholder)}">
                 <button class="secondary-button" type="submit">Save</button>
               </form>
-              <button class="utility-button danger-text" type="button" data-equipment-delete="${escapeHtml(equipment.id)}">Delete equipment</button>
+              <button class="utility-button danger-text" type="button" data-equipment-delete="${escapeHtml(equipment.id)}">Delete ${escapeHtml(asset.recordLabel)}</button>
             </details>` : ""}
           </article>
         `;
@@ -12587,13 +12748,14 @@ function renderCommunicationRows(items, options = {}) {
 
 function renderJobCommunications(job) {
   ensureJobDefaults(job);
+  const panel = businessWorkspaceCards(job).communications;
   const items = jobCommunicationItems(job);
   const quickActions = notificationQuickActions(job);
   const summary = jobCommunicationSummary(job);
   const unreadCount = unreadInboundMessages(job).length;
   return renderCollapsibleFieldPanel({
-    title: "Communications",
-    subtitle: "Customer contact, unread replies, and send exceptions.",
+    title: panel.title,
+    subtitle: panel.subtitle,
     open: unreadCount > 0,
     badge: `<span class="pill ${unreadCount ? "urgent" : "estimated"}">${escapeHtml(unreadCount ? `${unreadCount} unread` : `${items.length} item${items.length === 1 ? "" : "s"}`)}</span>`,
     content: `
@@ -14338,6 +14500,7 @@ function renderDetail() {
     ? job.messages.map((message) => renderMessage(job, message)).join("")
     : '<div class="empty-note">No messages or notes yet.</div>';
   const messageDraft = messageComposeDraft(job.id);
+  const workspaceCards = businessWorkspaceCards(job);
   const conflictText = scheduleConflictText(job);
   const reservationShortages = jobReservationShortages(job);
 
@@ -14446,24 +14609,24 @@ function renderDetail() {
 
       ${renderCollapsibleFieldPanel({
         key: `job:${job.id}:equipment`,
-        title: "Equipment and property",
-        subtitle: "HVAC units, water heaters, panels, fixtures, warranty notes, and site details.",
-        badge: `<span class="pill estimated">${escapeHtml(job.equipment.length)} record${job.equipment.length === 1 ? "" : "s"}</span>`,
+        title: workspaceCards.asset.title,
+        subtitle: workspaceCards.asset.subtitle,
+        badge: `<span class="pill estimated">${escapeHtml(job.equipment.length)} ${escapeHtml(`${workspaceCards.asset.recordLabel}${job.equipment.length === 1 ? "" : "s"}`)}</span>`,
         content: `
         ${can("customer-profile") ? `<form class="equipment-form" data-equipment-form>
-          <input name="type" placeholder="Type, e.g. AC unit">
-          <input name="name" placeholder="Name, e.g. Upstairs condenser">
-          <input name="model" placeholder="Model">
-          <input name="serial" placeholder="Serial">
-          <input name="installDate" type="date" aria-label="Install date">
-          <input name="warranty" placeholder="Warranty">
-          <input name="location" placeholder="Location">
-          <input name="condition" placeholder="Condition, e.g. Good / aging">
-          <input name="serviceIntervalDays" type="number" min="0" placeholder="Service every days">
-          <input name="lastServiceDate" type="date" aria-label="Last service date">
-          <input name="nextServiceDate" type="date" aria-label="Next service date">
-          <input class="wide" name="notes" placeholder="Notes, filter size, refrigerant, capacity, condition">
-          <button class="secondary-button" type="submit">Add record</button>
+          <input name="type" placeholder="${escapeHtml(workspaceCards.asset.typePlaceholder)}">
+          <input name="name" placeholder="${escapeHtml(workspaceCards.asset.namePlaceholder)}">
+          <input name="model" placeholder="${escapeHtml(workspaceCards.asset.modelPlaceholder)}">
+          <input name="serial" placeholder="${escapeHtml(workspaceCards.asset.serialPlaceholder)}">
+          <input name="installDate" type="date" aria-label="${escapeHtml(workspaceCards.asset.installDateLabel)}">
+          <input name="warranty" placeholder="${escapeHtml(workspaceCards.asset.warrantyPlaceholder)}">
+          <input name="location" placeholder="${escapeHtml(workspaceCards.asset.locationPlaceholder)}">
+          <input name="condition" placeholder="${escapeHtml(workspaceCards.asset.conditionPlaceholder)}">
+          <input name="serviceIntervalDays" type="number" min="0" placeholder="${escapeHtml(workspaceCards.asset.serviceIntervalPlaceholder)}">
+          <input name="lastServiceDate" type="date" aria-label="${escapeHtml(workspaceCards.asset.lastServiceLabel)}">
+          <input name="nextServiceDate" type="date" aria-label="${escapeHtml(workspaceCards.asset.nextServiceLabel)}">
+          <input class="wide" name="notes" placeholder="${escapeHtml(workspaceCards.asset.notesPlaceholder)}">
+          <button class="secondary-button" type="submit">Add ${escapeHtml(workspaceCards.asset.recordLabel)}</button>
         </form>` : ""}
         ${renderEquipmentList(job)}
         `
@@ -14471,14 +14634,14 @@ function renderDetail() {
 
       ${renderCollapsibleFieldPanel({
         key: `job:${job.id}:files`,
-        title: "Photos and files",
-        subtitle: "Before/after photos, equipment labels, permits, and signed documents.",
+        title: workspaceCards.files.title,
+        subtitle: workspaceCards.files.subtitle,
         badge: `<span class="pill estimated">${escapeHtml(job.files.length)} file${job.files.length === 1 ? "" : "s"}</span>`,
         content: `
         ${can("uploadFiles") ? `
           <form class="file-upload-form" data-file-upload-form>
             <input type="file" name="files" multiple accept="image/*,.pdf,.doc,.docx">
-            <input name="note" placeholder="Optional note">
+            <input name="note" placeholder="${escapeHtml(workspaceCards.files.notePlaceholder)}">
             <button class="secondary-button" type="submit">Upload</button>
           </form>
         ` : ""}
@@ -14488,12 +14651,12 @@ function renderDetail() {
 
       ${renderCollapsibleFieldPanel({
         key: `job:${job.id}:parts`,
-        title: "Parts and tools",
-        subtitle: "Lightweight on-hand material tracking before full inventory.",
+        title: workspaceCards.parts.title,
+        subtitle: workspaceCards.parts.subtitle,
         badge: `<span class="pill estimated">${escapeHtml(job.parts.length)} logged</span>`,
         content: `
         ${renderReservationPickList(job)}
-        ${can("parts") ? '<div class="collapsible-inline-actions"><button class="action-button" type="button" data-action="parts">Log parts</button></div>' : ""}
+        ${can("parts") ? `<div class="collapsible-inline-actions"><button class="action-button" type="button" data-action="parts">${escapeHtml(workspaceCards.parts.actionLabel)}</button></div>` : ""}
         ${renderPartsList(job)}
         `
       })}
@@ -14504,8 +14667,8 @@ function renderDetail() {
 
       ${renderCollapsibleFieldPanel({
         key: `job:${job.id}:customer-history`,
-        title: "Customer history",
-        subtitle: "Quickly find what happened last time.",
+        title: workspaceCards.history.title,
+        subtitle: workspaceCards.history.subtitle,
         content: `
         ${renderCustomerHistory(job)}
         `
@@ -19478,6 +19641,7 @@ function createJob(formData) {
   const now = new Date();
   const job = {
     id: createId(),
+    businessType: companySettings().businessType,
     name: formData.get("name").trim(),
     phone: formatPhoneNumber(formData.get("phone")),
     address: formData.get("address").trim(),
@@ -19563,6 +19727,7 @@ function createMaintenanceJobFromEquipment(sourceJobId, equipmentId) {
   const now = new Date();
   const job = ensureJobDefaults({
     id: createId(),
+    businessType: sourceJob.businessType || companySettings().businessType,
     name: sourceJob.name,
     phone: sourceJob.phone,
     address: sourceJob.address,
@@ -20737,7 +20902,8 @@ function renderInternalJobNoteHistory(job = {}) {
 }
 
 function actionModalConfig(action, job) {
-  const terms = businessTerminology();
+  const terms = businessTerminology(jobBusinessType(job));
+  const workspaceCards = businessWorkspaceCards(job);
   const isReschedule = action === "book" && isScheduled(job);
   const estimate = normalizeEstimateRecord(job.estimate || {}, job);
   const company = companySettings();
@@ -20776,11 +20942,11 @@ function actionModalConfig(action, job) {
     },
     estimate: {
       eyebrow: "Sell",
-      title: "Send estimate",
+      title: `Send ${workspaceCards.estimate.title.toLowerCase()}`,
       subtitle: "Choose the package, customer-facing terms, and follow-up behavior.",
-      submit: "Send estimate",
+      submit: `Send ${workspaceCards.estimate.title.toLowerCase()}`,
       fields: [
-        inputField({ label: "Estimate amount", name: "value", type: "number", value: estimateDraftAmount, required: true, attrs: 'data-estimate-amount-input step="0.01" min="0"' }),
+        inputField({ label: `${workspaceCards.estimate.title} amount`, name: "value", type: "number", value: estimateDraftAmount, required: true, attrs: 'data-estimate-amount-input step="0.01" min="0"' }),
         `<label>Package<div class="backline-picker-field">${renderEstimatePackagePicker("estimate-package", actionDraft.packageName || estimate.packageName)}</div></label>`,
         inputField({ label: "Expires after days", name: "expirationDays", type: "number", value: actionDraft.expirationDays ?? (estimate.expirationDays || company.estimateExpirationDays), required: true }),
         inputField({ label: "Deposit requested", name: "depositRequested", type: "number", value: estimateDraftDeposit, attrs: `data-estimate-deposit-input step="0.01" min="0"${state.actionDraft?.touchedDeposit ? ' data-touched="true"' : ""}` }),
@@ -20871,11 +21037,11 @@ function actionModalConfig(action, job) {
     },
     parts: {
       eyebrow: "Field",
-      title: "Log parts",
-      subtitle: "Track what came from on-hand inventory, a supplier, or job materials.",
-      submit: "Log parts",
+      title: workspaceCards.parts.actionLabel,
+      subtitle: `Track ${workspaceCards.parts.itemPlural} from on-hand inventory, a supplier, or customer-provided materials.`,
+      submit: workspaceCards.parts.actionLabel,
       fields: [
-        inputField({ label: "Part or material", name: "name", value: actionDraft.name ?? "", placeholder: job.partsNote || "Capacitor, disposal, water heater", required: true, wide: true }),
+        inputField({ label: workspaceCards.parts.itemPlural === "parts" ? "Part or material" : "Item or material", name: "name", value: actionDraft.name ?? "", placeholder: job.partsNote || "Item or material used", required: true, wide: true }),
         inputField({ label: "Quantity", name: "qty", value: actionDraft.qty ?? "1", required: true }),
         inputField({ label: "Source", name: "source", value: actionDraft.source || "truck stock", options: [
           { value: "truck stock", label: "On hand" },
@@ -22627,12 +22793,13 @@ document.addEventListener("click", async (event) => {
   if (deleteEquipmentId) {
     if (!canOrRecord("customer-profile", "delete equipment record")) return;
     updateSelectedJob((job) => {
+      const asset = businessWorkspaceCards(job).asset;
       const equipment = job.equipment.find((record) => record.id === deleteEquipmentId);
       job.equipment = job.equipment.filter((record) => record.id !== deleteEquipmentId);
       if (equipment) {
         addJobMessage(job, {
           direction: "note",
-          body: `Equipment record deleted: ${equipmentLabel(equipment)}.`
+          body: `${asset.recordLabel.replace(/\b\w/g, (letter) => letter.toUpperCase())} deleted: ${equipmentLabel(equipment)}.`
         });
       }
       return job;
@@ -23280,6 +23447,7 @@ elements.pricebookForm?.addEventListener("submit", (event) => {
 elements.companySettingsForm?.addEventListener("submit", (event) => {
   event.preventDefault();
   if (!can("exportData")) return;
+  preserveLegacyJobBusinessTypes(companySettings().businessType);
   state.companySettings = companySettingsFromForm(elements.companySettingsForm);
   save();
   elements.companySettingsModal.close("saved");
@@ -23494,12 +23662,13 @@ document.addEventListener("submit", async (event) => {
   if (equipmentForm) {
     event.preventDefault();
     if (!canOrRecord("customer-profile", "add equipment record")) return;
-    const record = equipmentRecordFromForm(equipmentForm);
+    const asset = businessWorkspaceCards(selectedJob()).asset;
+    const record = equipmentRecordFromForm(equipmentForm, asset.recordLabel);
     updateSelectedJob((job) => {
       job.equipment.push(record);
       addJobMessage(job, {
         direction: "note",
-        body: `Equipment record added: ${equipmentLabel(record)}${record.serial ? `, serial ${record.serial}` : ""}.`
+        body: `${asset.recordLabel.replace(/\b\w/g, (letter) => letter.toUpperCase())} added: ${equipmentLabel(record)}${record.serial ? `, ${asset.detailLabels.serial.toLowerCase()} ${record.serial}` : ""}.`
       });
       return job;
     });
@@ -23512,8 +23681,9 @@ document.addEventListener("submit", async (event) => {
     event.preventDefault();
     if (!canOrRecord("customer-profile", "edit equipment record")) return;
     const equipmentId = equipmentEditForm.dataset.equipmentEditForm;
+    const asset = businessWorkspaceCards(selectedJob()).asset;
     const edited = {
-      ...equipmentRecordFromForm(equipmentEditForm),
+      ...equipmentRecordFromForm(equipmentEditForm, asset.recordLabel),
       id: equipmentId
     };
     updateSelectedJob((job) => {
@@ -23530,7 +23700,7 @@ document.addEventListener("submit", async (event) => {
         : record);
       addJobMessage(job, {
         direction: "note",
-        body: `Equipment record updated: ${equipmentLabel(edited)}.`
+        body: `${asset.recordLabel.replace(/\b\w/g, (letter) => letter.toUpperCase())} updated: ${equipmentLabel(edited)}.`
       });
       return job;
     });
@@ -24550,7 +24720,7 @@ function registerBacklineServiceWorker() {
   if (window.location.protocol === "file:" || !("serviceWorker" in navigator)) return;
   window.addEventListener("load", () => {
     navigator.serviceWorker
-      .register("./service-worker.js?v=20260822-action-menu-alignment", { scope: "./" })
+      .register("./service-worker.js?v=20260822-business-cards", { scope: "./" })
       .catch((error) => console.warn("Backline service worker registration failed.", error));
   });
 }

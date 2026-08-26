@@ -46,7 +46,7 @@ const rolloutSteps = [
   },
   {
     name: "Send estimate and approval link",
-    app: [/title: "Send estimate"/, /appendEstimateRevision\(job, nextEstimate, estimateStatus\)/, /queueJobNotification\(job, "estimate_followup"\)/, /async function createApprovalLink\(/, /queueJobNotification\(nextJob, "approval_link"/, /#approval-token=/]
+    app: [/title: `Send \$\{workspaceCards\.estimate\.title\.toLowerCase\(\)\}`/, /appendEstimateRevision\(job, nextEstimate, estimateStatus\)/, /queueJobNotification\(job, "estimate_followup"\)/, /async function createApprovalLink\(/, /queueJobNotification\(nextJob, "approval_link"/, /#approval-token=/]
   },
   {
     name: "Customer approves or declines once",
