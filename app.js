@@ -5060,7 +5060,7 @@ function save() {
         }
         lastRemoteRefreshAt = Date.now();
         elements.storageStatus.textContent = result?.deviceCopySaved === false
-          ? "Secure database saved - unlock offline access to refresh this device"
+          ? "Secure database saved. Set up offline access on this device to keep a protected local copy."
           : `Secure database saved ${new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`;
       })
       .catch((caughtError) => {
@@ -24878,7 +24878,7 @@ function registerBacklineServiceWorker() {
   if (window.location.protocol === "file:" || !("serviceWorker" in navigator)) return;
   window.addEventListener("load", () => {
     navigator.serviceWorker
-      .register("./service-worker.js?v=20260826-tech-start-payload", { scope: "./" })
+      .register("./service-worker.js?v=20260826-offline-copy-status", { scope: "./" })
       .catch((error) => console.warn("Backline service worker registration failed.", error));
   });
 }

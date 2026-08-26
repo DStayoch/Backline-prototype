@@ -172,7 +172,8 @@ assert.match(html, /<link rel="stylesheet" href="styles\.css\?v=20260826-secure-
 assert.match(html, /@supabase\/supabase-js@2/);
 assert.match(html, /jspdf@2\.5\.1/);
 assert.match(html, /<script src="supabase-config\.js"><\/script>/);
-assert.match(html, /<script src="app\.js\?v=20260826-tech-start-payload"><\/script>/);
+assert.match(html, /<script src="app\.js\?v=20260826-offline-copy-status"><\/script>/);
+assert.match(js, /Secure database saved\. Set up offline access on this device to keep a protected local copy\./);
 assert.match(html, /id="topbarGreeting"/);
 assert.match(html, /id="topbarInsight"/);
 assert.match(html, /Welcome back\./);
