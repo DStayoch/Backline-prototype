@@ -8,6 +8,7 @@ const schema14 = readFileSync("supabase-schema-14-customer-portal.sql", "utf8");
 const schema15 = readFileSync("supabase-schema-15-custom-roles.sql", "utf8");
 const schema16 = readFileSync("supabase-schema-16-security-hardening.sql", "utf8");
 const schema17 = readFileSync("supabase-schema-17-public-token-hardening.sql", "utf8");
+const schema22 = readFileSync("supabase-schema-22-secure-sync.sql", "utf8");
 const fullSchema = readFileSync("supabase-schema.sql", "utf8");
 
 function assertOrgScopedSelect(table, label = table) {
@@ -73,6 +74,21 @@ assertOrgScopedPolicy(schema16, "job_files");
 assertOrgScopedPolicy(schema16, "deleted_jobs", "is_org_admin");
 assert.match(schema16, /public\.is_org_admin\(id\)/);
 assert.match(schema16, /storage\.foldername\(name\)\)\[1\]/);
+
+assert.match(app, /client\.rpc\("sync_job_if_revision"/);
+assert.match(app, /client\.rpc\("sync_customer_if_revision"/);
+assert.match(app, /expected_revision: Number\(job\._remoteRevision\) \|\| 0/);
+assert.match(app, /expected_revision: Number\(customer\._remoteRevision\) \|\| 0/);
+assert.match(app, /function registerRemoteSyncConflict/);
+assert.doesNotMatch(app, /\.from\("jobs"\)[\s\S]{0,180}\.(upsert|update|insert|delete)\(/);
+assert.doesNotMatch(app, /\.from\("customers"\)[\s\S]{0,180}\.(upsert|update|insert|delete)\(/);
+assert.match(schema22, /add column if not exists revision bigint/);
+assert.match(schema22, /create or replace function public\.sync_job_if_revision/);
+assert.match(schema22, /create or replace function public\.sync_customer_if_revision/);
+assert.match(schema22, /create or replace function public\.delete_job_if_revision/);
+assert.match(schema22, /return jsonb_build_object\('status', 'conflict'/);
+assert.match(schema22, /drop policy if exists "Members can manage jobs"/);
+assert.match(schema22, /drop policy if exists "Members can manage customers"/);
 
 for (const internalField of ["parts", "reservations", "tasks", "notifications", "followupState", "assignmentSeenBy", "fieldChecklist", "equipment", "customerSignatureImage"]) {
   assert.match(schema17, new RegExp(`- '${internalField}'`), `Public token responses must strip ${internalField}`);

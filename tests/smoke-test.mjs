@@ -44,6 +44,7 @@ const requiredFiles = [
   "supabase-schema-19-platform-admins.sql",
   "supabase-schema-20-billing.sql",
   "supabase-schema-21-billing-access.sql",
+  "supabase-schema-22-secure-sync.sql",
   "assets/backline-banner.png",
   "assets/backline-banner-clean.png",
   "assets/backline-banner-clean-grey.png",
@@ -167,11 +168,11 @@ assert.match(css, /\.sidebar \.brand-subtitle/);
 assert.match(css, /html\[data-theme="dark"\] \.brand-mark img/);
 assert.match(css, /content: url\("assets\/backline-icon-dark\.png"\)/);
 assert.match(css, /\.auth-gate-brand-mark/);
-assert.match(html, /<link rel="stylesheet" href="styles\.css\?v=20260822-business-cards">/);
+assert.match(html, /<link rel="stylesheet" href="styles\.css\?v=20260826-secure-sync">/);
 assert.match(html, /@supabase\/supabase-js@2/);
 assert.match(html, /jspdf@2\.5\.1/);
 assert.match(html, /<script src="supabase-config\.js"><\/script>/);
-assert.match(html, /<script src="app\.js\?v=20260822-business-cards"><\/script>/);
+assert.match(html, /<script src="app\.js\?v=20260826-secure-sync"><\/script>/);
 assert.match(html, /id="topbarGreeting"/);
 assert.match(html, /id="topbarInsight"/);
 assert.match(html, /Welcome back\./);
@@ -422,8 +423,10 @@ assert.match(js, /window\.crypto\.subtle\.deriveKey/);
 assert.match(js, /async function unlockOfflineWorkspace/);
 assert.match(html, /id="offlineUnlockPanel"/);
 assert.match(html, /id="offlineAccessModal"/);
-assert.match(js, /if \(state\.customers\.length\) \{\s+writes\.push\(client\.from\("customers"\)\.upsert/s);
-assert.match(js, /if \(state\.jobs\.length\) \{\s+writes\.push\(client\.from\("jobs"\)\.upsert/s);
+assert.match(js, /client\.rpc\("sync_customer_if_revision"/);
+assert.match(js, /client\.rpc\("sync_job_if_revision"/);
+assert.doesNotMatch(js, /client\.from\("customers"\)\.upsert/);
+assert.doesNotMatch(js, /client\.from\("jobs"\)\.upsert/);
 assert.match(js, /document\.body\.classList\.toggle\("account-switching", active\)/);
 assert.match(js, /setAccountSwitching\(true, mode === "signup" \? "Creating account\.\.\." : "Signing in\.\.\."\)/);
 assert.match(js, /signOut\(\{ scope: "local" \}\)/);
@@ -606,7 +609,7 @@ assert.match(js, /remoteSettings\.companyName \|\| data\?\.name \|\| backup\?\.c
 assert.match(js, /saveSecureCompanySettingsBackup\(state\.companySettings, state\.suppliers\)/);
 assert.match(js, /saveSecureCompanySettingsBackup\(company, state\.suppliers\)/);
 assert.match(js, /if \(state\.secureMode\) \{\s+saveSecureCompanySettingsBackup\(state\.companySettings, state\.suppliers\)/s);
-assert.match(js, /await persistRemoteCompanySettings\(\);\s+const writes = \[\];/s);
+assert.match(js, /if \(can\("exportData"\)\) await persistRemoteCompanySettings\(\);\s+const dirtyCustomers = state\.customers\.filter\(remoteRecordIsDirty\);/s);
 assert.match(js, /Supabase settings sync needs supabase-schema-13-company-settings\.sql/);
 assert.match(js, /company\.approvalWording/);
 assert.match(js, /company\.approvalDisclaimerText/);
@@ -675,7 +678,8 @@ assert.match(js, /if \(secureSavePromise\) \{/);
 assert.match(js, /await secureSavePromise/);
 assert.match(js, /const saveJob = \(secureSavePromise \|\| Promise\.resolve\(\)\)/);
 assert.match(js, /lastRemoteRefreshAt = Date\.now\(\);/);
-assert.match(js, /results\.find\(\(result\) => result\.error\)\?\.error/);
+assert.match(js, /const dirtyJobs = state\.jobs\.filter\(remoteRecordIsDirty\);/);
+assert.match(js, /if \(data\?\.status === "conflict"\) throw remoteSyncConflictError\("job", data\);/);
 assert.match(js, /function recordActivity\(/);
 assert.match(js, /function renderActivity\(/);
 assert.match(js, /activityDateFilter: "all"/);
@@ -1139,7 +1143,7 @@ assert.match(css, /\.customer-facing-support/);
 assert.match(css, /\.customer-facing-links/);
 assert.match(betaDeploymentGuide, /BACKLINE_SUPABASE_URL/);
 assert.match(betaDeploymentGuide, /BACKLINE_SUPABASE_ANON_KEY/);
-assert.match(betaDeploymentGuide, /supabase-schema-19-platform-admins\.sql/);
+assert.match(betaDeploymentGuide, /supabase-schema-22-secure-sync\.sql/);
 assert.match(betaDeploymentGuide, /Phone\/SMS beta mode/);
 assert.match(betaDeploymentGuide, /never `localhost`, `127\.0\.0\.1`, or `file:\/\/`/);
 assert.match(supabaseProductionSetup, /supabase-schema-19-platform-admins\.sql/);

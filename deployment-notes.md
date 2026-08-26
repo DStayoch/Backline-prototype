@@ -28,7 +28,7 @@ Production:
 
 1. Keep local testing on the development Supabase project.
 2. Create a fresh production Supabase project.
-3. Follow `supabase-production-setup.md`, then run `supabase-schema.sql` in production or run the split schema files through `supabase-schema-19-platform-admins.sql`.
+3. Follow `supabase-production-setup.md`, then run `supabase-schema.sql` in production or run the split schema files through `supabase-schema-22-secure-sync.sql`.
 4. Configure `supabase-config.js` for production.
 5. For GitHub Pages, set repository variable `BACKLINE_SUPABASE_URL` and repository secret `BACKLINE_SUPABASE_ANON_KEY`.
 6. Run `npm run deploy:preflight`.

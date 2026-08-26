@@ -110,7 +110,7 @@ const productionReadinessStatuses = {
 
 const supabaseProductionSetupChecklist = [
   { key: "production-project", label: "Production project created", detail: "Fresh Supabase project exists and is separate from local/dev testing." },
-  { key: "schema-installed", label: "Schema installed through 19", detail: "Run supabase-schema.sql or split files through supabase-schema-19-platform-admins.sql." },
+  { key: "schema-installed", label: "Schema installed through 22", detail: "Run supabase-schema.sql or split files through supabase-schema-22-secure-sync.sql." },
   { key: "team-schema-fallback", label: "Team schema fallback noted", detail: "Use 07a/07b/07c instead of 07 if Supabase shows a line 0 paste error." },
   { key: "foundry-bootstrap", label: "Foundry operator added", detail: "Trusted Backline operator account inserted into platform_admins after auth account exists." },
   { key: "auth-urls", label: "Auth URLs configured", detail: "Site URL and redirect URLs point to the hosted HTTPS Backline URL." },
@@ -766,6 +766,7 @@ let state = {
   supabaseClient: null,
   offlineMode: false,
   offlineSyncPending: false,
+  offlineSyncConflict: null,
   offlineSyncNoticeShown: false,
   offlineUnlockKey: null,
   offlineUnlockProfileId: "",
@@ -1350,20 +1351,19 @@ async function saveSecureOfflineSnapshot(options = {}) {
   try {
     const db = await openDatabase();
     const profile = await readStoreRecord(db, OFFLINE_UNLOCK_PROFILE_STORE, offlineUnlockProfileId());
-    if (profile) {
-      if (!state.offlineUnlockKey || state.offlineUnlockProfileId !== profile.id) return false;
-      const encrypted = await encryptOfflineSnapshot(snapshot, state.offlineUnlockKey);
-      await writeStoreRecord(db, OFFLINE_UNLOCK_PROFILE_STORE, {
-        ...profile,
-        ...encrypted,
-        pending: snapshot.pending,
-        updatedAt: snapshot.savedAt
-      });
+    if (!profile || !state.offlineUnlockKey || state.offlineUnlockProfileId !== profile.id) {
+      // Never retain a readable workspace snapshot on a shared or lost device.
       await deleteStoreRecord(db, SECURE_OFFLINE_SNAPSHOT_STORE, snapshot.key);
-      state.offlineSyncPending = snapshot.pending;
-      return true;
+      return false;
     }
-    await writeStoreRecord(db, SECURE_OFFLINE_SNAPSHOT_STORE, snapshot);
+    const encrypted = await encryptOfflineSnapshot(snapshot, state.offlineUnlockKey);
+    await writeStoreRecord(db, OFFLINE_UNLOCK_PROFILE_STORE, {
+      ...profile,
+      ...encrypted,
+      pending: snapshot.pending,
+      updatedAt: snapshot.savedAt
+    });
+    await deleteStoreRecord(db, SECURE_OFFLINE_SNAPSHOT_STORE, snapshot.key);
     state.offlineSyncPending = snapshot.pending;
     return true;
   } catch {
@@ -1379,12 +1379,22 @@ async function restoreSecureOfflineSnapshot(options = {}) {
 
   try {
     const db = await openDatabase();
-    const snapshot = await readStoreRecord(db, SECURE_OFFLINE_SNAPSHOT_STORE, key);
-    if (!snapshot || snapshot.organizationId !== orgId || snapshot.userId !== userId) return false;
-    if (options.pendingOnly && !snapshot.pending) return false;
-    return applySecureOfflineSnapshot(snapshot);
+    // Versions before protected offline access kept plain snapshots in this store.
+    // Remove them instead of restoring sensitive data without the device PIN.
+    await deleteStoreRecord(db, SECURE_OFFLINE_SNAPSHOT_STORE, key);
+    return false;
   } catch {
     return false;
+  }
+}
+
+async function purgeLegacyPlainOfflineSnapshots() {
+  try {
+    const db = await openDatabase();
+    // This store was used only by releases that saved readable workspace data.
+    await replaceStore(db, SECURE_OFFLINE_SNAPSHOT_STORE, []);
+  } catch {
+    // IndexedDB cleanup must never block sign-in.
   }
 }
 
@@ -3931,6 +3941,7 @@ async function setupSecureBackend() {
     return true;
   }
 
+  await purgeLegacyPlainOfflineSnapshots();
   const offline = navigator.onLine === false;
   const restoredPendingSnapshot = await restoreSecureOfflineSnapshot({ pendingOnly: true });
   if (restoredPendingSnapshot || offline) {
@@ -4072,6 +4083,7 @@ async function syncCurrentMemberDisplayName() {
 
 function jobToRemoteRow(job) {
   ensureJobDefaults(job);
+  const { _remoteRevision, _remoteFingerprint, ...payload } = job;
   return {
     id: job.id,
     organization_id: state.organizationId,
@@ -4085,7 +4097,7 @@ function jobToRemoteRow(job) {
     technician: job.technician || null,
     estimated_value: normalizeValue(job.value),
     approval_status: job.approvalStatus,
-    payload: job,
+    payload,
     created_at: job.createdAt || new Date().toISOString(),
     updated_at: new Date().toISOString()
   };
@@ -4110,6 +4122,7 @@ function deletedJobToRemoteRow(record) {
 
 function customerToRemoteRow(customer) {
   const normalized = normalizeCustomerRecord(customer);
+  const { _remoteRevision, _remoteFingerprint, ...payload } = customer;
   return {
     id: normalized.id,
     organization_id: state.organizationId,
@@ -4122,7 +4135,10 @@ function customerToRemoteRow(customer) {
     last_job_at: normalized.lastJobAt || null,
     total_value: normalized.totalValue || 0,
     job_count: normalized.jobCount || 0,
-    payload: normalized,
+    payload: {
+      ...normalized,
+      ...payload
+    },
     created_at: normalized.createdAt || new Date().toISOString(),
     updated_at: new Date().toISOString()
   };
@@ -4162,22 +4178,9 @@ async function loadRemoteData() {
 
   state.secureMode = true;
   state.databaseReady = true;
-  state.jobs = (jobs || []).map((row) => ensureJobDefaults(row.payload || {}));
+  state.jobs = (jobs || []).map(hydrateRemoteJob);
   await loadRemoteJobFiles();
-  state.customers = (customers || []).map((row) => normalizeCustomerRecord(row.payload || {
-    id: row.id,
-    name: row.name,
-    phone: row.phone,
-    email: row.email,
-    address: row.address,
-    lastJobId: row.last_job_id,
-    lastJobStatus: row.last_job_status,
-    lastJobAt: row.last_job_at,
-    totalValue: Number(row.total_value) || 0,
-    jobCount: row.job_count || 0,
-    createdAt: row.created_at,
-    updatedAt: row.updated_at
-  }));
+  state.customers = (customers || []).map(hydrateRemoteCustomer);
 
   await loadRemoteDeletedJobs();
   await loadRemoteActivityEvents();
@@ -4476,7 +4479,7 @@ async function loadRemoteTeamData() {
 
 async function persistRemotePricebookItems() {
   const client = getSupabaseClient();
-  if (!client || !state.organizationId || !state.currentUser || !state.pricebookItems.length) return;
+  if (!client || !state.organizationId || !state.currentUser || !state.pricebookItems.length || !can("invoice")) return;
   try {
     const { error } = await client.from("pricebook_items").upsert(state.pricebookItems.map(pricebookToRemoteRow));
     if (error) throw error;
@@ -4518,19 +4521,30 @@ async function persistRemoteData() {
   const client = getSupabaseClient();
   if (!client || !state.organizationId || !state.currentUser) return;
 
-  await persistRemoteCompanySettings();
+  if (can("exportData")) await persistRemoteCompanySettings();
 
-  const writes = [];
-  if (state.customers.length) {
-    writes.push(client.from("customers").upsert(state.customers.map(customerToRemoteRow)));
-  }
-  if (state.jobs.length) {
-    writes.push(client.from("jobs").upsert(state.jobs.map(jobToRemoteRow)));
-  }
-  if (writes.length) {
-    const results = await Promise.all(writes);
-    const error = results.find((result) => result.error)?.error;
+  const dirtyCustomers = state.customers.filter(remoteRecordIsDirty);
+  for (const customer of dirtyCustomers) {
+    const { data, error } = await client.rpc("sync_customer_if_revision", {
+      input_row: customerToRemoteRow(customer),
+      expected_revision: Number(customer._remoteRevision) || 0
+    });
     if (error) throw error;
+    if (data?.status === "conflict") throw remoteSyncConflictError("customer record", data);
+    if (data?.status !== "saved") throw new Error("Backline could not confirm the customer record sync.");
+    markRemoteRecordSynced(customer, data.revision);
+  }
+
+  const dirtyJobs = state.jobs.filter(remoteRecordIsDirty);
+  for (const job of dirtyJobs) {
+    const { data, error } = await client.rpc("sync_job_if_revision", {
+      input_row: jobToRemoteRow(job),
+      expected_revision: Number(job._remoteRevision) || 0
+    });
+    if (error) throw error;
+    if (data?.status === "conflict") throw remoteSyncConflictError("job", data);
+    if (data?.status !== "saved") throw new Error("Backline could not confirm the job sync.");
+    markRemoteRecordSynced(job, data.revision);
   }
 
   if (state.deletedJobs.length) {
@@ -4559,20 +4573,28 @@ async function persistRemoteData() {
 async function syncArchivedActiveJobRemovals() {
   const client = getSupabaseClient();
   if (!client || !state.organizationId || !state.currentUser) return;
-  const jobIds = [...new Set(state.deletedJobs.map((record) => record?.job?.id).filter(Boolean))];
-  if (!jobIds.length) return;
-
-  const results = await Promise.all(jobIds.map((jobId) => client
-    .from("jobs")
-    .delete()
-    .eq("organization_id", state.organizationId)
-    .eq("id", jobId)));
-  const error = results.find((result) => result.error)?.error;
-  if (error) throw error;
+  if (!can("delete")) return;
+  const records = [...new Map(state.deletedJobs
+    .filter((record) => record?.job?.id)
+    .map((record) => [record.job.id, record])).values()];
+  for (const record of records) {
+    const { data, error } = await client.rpc("delete_job_if_revision", {
+      input_org: state.organizationId,
+      input_job_id: record.job.id,
+      expected_revision: Number(record.job._remoteRevision) || 0
+    });
+    if (error) throw error;
+    if (data?.status === "conflict") throw remoteSyncConflictError("job", data);
+    if (data?.status !== "deleted") throw new Error("Backline could not confirm the job deletion.");
+  }
 }
 
 async function syncPendingOfflineChanges() {
   if (!state.secureMode || !state.organizationId || !state.currentUser || navigator.onLine === false) return false;
+  if (state.offlineSyncConflict) {
+    elements.storageStatus.textContent = "Sync paused - review the change from another device";
+    return false;
+  }
   if (!state.offlineSyncPending) return true;
   if (offlineSyncPromise) return offlineSyncPromise;
 
@@ -4594,8 +4616,16 @@ async function syncPendingOfflineChanges() {
       return true;
     } catch (caughtError) {
       state.offlineMode = true;
+      if (isRemoteSyncConflict(caughtError)) {
+        registerRemoteSyncConflict(caughtError);
+        elements.storageStatus.textContent = "Sync paused - another device changed this record";
+        showToast("Sync needs review", "Backline kept this device's protected copy and did not overwrite the change made from another device. Refresh and review the record before saving again.", "warning", {
+          id: "offline-sync-conflict",
+          timeout: 10000
+        });
+      }
       await saveSecureOfflineSnapshot({ pending: true });
-      elements.storageStatus.textContent = offlineSaveStatus();
+      if (!state.offlineSyncConflict) elements.storageStatus.textContent = offlineSaveStatus();
       if (!isSupabaseNetworkError(caughtError)) {
         notifySupabaseIssue(caughtError, {
           fallback: "Backline could not upload the offline changes.",
@@ -4659,13 +4689,22 @@ async function refreshRemoteDataIfNeeded(options = {}) {
 async function deleteRemoteActiveJob(jobId) {
   const client = getSupabaseClient();
   if (!client || !state.organizationId || !state.currentUser) return;
+  const archived = state.deletedJobs.find((record) => record?.job?.id === jobId);
+  if (!archived?.job || !can("delete")) return;
   try {
-    await client
-      .from("jobs")
-      .delete()
-      .eq("organization_id", state.organizationId)
-      .eq("id", jobId);
-  } catch {
+    const { data, error } = await client.rpc("delete_job_if_revision", {
+      input_org: state.organizationId,
+      input_job_id: jobId,
+      expected_revision: Number(archived.job._remoteRevision) || 0
+    });
+    if (error) throw error;
+    if (data?.status === "conflict") throw remoteSyncConflictError("job", data);
+    if (data?.status !== "deleted") throw new Error("Backline could not confirm the job deletion.");
+  } catch (error) {
+    if (isRemoteSyncConflict(error)) {
+      showToast("Job changed elsewhere", "The job was not deleted remotely because another device changed it first. Refresh before trying again.", "danger", { timeout: 9000 });
+      return;
+    }
     // Local archive still keeps the deletion visible if remote cleanup fails.
   }
 }
@@ -4829,7 +4868,9 @@ function mergeCustomerRecords(calculated, stored = {}) {
     accountFlag: saved.accountFlag || base.accountFlag,
     notes: saved.notes || base.notes,
     preferredContact: saved.preferredContact || base.preferredContact,
-    createdAt: saved.createdAt || base.createdAt
+    createdAt: saved.createdAt || base.createdAt,
+    // A summary rebuild must not create a fake remote edit when no customer data changed.
+    updatedAt: saved.updatedAt || base.updatedAt
   });
 }
 
@@ -4868,7 +4909,16 @@ function buildCustomersFromJobs(jobs, storedCustomers = state.customers) {
 }
 
 function syncCustomersFromJobs() {
-  state.customers = buildCustomersFromJobs(state.jobs);
+  const remoteMetadata = new Map(state.customers.map((customer) => [customer.id, {
+    revision: customer._remoteRevision,
+    fingerprint: customer._remoteFingerprint
+  }]));
+  state.customers = buildCustomersFromJobs(state.jobs).map((customer) => {
+    const metadata = remoteMetadata.get(customer.id);
+    if (metadata?.revision) customer._remoteRevision = metadata.revision;
+    if (metadata?.fingerprint) customer._remoteFingerprint = metadata.fingerprint;
+    return customer;
+  });
 }
 
 async function loadDatabaseData() {
@@ -4947,12 +4997,20 @@ function save() {
         }
 
         try {
+          if (state.offlineSyncConflict) {
+            return { conflict: true };
+          }
           await persistRemoteData();
           await syncArchivedActiveJobRemovals();
           const deviceCopySaved = await saveSecureOfflineSnapshot({ pending: false });
           state.offlineMode = false;
           return { offline: false, deviceCopySaved };
         } catch (caughtError) {
+          if (isRemoteSyncConflict(caughtError)) {
+            registerRemoteSyncConflict(caughtError);
+            if (!snapshotSaved) throw new Error("Backline found a change from another device but could not preserve this device's protected copy.");
+            return { conflict: true };
+          }
           if (!isSupabaseNetworkError(caughtError)) throw caughtError;
           state.offlineMode = true;
           if (!snapshotSaved) throw new Error("Backline could not reach the secure database or save this work to the device.");
@@ -4962,6 +5020,14 @@ function save() {
     secureSavePromise = saveJob;
     saveJob
       .then((result) => {
+        if (result?.conflict) {
+          elements.storageStatus.textContent = "Sync paused - another device changed this record";
+          showToast("Sync needs review", "Backline kept this device's protected copy and did not overwrite the change made from another device. Refresh and review the record before saving again.", "warning", {
+            id: "offline-sync-conflict",
+            timeout: 10000
+          });
+          return;
+        }
         if (result?.offline) {
           elements.storageStatus.textContent = offlineSaveStatus();
           showOfflineSaveNotice();
@@ -9454,6 +9520,68 @@ function normalizeJobMessage(message = {}) {
     reviewedAt: message.reviewedAt || "",
     reviewedBy: message.reviewedBy || "",
     userNote: Boolean(message.userNote)
+  };
+}
+
+function remoteRecordFingerprint(record) {
+  const { _remoteRevision, _remoteFingerprint, ...payload } = record || {};
+  return JSON.stringify(payload);
+}
+
+function markRemoteRecordSynced(record, revision) {
+  if (!record) return;
+  record._remoteRevision = Math.max(0, Number(revision) || 0);
+  record._remoteFingerprint = remoteRecordFingerprint(record);
+}
+
+function hydrateRemoteJob(row = {}) {
+  const job = ensureJobDefaults(row.payload || {});
+  markRemoteRecordSynced(job, row.revision || 1);
+  return job;
+}
+
+function hydrateRemoteCustomer(row = {}) {
+  const customer = normalizeCustomerRecord(row.payload || {
+    id: row.id,
+    name: row.name,
+    phone: row.phone,
+    email: row.email,
+    address: row.address,
+    lastJobId: row.last_job_id,
+    lastJobStatus: row.last_job_status,
+    lastJobAt: row.last_job_at,
+    totalValue: Number(row.total_value) || 0,
+    jobCount: row.job_count || 0,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at
+  });
+  markRemoteRecordSynced(customer, row.revision || 1);
+  return customer;
+}
+
+function remoteRecordIsDirty(record) {
+  return !record?._remoteFingerprint || remoteRecordFingerprint(record) !== record._remoteFingerprint;
+}
+
+function remoteSyncConflictError(kind, result = {}) {
+  const error = new Error(`Another device updated this ${kind} before your changes could sync.`);
+  error.code = "BACKLINE_SYNC_CONFLICT";
+  error.kind = kind;
+  error.recordId = result.id || "";
+  error.remoteRevision = Number(result.revision) || 0;
+  return error;
+}
+
+function isRemoteSyncConflict(error) {
+  return error?.code === "BACKLINE_SYNC_CONFLICT";
+}
+
+function registerRemoteSyncConflict(error) {
+  state.offlineSyncPending = true;
+  state.offlineSyncConflict = {
+    kind: error?.kind || "record",
+    recordId: error?.recordId || "",
+    remoteRevision: Number(error?.remoteRevision) || 0
   };
 }
 
@@ -16636,7 +16764,7 @@ function supabaseProductionSetupText() {
     "",
     "Run order:",
     "1. Create fresh production Supabase project.",
-    "2. Run supabase-schema.sql, or split files through supabase-schema-19-platform-admins.sql.",
+    "2. Run supabase-schema.sql, or split files through supabase-schema-22-secure-sync.sql.",
     "3. If team schema step 07 fails, run 07a, 07b, and 07c instead.",
     "4. Add Foundry operator to platform_admins after their auth account exists.",
     "5. Configure Auth Site URL and Redirect URLs to the hosted Backline HTTPS URL.",
@@ -18680,7 +18808,7 @@ function renderCreatorConsole() {
     creatorHealthSection("Release Notes", "Internal build notes for beta readiness.", `
       <div class="creator-release-list">
         ${creatorReleaseNote("Build tag", appVersion, "highlight")}
-        ${creatorReleaseNote("Schema level", "Expected through supabase-schema-19-platform-admins.sql")}
+        ${creatorReleaseNote("Schema level", "Expected through supabase-schema-22-secure-sync.sql")}
         ${creatorReleaseNote("Recent product areas", "Foundry access, platform health, workspace isolation, role permissions, mobile layout, customer portal, invoices, inventory.")}
         ${creatorReleaseNote("Manual beta checks", "Owner signup, workspace settings save, invite email, technician role, approval link, portal reply, file view, payment recording.")}
         ${creatorReleaseNote("Local limitations", "Localhost phone/SMS/email flows are simulated or provider-limited until production services and domains are verified.", "warning")}
@@ -24720,7 +24848,7 @@ function registerBacklineServiceWorker() {
   if (window.location.protocol === "file:" || !("serviceWorker" in navigator)) return;
   window.addEventListener("load", () => {
     navigator.serviceWorker
-      .register("./service-worker.js?v=20260822-business-cards", { scope: "./" })
+      .register("./service-worker.js?v=20260826-secure-sync", { scope: "./" })
       .catch((error) => console.warn("Backline service worker registration failed.", error));
   });
 }

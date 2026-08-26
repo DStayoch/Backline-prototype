@@ -35,7 +35,7 @@ assert.deepEqual(pngSize("assets/backline-pwa-192.png"), { width: 192, height: 1
 assert.deepEqual(pngSize("assets/backline-pwa-512.png"), { width: 512, height: 512 });
 
 assert.match(app, /function registerBacklineServiceWorker\(\)/);
-assert.match(app, /navigator\.serviceWorker\s+\.register\("\.\/service-worker\.js\?v=20260822-business-cards", \{ scope: "\.\/" \}\)/);
+assert.match(app, /navigator\.serviceWorker\s+\.register\("\.\/service-worker\.js\?v=20260826-secure-sync", \{ scope: "\.\/" \}\)/);
 assert.match(app, /#\(dashboard\|schedule\|inbox\|money\|followups\|communications\|jobsdb\|customers\|team\|activity\|insights\|creator\)/);
 assert.match(app, /activateView\(viewMatch\[1\]\)/);
 assert.match(app, /const DATABASE_VERSION = 7/);
@@ -43,12 +43,15 @@ assert.match(app, /const SECURE_OFFLINE_SNAPSHOT_STORE = "secureOfflineSnapshots
 assert.match(app, /const OFFLINE_UNLOCK_PROFILE_STORE = "offlineUnlockProfiles"/);
 assert.match(app, /async function saveSecureOfflineSnapshot/);
 assert.match(app, /async function restoreSecureOfflineSnapshot/);
+assert.match(app, /async function purgeLegacyPlainOfflineSnapshots/);
 assert.match(app, /async function syncPendingOfflineChanges/);
 assert.match(app, /async function unlockOfflineWorkspace/);
+assert.match(app, /Never retain a readable workspace snapshot/);
+assert.doesNotMatch(app, /writeStoreRecord\(db, SECURE_OFFLINE_SNAPSHOT_STORE/);
 assert.match(app, /Offline - saved to this device; sync pending/);
 assert.match(app, /window\.addEventListener\("online"/);
 
-assert.match(serviceWorker, /const BACKLINE_CACHE = "backline-pwa-20260822-16"/);
+assert.match(serviceWorker, /const BACKLINE_CACHE = "backline-pwa-20260826-17"/);
 assert.match(serviceWorker, /"\.\/manifest\.webmanifest"/);
 assert.match(serviceWorker, /"\.\/assets\/backline-pwa-192\.png"/);
 assert.match(serviceWorker, /"\.\/assets\/backline-pwa-512\.png"/);

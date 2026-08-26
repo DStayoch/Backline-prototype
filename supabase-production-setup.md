@@ -40,12 +40,17 @@ If the SQL editor fails with a line 0 or paste-size issue, run the split files i
 17. `supabase-schema-17-public-token-hardening.sql`
 18. `supabase-schema-18-activity-append-only.sql`
 19. `supabase-schema-19-platform-admins.sql`
+20. `supabase-schema-20-billing.sql`
+21. `supabase-schema-21-billing-access.sql`
+22. `supabase-schema-22-secure-sync.sql`
 
 If `supabase-schema-07-team-management.sql` hits a line 0 paste error, run these three files instead of step 7:
 
 1. `supabase-schema-07a-team-tables.sql`
 2. `supabase-schema-07b-team-functions.sql`
 3. `supabase-schema-07c-team-policies.sql`
+
+For an existing workspace already through schema 21, run only `supabase-schema-22-secure-sync.sql` before loading the matching Backline release. It replaces direct browser writes for jobs and customers with role-checked, conflict-safe database functions.
 
 ## 3. Add Foundry Operator Access
 

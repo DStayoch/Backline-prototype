@@ -28,7 +28,7 @@ This checklist is for moving Backline from local prototype to a real beta URL. I
 ## Supabase Database
 
 - [x] Combined schema file exists: `supabase-schema.sql`
-- [x] Split schema files exist through `supabase-schema-19-platform-admins.sql`
+- [x] Split schema files exist through `supabase-schema-22-secure-sync.sql`
 - [x] Job file storage bucket setup is present in schema: `job-files`
 - [x] Approval link RPCs are present
 - [x] Customer portal RPCs are present
