@@ -132,7 +132,10 @@ begin
   if public.org_has_permission(target_org, 'book') then
     allowed_keys := allowed_keys || array['scheduleDate', 'startTime', 'durationMinutes', 'endTime', 'technician', 'assignmentSeenBy', 'status', 'messages'];
   end if;
-  if public.org_has_permission(target_org, 'start') or public.org_has_permission(target_org, 'complete') then
+  if public.org_has_permission(target_org, 'start') then
+    allowed_keys := allowed_keys || array['status', 'startedAt', 'messages', 'notifications'];
+  end if;
+  if public.org_has_permission(target_org, 'complete') then
     allowed_keys := allowed_keys || array['status', 'messages', 'notifications'];
   end if;
   if public.org_has_permission(target_org, 'parts') then
