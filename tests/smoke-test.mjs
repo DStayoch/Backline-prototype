@@ -172,7 +172,7 @@ assert.match(html, /<link rel="stylesheet" href="styles\.css\?v=20260826-secure-
 assert.match(html, /@supabase\/supabase-js@2/);
 assert.match(html, /jspdf@2\.5\.1/);
 assert.match(html, /<script src="supabase-config\.js"><\/script>/);
-assert.match(html, /<script src="app\.js\?v=20260826-offline-access-prompt"><\/script>/);
+assert.match(html, /<script src="app\.js\?v=20260826-job-action-state"><\/script>/);
 assert.match(js, /Secure database saved\. Go to Settings to set up offline access\./);
 assert.match(html, /id="topbarGreeting"/);
 assert.match(html, /id="topbarInsight"/);
@@ -1243,6 +1243,7 @@ assert.match(js, /function updateRoleUI\(/);
 assert.match(js, /seenAttentionJobs/);
 assert.match(js, /function renderJobActions\(/);
 assert.match(js, /action: "complete", label: `Complete \$\{terms\.workItem\}`/);
+assert.match(js, /action !== "start" \|\| !\["in_progress", "completed", "paid", "closed"\]\.includes\(job\?\.status\)/);
 assert.match(js, /action: "note", label: "View notes", tone: "", group: "Internal"/);
 assert.match(js, /function canAddInternalNote\(/);
 assert.match(js, /function canRemoveInternalNote\(/);

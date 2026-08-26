@@ -12203,6 +12203,7 @@ function renderJobActions() {
     { action: "delete", label: "Delete", tone: "danger", group: "Admin" }
   ].filter(Boolean)
     .filter(({ action }) => action === "note" ? canAddInternalNote() : can(action))
+    .filter(({ action }) => action !== "start" || !["in_progress", "completed", "paid", "closed"].includes(job?.status))
     .filter(({ action }) => !lockedBilling || ["reopen", "close", "delete"].includes(action) || canReviewLockedJob(job, action));
 
   const actionButton = ({ action, label, tone }, extraClass = "") => `
@@ -24878,7 +24879,7 @@ function registerBacklineServiceWorker() {
   if (window.location.protocol === "file:" || !("serviceWorker" in navigator)) return;
   window.addEventListener("load", () => {
     navigator.serviceWorker
-      .register("./service-worker.js?v=20260826-offline-access-prompt", { scope: "./" })
+      .register("./service-worker.js?v=20260826-job-action-state", { scope: "./" })
       .catch((error) => console.warn("Backline service worker registration failed.", error));
   });
 }
