@@ -87,7 +87,7 @@ assert.match(schema22, /create or replace function public\.sync_job_if_revision/
 assert.match(schema22, /create or replace function public\.sync_customer_if_revision/);
 assert.match(schema22, /create or replace function public\.delete_job_if_revision/);
 assert.match(schema22, /return jsonb_build_object\('status', 'conflict'/);
-assert.match(schema22, /array\['status', 'startedAt', 'messages', 'notifications'\]/, "Technicians need to persist the start timestamp when starting assigned work.");
+assert.match(schema22, /array\['status', 'startedAt', 'assignmentSeenBy', 'messages', 'notifications'\]/, "Technicians need to persist assignment acknowledgement and the start timestamp when starting assigned work.");
 assert.match(schema22, /drop policy if exists "Members can manage jobs"/);
 assert.match(schema22, /drop policy if exists "Members can manage customers"/);
 

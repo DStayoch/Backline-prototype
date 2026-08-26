@@ -133,7 +133,7 @@ begin
     allowed_keys := allowed_keys || array['scheduleDate', 'startTime', 'durationMinutes', 'endTime', 'technician', 'assignmentSeenBy', 'status', 'messages'];
   end if;
   if public.org_has_permission(target_org, 'start') then
-    allowed_keys := allowed_keys || array['status', 'startedAt', 'messages', 'notifications'];
+    allowed_keys := allowed_keys || array['status', 'startedAt', 'assignmentSeenBy', 'messages', 'notifications'];
   end if;
   if public.org_has_permission(target_org, 'complete') then
     allowed_keys := allowed_keys || array['status', 'messages', 'notifications'];
