@@ -4523,7 +4523,11 @@ async function persistRemoteData() {
 
   if (can("exportData")) await persistRemoteCompanySettings();
 
-  const dirtyCustomers = state.customers.filter(remoteRecordIsDirty);
+  // Field users can change an assigned job, but customer profiles remain an office permission.
+  // Their derived customer summary will refresh the next time an authorized role saves it.
+  const dirtyCustomers = can("customer-profile")
+    ? state.customers.filter(remoteRecordIsDirty)
+    : [];
   for (const customer of dirtyCustomers) {
     const { data, error } = await client.rpc("sync_customer_if_revision", {
       input_row: customerToRemoteRow(customer),
@@ -5041,7 +5045,8 @@ function save() {
       .catch((caughtError) => {
         elements.storageStatus.textContent = "Secure database save failed";
         notifySupabaseIssue(caughtError, {
-          fallback: "Backline could not save to the secure database."
+          fallback: "Backline could not save to the secure database.",
+          always: true
         });
       })
       .finally(() => {

@@ -77,6 +77,7 @@ assert.match(schema16, /storage\.foldername\(name\)\)\[1\]/);
 
 assert.match(app, /client\.rpc\("sync_job_if_revision"/);
 assert.match(app, /client\.rpc\("sync_customer_if_revision"/);
+assert.match(app, /const dirtyCustomers = can\("customer-profile"\)\s*\?\s*state\.customers\.filter\(remoteRecordIsDirty\)\s*:\s*\[\];/s, "Technician job changes must not require customer-profile permission.");
 assert.match(app, /expected_revision: Number\(job\._remoteRevision\) \|\| 0/);
 assert.match(app, /expected_revision: Number\(customer\._remoteRevision\) \|\| 0/);
 assert.match(app, /function registerRemoteSyncConflict/);

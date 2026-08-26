@@ -609,7 +609,7 @@ assert.match(js, /remoteSettings\.companyName \|\| data\?\.name \|\| backup\?\.c
 assert.match(js, /saveSecureCompanySettingsBackup\(state\.companySettings, state\.suppliers\)/);
 assert.match(js, /saveSecureCompanySettingsBackup\(company, state\.suppliers\)/);
 assert.match(js, /if \(state\.secureMode\) \{\s+saveSecureCompanySettingsBackup\(state\.companySettings, state\.suppliers\)/s);
-assert.match(js, /if \(can\("exportData"\)\) await persistRemoteCompanySettings\(\);\s+const dirtyCustomers = state\.customers\.filter\(remoteRecordIsDirty\);/s);
+assert.match(js, /if \(can\("exportData"\)\) await persistRemoteCompanySettings\(\);[\s\S]*?const dirtyCustomers = can\("customer-profile"\)\s*\?\s*state\.customers\.filter\(remoteRecordIsDirty\)\s*:\s*\[\];/s);
 assert.match(js, /Supabase settings sync needs supabase-schema-13-company-settings\.sql/);
 assert.match(js, /company\.approvalWording/);
 assert.match(js, /company\.approvalDisclaimerText/);
