@@ -12399,7 +12399,7 @@ function renderJobTemplateSummary(job) {
   const templateTaskCount = job.tasks.filter((task) => task.source === "template" && task.sourceKey?.startsWith(`${template.key}:`)).length;
   return `
     <section class="template-summary-card">
-      <div>
+      <div class="template-summary-copy">
         <span>Job template</span>
         <strong>${escapeHtml(template.title)}</strong>
         <small>${escapeHtml(template.description)}</small>
@@ -24916,7 +24916,7 @@ function registerBacklineServiceWorker() {
   if (window.location.protocol === "file:" || !("serviceWorker" in navigator)) return;
   window.addEventListener("load", () => {
     navigator.serviceWorker
-      .register("./service-worker.js?v=20260827-vertical-scroll", { scope: "./" })
+      .register("./service-worker.js?v=20260827-template-layout-audit", { scope: "./" })
       .catch((error) => console.warn("Backline service worker registration failed.", error));
   });
 }
