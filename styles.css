@@ -111,6 +111,14 @@ html[data-theme="dark"] {
   display: none !important;
 }
 
+html,
+body {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  overscroll-behavior-x: none;
+}
+
 body {
   margin: 0;
   background: var(--bg);
@@ -208,6 +216,8 @@ button,
 }
 
 .app-shell {
+  width: 100%;
+  max-width: 100%;
   height: 100vh;
   min-height: 100vh;
   display: grid;
@@ -429,8 +439,11 @@ html[data-theme="dark"] .brand-wordmark {
 
 .workspace {
   height: 100vh;
+  width: 100%;
+  max-width: 100%;
   min-width: 0;
   padding: 28px;
+  overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
 }
@@ -8717,10 +8730,8 @@ html[data-theme="dark"] .approval-logo-full {
 
 .schedule-grid {
   display: grid;
-  grid-template-columns: repeat(7, minmax(180px, 1fr));
+  grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: 12px;
-  overflow-x: auto;
-  padding-bottom: 4px;
 }
 
 .schedule-grid.today-grid {
@@ -8729,7 +8740,7 @@ html[data-theme="dark"] .approval-logo-full {
 
 .day-column,
 .unscheduled-column {
-  min-width: 180px;
+  min-width: 0;
   background: var(--surface-muted);
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -10171,7 +10182,8 @@ html[data-theme="dark"] .approval-logo-full {
     grid-template-columns: 1fr;
     height: auto;
     min-height: 100svh;
-    overflow: visible;
+    overflow-x: hidden;
+    overflow-y: visible;
   }
 
   .sidebar {
@@ -10184,7 +10196,7 @@ html[data-theme="dark"] .approval-logo-full {
     align-items: center;
     gap: 10px;
     padding: 12px 14px;
-    overflow-x: auto;
+    overflow-x: hidden;
     overflow-y: visible;
     max-width: 100vw;
     border-right: 0;
@@ -10193,8 +10205,17 @@ html[data-theme="dark"] .approval-logo-full {
 
   .workspace {
     height: auto;
+    overflow-x: hidden;
     overflow-y: visible;
     padding-top: 18px;
+  }
+
+  .schedule-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .schedule-grid.today-grid {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .nav-list {
@@ -10308,6 +10329,10 @@ html[data-theme="dark"] .approval-logo-full {
 
   body {
     font-size: 14px;
+  }
+
+  .schedule-grid {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .app-shell {
