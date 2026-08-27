@@ -12,7 +12,7 @@
     <link rel="icon" type="image/png" href="assets/backline-icon-transparent.png">
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="apple-touch-icon" href="assets/backline-icon-transparent.png">
-    <link rel="stylesheet" href="styles.css?v=20260827-summary-layout">
+    <link rel="stylesheet" href="styles.css?v=20260827-identity-names">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
     <script src="supabase-config.js"></script>
@@ -45,10 +45,17 @@
             <p id="authGatePanelDetail">Sign in to return to your shop workspace.</p>
           </div>
           <form class="auth-form" id="authForm">
-            <label data-username-field hidden>
-              Workspace username
-              <input name="displayName" autocomplete="username" placeholder="first.last">
-            </label>
+            <div class="auth-name-fields" data-name-fields hidden>
+              <label>
+                First name
+                <input name="firstName" autocomplete="given-name" placeholder="Derek">
+              </label>
+              <label>
+                Last name
+                <input name="lastName" autocomplete="family-name" placeholder="Stayoch">
+              </label>
+            </div>
+            <p class="auth-username-note" data-username-preview hidden>Your Backline username will be <strong data-username-preview-value>first.last</strong>.</p>
             <label>
               Email
               <input type="email" name="email" autocomplete="email" placeholder="you@yourshop.com" required>
@@ -1363,6 +1370,6 @@
       </section>
     </dialog>
 
-    <script src="app.js?v=20260827-summary-layout"></script>
+    <script src="app.js?v=20260827-identity-names"></script>
   </body>
 </html>

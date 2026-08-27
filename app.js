@@ -2460,12 +2460,29 @@ function isExistingSignup(result) {
   return Array.isArray(identities) && identities.length === 0;
 }
 
-function formatDisplayName(value) {
-  return String(value || "")
-    .trim()
+function formatPersonName(value) {
+  return String(value || "").trim().replace(/\s+/g, " ");
+}
+
+function backlineUsernameFromNames(firstName, lastName) {
+  const normalize = (value) => formatPersonName(value)
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
-    .replace(/\s+/g, ".")
-    .replace(/[^a-z0-9._-]/g, "");
+    .replace(/[^a-z0-9]/g, "");
+  const parts = [normalize(firstName), normalize(lastName)].filter(Boolean);
+  return parts.length === 2 ? parts.join(".") : "";
+}
+
+function updateSignupUsernamePreview() {
+  const preview = elements.authForm?.querySelector("[data-username-preview]");
+  const previewValue = elements.authForm?.querySelector("[data-username-preview-value]");
+  if (!preview || !previewValue) return;
+  const username = backlineUsernameFromNames(
+    elements.authForm.elements.firstName?.value,
+    elements.authForm.elements.lastName?.value
+  );
+  previewValue.textContent = username || "first.last";
 }
 
 function normalizeApprovalName(value) {
@@ -3691,15 +3708,19 @@ async function openBillingPortal() {
 }
 
 function resetAuthCreateAccountState() {
-  const usernameField = elements.authForm?.querySelector("[data-username-field]");
+  const nameFields = elements.authForm?.querySelector("[data-name-fields]");
+  const usernamePreview = elements.authForm?.querySelector("[data-username-preview]");
   const confirmPasswordField = elements.authForm?.querySelector("[data-confirm-password-field]");
   const signInButton = elements.authForm?.querySelector("[data-auth-signin-button]");
   const backButton = elements.authGate?.querySelector("[data-auth-back-login]");
   const signupButton = elements.authGate?.querySelector("[data-auth-signup-button]");
   elements.authForm?.classList.remove("signup-mode");
   elements.authGate?.classList.remove("auth-create-mode");
-  if (usernameField) {
-    usernameField.hidden = true;
+  if (nameFields) {
+    nameFields.hidden = true;
+  }
+  if (usernamePreview) {
+    usernamePreview.hidden = true;
   }
   if (confirmPasswordField) {
     confirmPasswordField.hidden = true;
@@ -3719,9 +3740,10 @@ function resetAuthCreateAccountState() {
   elements.authGatePanelHeading.textContent = "Welcome back";
   elements.authGatePanelDetail.textContent = "Sign in to return to your shop workspace.";
   elements.authGateFooterPrompt.textContent = "New to Backline?";
-  if (elements.authForm.elements.displayName) {
-    elements.authForm.elements.displayName.value = "";
-  }
+  ["firstName", "lastName"].forEach((name) => {
+    if (elements.authForm.elements[name]) elements.authForm.elements[name].value = "";
+  });
+  updateSignupUsernamePreview();
   if (elements.authForm.elements.confirmPassword) {
     elements.authForm.elements.confirmPassword.value = "";
   }
@@ -22106,16 +22128,18 @@ document.addEventListener("click", async (event) => {
 
   const authButton = event.target.closest("[data-auth-mode]");
   if (authButton && (elements.authForm?.contains(authButton) || authButton.form === elements.authForm)) {
-    const usernameField = elements.authForm.querySelector("[data-username-field]");
+    const nameFields = elements.authForm.querySelector("[data-name-fields]");
+    const usernamePreview = elements.authForm.querySelector("[data-username-preview]");
     const confirmPasswordField = elements.authForm.querySelector("[data-confirm-password-field]");
     const signInButton = elements.authForm.querySelector("[data-auth-signin-button]");
     const backButton = elements.authGate.querySelector("[data-auth-back-login]");
     const signupButton = elements.authGate.querySelector("[data-auth-signup-button]");
-    if (authButton.dataset.authMode === "signup" && (usernameField?.hidden || confirmPasswordField?.hidden)) {
+    if (authButton.dataset.authMode === "signup" && (nameFields?.hidden || confirmPasswordField?.hidden)) {
       event.preventDefault();
       elements.authForm.classList.add("signup-mode");
       elements.authGate.classList.add("auth-create-mode");
-      if (usernameField) usernameField.hidden = false;
+      if (nameFields) nameFields.hidden = false;
+      if (usernamePreview) usernamePreview.hidden = false;
       if (confirmPasswordField) confirmPasswordField.hidden = false;
       if (signInButton) {
         signInButton.hidden = false;
@@ -22130,11 +22154,12 @@ document.addEventListener("click", async (event) => {
       elements.authGatePanelHeading.textContent = "Create your shop workspace";
       elements.authGatePanelDetail.textContent = "Set up your secure Backline workspace in a few steps.";
       elements.authGateFooterPrompt.textContent = "Already have a Backline account?";
-      elements.authGateStatus.textContent = "Choose a workspace username, then enter your email and password to create the account.";
-      elements.authForm.elements.displayName?.focus();
+      elements.authGateStatus.textContent = "Enter your name, then create your secure Backline workspace.";
+      updateSignupUsernamePreview();
+      elements.authForm.elements.firstName?.focus();
       return;
     }
-    if (authButton.dataset.authMode === "signin" && usernameField && !elements.authForm.elements.displayName?.value.trim()) {
+    if (authButton.dataset.authMode === "signin" && nameFields && !elements.authForm.elements.firstName?.value.trim() && !elements.authForm.elements.lastName?.value.trim()) {
       resetAuthCreateAccountState();
     }
   }
@@ -24020,7 +24045,10 @@ document.addEventListener("submit", async (event) => {
     const submitter = event.submitter;
     const mode = submitter?.dataset.authMode || "signin";
     const data = new FormData(authForm);
-    const displayName = formatDisplayName(data.get("displayName"));
+    const firstName = formatPersonName(data.get("firstName"));
+    const lastName = formatPersonName(data.get("lastName"));
+    const displayName = backlineUsernameFromNames(firstName, lastName);
+    const fullName = [firstName, lastName].filter(Boolean).join(" ");
     const email = String(data.get("email") || "").trim();
     const password = String(data.get("password") || "");
     const confirmPassword = String(data.get("confirmPassword") || "");
@@ -24028,9 +24056,9 @@ document.addEventListener("submit", async (event) => {
       elements.authGateStatus.textContent = "Supabase is not configured yet.";
       return;
     }
-    if (mode === "signup" && !displayName) {
-      elements.authGateStatus.textContent = "Enter a username like first.last before creating the account.";
-      authForm.elements.displayName?.focus();
+    if (mode === "signup" && (!firstName || !lastName || !displayName)) {
+      elements.authGateStatus.textContent = "Enter both your first and last name to create the account.";
+      (firstName ? authForm.elements.lastName : authForm.elements.firstName)?.focus();
       return;
     }
     if (mode === "signup" && password !== confirmPassword) {
@@ -24048,7 +24076,9 @@ document.addEventListener("submit", async (event) => {
             emailRedirectTo: authRedirectTo(),
             data: {
               display_name: displayName,
-              full_name: displayName
+              full_name: fullName,
+              first_name: firstName,
+              last_name: lastName
             }
           }
         })
@@ -24085,7 +24115,9 @@ document.addEventListener("submit", async (event) => {
       const { data: updatedUser } = await client.auth.updateUser({
         data: {
           display_name: displayName,
-          full_name: displayName
+          full_name: fullName,
+          first_name: firstName,
+          last_name: lastName
         }
       });
       state.currentUser = updatedUser?.user || state.currentUser;
@@ -24536,6 +24568,11 @@ document.addEventListener("dragleave", (event) => {
 });
 
 document.addEventListener("input", (event) => {
+  if (event.target.closest("#authForm") && event.target.matches('[name="firstName"], [name="lastName"]')) {
+    updateSignupUsernamePreview();
+    return;
+  }
+
   const foundryPilotSearch = event.target.closest("[data-foundry-pilot-search]");
   if (foundryPilotSearch) {
     const cursor = foundryPilotSearch.selectionStart || foundryPilotSearch.value.length;
@@ -24879,7 +24916,7 @@ function registerBacklineServiceWorker() {
   if (window.location.protocol === "file:" || !("serviceWorker" in navigator)) return;
   window.addEventListener("load", () => {
     navigator.serviceWorker
-      .register("./service-worker.js?v=20260827-summary-layout", { scope: "./" })
+      .register("./service-worker.js?v=20260827-identity-names", { scope: "./" })
       .catch((error) => console.warn("Backline service worker registration failed.", error));
   });
 }

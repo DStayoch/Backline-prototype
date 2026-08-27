@@ -7380,6 +7380,23 @@ html[data-theme="dark"] .auth-logo {
   padding: 22px 28px 20px;
 }
 
+.auth-name-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.auth-username-note {
+  margin: -3px 0 0;
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+.auth-username-note strong {
+  color: var(--ink);
+}
+
 .auth-surface .auth-form label {
   color: #42546a;
   font-size: 0.82rem;
@@ -7523,6 +7540,10 @@ html[data-theme="dark"] .auth-logo {
   .auth-surface .offline-unlock-panel {
     margin-left: 18px;
     margin-right: 18px;
+  }
+
+  .auth-name-fields {
+    grid-template-columns: 1fr;
   }
 }
 
