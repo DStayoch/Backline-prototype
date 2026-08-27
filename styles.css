@@ -3117,7 +3117,7 @@ button.metric-block {
 
 .job-summary-bar {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
   gap: 8px;
   padding: 8px;
   border: 1px solid var(--line);
@@ -3188,14 +3188,21 @@ button.metric-block {
 }
 
 .job-summary-action {
+  min-width: 0;
   background: color-mix(in srgb, var(--blue-soft) 48%, var(--surface));
 }
 
 .job-summary-button {
   width: 100%;
+  min-width: 0;
+  max-width: 100%;
   min-height: 32px;
   padding: 6px 10px;
   justify-content: center;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-align: center;
+  line-height: 1.15;
 }
 
 .job-summary-action small {
