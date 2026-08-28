@@ -6335,7 +6335,7 @@ function teamInviteMessage(invite) {
     `Email to use: ${invite.email}`,
     "",
     `Open Backline here: ${appEntryUrl()}`,
-    "Create an account or sign in with this same email, and Backline will connect you to the shop automatically."
+    "Create your Backline account with this email. Backline will connect you to the shop automatically."
   ].join("\n");
 }
 
@@ -24964,7 +24964,7 @@ function registerBacklineServiceWorker() {
   if (window.location.protocol === "file:" || !("serviceWorker" in navigator)) return;
   window.addEventListener("load", () => {
     navigator.serviceWorker
-      .register("./service-worker.js?v=20260828-offline-sync-fix", { scope: "./" })
+      .register("./service-worker.js?v=20260828-invite-email-copy", { scope: "./" })
       .catch((error) => console.warn("Backline service worker registration failed.", error));
   });
 }

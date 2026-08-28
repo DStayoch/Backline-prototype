@@ -1,4 +1,4 @@
-const BACKLINE_CACHE = "backline-pwa-20260828-27";
+const BACKLINE_CACHE = "backline-pwa-20260828-28";
 
 const CORE_ASSETS = [
   "./",

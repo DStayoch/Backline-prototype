@@ -58,7 +58,7 @@ has(css, /\.settings-menu \{[\s\S]*?z-index: 40;/, "closed settings button shoul
 has(css, /\.settings-menu:has\(\.settings-popover:not\(\[hidden\]\)\) \{[\s\S]*?z-index: 120;/, "open settings menu should layer above customer search");
 has(css, /\.settings-popover \{[\s\S]*?z-index: 140;/, "settings popover should layer above customer search results");
 
-has(tablet, /\.app-shell \{[\s\S]*?grid-template-columns: 1fr;[\s\S]*?height: auto;[\s\S]*?overflow: visible;/, "tablet shell must collapse to one column without fixed scrolling");
+has(tablet, /\.app-shell \{[\s\S]*?grid-template-columns: 1fr;[\s\S]*?height: auto;[\s\S]*?overflow-x: hidden;[\s\S]*?overflow-y: visible;/, "tablet shell must collapse to one column without fixed scrolling");
 has(css, /\.topbar-actions \{[\s\S]*?flex-wrap: wrap;[\s\S]*?justify-content: flex-end;[\s\S]*?z-index: 2;/, "topbar actions should wrap above the title layer instead of overlapping it");
 has(tablet, /\.topbar \{[\s\S]*?flex-wrap: wrap;/, "tablet topbar should wrap before controls overlap text");
 has(tablet, /\.sidebar \{[\s\S]*?position: sticky;[\s\S]*?height: auto;[\s\S]*?overflow-x: auto;[\s\S]*?overflow-y: visible;/, "tablet sidebar should become a horizontal rail");

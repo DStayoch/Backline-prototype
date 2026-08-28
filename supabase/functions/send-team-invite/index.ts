@@ -31,6 +31,17 @@ function textFromRole(role: string) {
     .join(" ") || "Team member";
 }
 
+function displayPersonName(value: unknown) {
+  const identity = String(value ?? "").trim();
+  if (!identity) return "Your shop";
+  const username = identity.includes("@") ? identity.split("@")[0] : identity;
+  return username
+    .split(/[.\s_-]+/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+    .join(" ") || "Your shop";
+}
+
 function isUuid(value: string) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 }
@@ -133,7 +144,7 @@ Deno.serve(async (request) => {
     const shopName = String(companySettings.companyName || organization?.name || "Backline");
     const inviteUrl = appUrl || "Open your Backline workspace link";
     const roleName = textFromRole(invite.role);
-    const senderName = member.display_name || member.email || "Your shop";
+    const senderName = displayPersonName(member.display_name || member.email || "Your shop");
     const replyTo = Deno.env.get("INVITE_REPLY_TO_EMAIL") || member.email || undefined;
     const subject = `${shopName} invited you to Backline`;
     const text = [
@@ -144,7 +155,7 @@ Deno.serve(async (request) => {
       "",
       `Open Backline: ${inviteUrl}`,
       "",
-      "Create an account or sign in with this same email, and Backline will connect you to the shop automatically."
+      "Create your Backline account with this email. Backline will connect you to the shop automatically."
     ].join("\n");
     const html = `
       <div style="font-family:Inter,Arial,sans-serif;line-height:1.5;color:#0f172a">
@@ -152,7 +163,7 @@ Deno.serve(async (request) => {
         <p>${escapeHtml(senderName)} invited you to join their shop workspace.</p>
         <p><strong>Role:</strong> ${escapeHtml(roleName)}<br><strong>Email to use:</strong> ${escapeHtml(invite.email)}</p>
         <p><a href="${escapeHtml(inviteUrl)}" style="display:inline-block;background:#2563eb;color:white;padding:10px 14px;border-radius:8px;text-decoration:none;font-weight:700">Open Backline</a></p>
-        <p>Create an account or sign in with this same email, and Backline will connect you to the shop automatically.</p>
+        <p>Create your Backline account with this email. Backline will connect you to the shop automatically.</p>
       </div>
     `;
 

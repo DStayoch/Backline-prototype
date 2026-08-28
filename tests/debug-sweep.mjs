@@ -40,7 +40,8 @@ const sections = ids
   .map((id) => id.replace("view-", ""));
 assert.deepEqual(navViews.sort(), sections.sort(), "Each nav view should have a matching section");
 assert.match(html, /<body class="app-loading">/, "App should hide the shell until role permissions are known");
-assert.match(html, /data-username-field hidden/, "Username should be hidden until create-account flow starts");
+assert.match(html, /data-name-fields hidden/, "Name fields should be hidden until create-account flow starts");
+assert.match(html, /data-username-preview hidden/, "Username preview should be hidden until create-account flow starts");
 assert.match(html, /data-confirm-password-field hidden/, "Confirm password should be hidden until create-account flow starts");
 assert.match(html, /name="confirmPassword"/, "Create account should ask users to re-enter their password");
 assert.match(html, /data-auth-signin-button/, "Sign in action should be addressable during auth mode changes");
@@ -491,8 +492,7 @@ const declarativeActionAttrs = new Set([
   "data-template-settings-card",
   "data-template-task",
   "data-template-task-list",
-  "data-toggle-backline-picker",
-  "data-username-field"
+  "data-toggle-backline-picker"
 ]);
 const unhandledActionAttrs = actionControlAttrs.filter((attr) => !consumedActionAttrs.includes(attr) && !declarativeActionAttrs.has(attr));
 assert.deepEqual(unhandledActionAttrs, [], "Every actionable data-* control should have a click/change/submit path or be marked declarative");
@@ -519,8 +519,8 @@ assert.match(js, /function confirmRemoveTeamMember\(/, "Confirmed team removal s
 assert.doesNotMatch(js, /confirm\(`Remove \$\{teamMemberDisplayName\(member\)\}/, "Team removal should not use a native browser confirm");
 assert.match(js, /if \(elements\.settingsMenu\.hidden\) return;/);
 assert.match(js, /event\.target\.closest\("input, select, textarea, option, \.backline-picker"\)/);
-assert.match(js, /authButton\.dataset\.authMode === "signup" && \(usernameField\?\.hidden \|\| confirmPasswordField\?\.hidden\)/);
-assert.match(js, /authButton\.dataset\.authMode === "signin" && usernameField/);
+assert.match(js, /authButton\.dataset\.authMode === "signup" && \(nameFields\?\.hidden \|\| confirmPasswordField\?\.hidden\)/);
+assert.match(js, /authButton\.dataset\.authMode === "signin" && nameFields/);
 assert.match(js, /function resetAuthCreateAccountState\(/);
 assert.match(js, /function resetSecureWorkspaceState\(/);
 assert.match(js, /state\.companySettings = normalizeCompanySettings\(\{\}\)/);
@@ -558,8 +558,8 @@ assert.match(js, /function queueOwnerWorkspaceSettingsOnboarding\(/);
 assert.match(js, /function openQueuedWorkspaceSettings\(/);
 assert.match(js, /setPendingOwnerOnboarding\(email\)/);
 assert.match(js, /queueOwnerWorkspaceSettingsOnboarding\(mode === "signup" && createdOwnerWorkspace\)/);
-assert.match(js, /usernameField\.hidden = true/);
-assert.match(js, /elements\.authForm\.elements\.displayName\.value = ""/);
+assert.match(js, /nameFields\.hidden = true/);
+assert.match(js, /\["firstName", "lastName"\]\.forEach/);
 assert.match(js, /data-confirm-password-field/);
 assert.match(js, /elements\.authForm\.elements\.confirmPassword\.value = ""/);
 assert.match(js, /password !== confirmPassword/);
@@ -1463,7 +1463,8 @@ assert.match(js, /data-jobs-filter/);
 assert.match(js, /function softDeleteJob\(/);
 assert.match(js, /function restoreDeletedJob\(/);
 assert.match(js, /function openDeleteModal\(/);
-assert.match(js, /function formatDisplayName\(/);
+assert.match(js, /function formatPersonName\(/);
+assert.match(js, /function backlineUsernameFromNames\(/);
 assert.match(js, /function isExistingSignup\(/);
 assert.match(js, /identities\.length === 0/);
 assert.match(js, /An account already exists for that email\. Use Sign in instead\./);
@@ -1879,10 +1880,10 @@ assert.match(css, /\.dispatch-controls/);
 assert.match(css, /\.drag-over/);
 assert.match(css, /\.communication-status-grid/);
 assert.match(css, /\.communication-status-card/);
-assert.match(css, /\.app-shell \{\s+height: 100vh;\s+min-height: 100vh;[\s\S]*?overflow: hidden;/);
-assert.match(css, /\.sidebar \{\s+position: sticky;\s+top: 0;\s+height: 100vh;[\s\S]*?overflow-y: auto;/);
+assert.match(css, /\.app-shell \{[\s\S]*?height: 100vh;[\s\S]*?min-height: 100vh;[\s\S]*?overflow: hidden;/);
+assert.match(css, /\.sidebar \{\s+position: sticky;\s+top: 0;\s+height: 100vh;[\s\S]*?overflow: hidden;/);
 assert.match(css, /\.workspace \{\s+height: 100vh;[\s\S]*?overflow-y: auto;/);
-assert.match(css, /@media \(max-width: 980px\) \{[\s\S]*?\.app-shell \{[\s\S]*?height: auto;[\s\S]*?overflow: visible;[\s\S]*?\.workspace \{[\s\S]*?height: auto;[\s\S]*?overflow-y: visible;/);
+assert.match(css, /@media \(max-width: 980px\) \{[\s\S]*?\.app-shell \{[\s\S]*?height: auto;[\s\S]*?overflow-x: hidden;[\s\S]*?overflow-y: visible;[\s\S]*?\.workspace \{[\s\S]*?height: auto;[\s\S]*?overflow-y: visible;/);
 assert.match(css, /\.work-grid\.inbox-collapsed/);
 assert.match(css, /\.collapse-inbox-button/);
 assert.match(css, /\.work-grid\.inbox-collapsed \.collapse-inbox-button \{/);

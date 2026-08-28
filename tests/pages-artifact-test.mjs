@@ -4,10 +4,10 @@ import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 
-const rootFiles = ["index.html", "styles.css", "field-polish.css", "app.js", "manifest.webmanifest", "service-worker.js"];
+const rootFiles = ["index.html", "backline-home.html", "styles.css", "field-polish.css", "app.js", "manifest.webmanifest", "service-worker.js"];
 const fakeProductionUrl = "https://production-example.supabase.co";
 const fakeProductionAnonKey = "production-anon-key-placeholder";
-const fakePublicAppUrl = "https://dstayoch.github.io/Backline-prototype/";
+const fakePublicAppUrl = "https://app.backlineoffice.com/";
 
 const siteDir = await mkdtemp(join(tmpdir(), "backline-pages-artifact-"));
 
