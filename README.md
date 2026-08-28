@@ -172,7 +172,7 @@ Before using a production URL, add that URL to the Supabase Auth URL configurati
 For this deployment, use:
 
 ```text
-https://dstayoch.github.io/Backline-prototype/
+https://app.backlineoffice.com/
 ```
 
 In Supabase, open **Authentication** -> **URL Configuration**:

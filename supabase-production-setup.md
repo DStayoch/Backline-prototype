@@ -1,6 +1,6 @@
 # Backline Supabase Production Setup
 
-Last updated: June 19, 2026
+Last updated: August 28, 2026
 
 Use this after creating the production Supabase project and before inviting a real beta shop.
 
@@ -73,9 +73,9 @@ Foundry access is separate from shop owner/admin roles. Shop owners cannot grant
 In Supabase Auth URL settings:
 
 - Set Site URL to the hosted Backline HTTPS URL:
-  `https://dstayoch.github.io/Backline-prototype/`
+  `https://app.backlineoffice.com/`
 - Add the hosted Backline HTTPS URL to allowed redirect URLs:
-  `https://dstayoch.github.io/Backline-prototype/`
+  `https://app.backlineoffice.com/**`
 - Do not use `localhost`, `127.0.0.1`, or `file://` for production auth URLs.
 - Confirm account email links return to the hosted Backline URL, not a local machine URL.
 

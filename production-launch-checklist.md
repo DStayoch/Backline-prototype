@@ -86,8 +86,8 @@ This checklist is for moving Backline from local prototype to a real beta URL. I
 - [ ] Confirm production deployment does not include local/dev Supabase values
 - [ ] GitHub Actions repository variable `BACKLINE_SUPABASE_URL` is set
 - [ ] GitHub Actions repository secret `BACKLINE_SUPABASE_ANON_KEY` is set
-- [ ] Supabase Auth Site URL is `https://dstayoch.github.io/Backline-prototype/`
-- [ ] Supabase Auth Redirect URLs include `https://dstayoch.github.io/Backline-prototype/`
+- [ ] Supabase Auth Site URL is `https://app.backlineoffice.com/`
+- [ ] Supabase Auth Redirect URLs include `https://app.backlineoffice.com/**`
 - [ ] Google OAuth provider is enabled in Supabase if Google sign-in is shown
 - [ ] Apple OAuth provider is enabled in Supabase if Apple sign-in is shown
 - [ ] `npm run deploy:preflight` passes before pushing a production deploy
