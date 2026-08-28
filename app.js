@@ -1240,7 +1240,7 @@ function secureOfflineSnapshotPayload(options = {}) {
     userRole: state.userRole,
     isCreator: state.isCreator,
     jobs: state.jobs.map(ensureJobDefaults),
-    customers: state.customers.map(normalizeCustomerRecord),
+    customers: state.customers.map(customerWithRemoteSyncMetadata),
     deletedJobs: state.deletedJobs.map(ensureDeletedJobDefaults),
     activityEvents: state.activityEvents,
     pricebookItems: state.pricebookItems.map(normalizePricebookItem),
@@ -1329,7 +1329,7 @@ function applySecureOfflineSnapshot(snapshot) {
   state.userRole = snapshot.userRole || "owner";
   state.isCreator = snapshot.isCreator === true;
   state.jobs = Array.isArray(snapshot.jobs) ? snapshot.jobs.map(ensureJobDefaults) : [];
-  state.customers = Array.isArray(snapshot.customers) ? snapshot.customers.map(normalizeCustomerRecord) : buildCustomersFromJobs(state.jobs);
+  state.customers = Array.isArray(snapshot.customers) ? snapshot.customers.map(customerWithRemoteSyncMetadata) : buildCustomersFromJobs(state.jobs);
   state.deletedJobs = Array.isArray(snapshot.deletedJobs) ? snapshot.deletedJobs.map(ensureDeletedJobDefaults) : [];
   state.activityEvents = Array.isArray(snapshot.activityEvents) ? snapshot.activityEvents : [];
   state.pricebookItems = Array.isArray(snapshot.pricebookItems) ? snapshot.pricebookItems.map(normalizePricebookItem) : [];
@@ -3774,6 +3774,7 @@ function resetSecureWorkspaceState() {
   state.isCreator = false;
   state.offlineMode = false;
   state.offlineSyncPending = false;
+  state.offlineSyncConflict = null;
   state.offlineSyncNoticeShown = false;
   state.offlineUnlockKey = null;
   state.offlineUnlockProfileId = "";
@@ -4164,7 +4165,7 @@ function deletedJobToRemoteRow(record) {
 
 function customerToRemoteRow(customer) {
   const normalized = normalizeCustomerRecord(customer);
-  const { _remoteRevision, _remoteFingerprint, ...payload } = customer;
+  const { _remoteRevision, _remoteFingerprint, _remotePayload, ...payload } = customer;
   return {
     id: normalized.id,
     organization_id: state.organizationId,
@@ -4571,12 +4572,21 @@ async function persistRemoteData() {
     ? state.customers.filter(remoteRecordIsDirty)
     : [];
   for (const customer of dirtyCustomers) {
+    const remoteRow = customerToRemoteRow(customer);
     const { data, error } = await client.rpc("sync_customer_if_revision", {
-      input_row: customerToRemoteRow(customer),
+      input_row: remoteRow,
       expected_revision: Number(customer._remoteRevision) || 0
     });
     if (error) throw error;
-    if (data?.status === "conflict") throw remoteSyncConflictError("customer record", data);
+    if (data?.status === "conflict") {
+      // A prior save can reach Supabase just before the browser loses its response.
+      // Treat an identical stored payload as already synced instead of pausing the queue.
+      if (remotePayloadMatches(remoteRow.payload, data.payload)) {
+        markRemoteRecordSynced(customer, data.revision);
+        continue;
+      }
+      throw remoteSyncConflictError("customer record", data);
+    }
     if (data?.status !== "saved") throw new Error("Backline could not confirm the customer record sync.");
     markRemoteRecordSynced(customer, data.revision);
   }
@@ -4589,7 +4599,15 @@ async function persistRemoteData() {
       expected_revision: Number(job._remoteRevision) || 0
     });
     if (error) throw error;
-    if (data?.status === "conflict") throw remoteSyncConflictError("job", data);
+    if (data?.status === "conflict") {
+      // A prior save can reach Supabase just before the browser loses its response.
+      // Treat an identical stored payload as already synced instead of pausing the queue.
+      if (remotePayloadMatches(remoteRow.payload, data.payload)) {
+        markRemoteRecordSynced(job, data.revision, data.payload);
+        continue;
+      }
+      throw remoteSyncConflictError("job", data);
+    }
     if (data?.status !== "saved") throw new Error("Backline could not confirm the job sync.");
     markRemoteRecordSynced(job, data.revision, remoteRow.payload);
   }
@@ -4639,7 +4657,7 @@ async function syncArchivedActiveJobRemovals() {
 async function syncPendingOfflineChanges() {
   if (!state.secureMode || !state.organizationId || !state.currentUser || navigator.onLine === false) return false;
   if (state.offlineSyncConflict) {
-    elements.storageStatus.textContent = "Sync paused - review the change from another device";
+    elements.storageStatus.textContent = "Sync paused - review the newer record version";
     return false;
   }
   if (!state.offlineSyncPending) return true;
@@ -4653,6 +4671,7 @@ async function syncPendingOfflineChanges() {
       const snapshotSaved = await saveSecureOfflineSnapshot({ pending: false });
       if (!snapshotSaved) throw new Error("Backline could not confirm the synced device copy.");
       state.offlineMode = false;
+      state.offlineSyncConflict = null;
       state.offlineSyncNoticeShown = false;
       lastRemoteRefreshAt = Date.now();
       elements.storageStatus.textContent = `Offline changes synced ${new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`;
@@ -4665,8 +4684,8 @@ async function syncPendingOfflineChanges() {
       state.offlineMode = true;
       if (isRemoteSyncConflict(caughtError)) {
         registerRemoteSyncConflict(caughtError);
-        elements.storageStatus.textContent = "Sync paused - another device changed this record";
-        showToast("Sync needs review", "Backline kept this device's protected copy and did not overwrite the change made from another device. Refresh and review the record before saving again.", "warning", {
+        elements.storageStatus.textContent = "Sync paused - a newer record version needs review";
+        showToast("Sync needs review", "Backline protected this device's unsynced copy because the saved record version changed. This can happen after an interrupted save or a change from another signed-in session. Refresh and review before saving again.", "warning", {
           id: "offline-sync-conflict",
           timeout: 10000
         });
@@ -5068,8 +5087,8 @@ function save() {
     saveJob
       .then((result) => {
         if (result?.conflict) {
-          elements.storageStatus.textContent = "Sync paused - another device changed this record";
-          showToast("Sync needs review", "Backline kept this device's protected copy and did not overwrite the change made from another device. Refresh and review the record before saving again.", "warning", {
+          elements.storageStatus.textContent = "Sync paused - a newer record version needs review";
+          showToast("Sync needs review", "Backline protected this device's unsynced copy because the saved record version changed. This can happen after an interrupted save or a change from another signed-in session. Refresh and review before saving again.", "warning", {
             id: "offline-sync-conflict",
             timeout: 10000
           });
@@ -9576,6 +9595,32 @@ function remoteRecordFingerprint(record) {
   return JSON.stringify(payload);
 }
 
+function stableRemotePayload(value) {
+  if (Array.isArray(value)) return value.map(stableRemotePayload);
+  if (value && typeof value === "object") {
+    return Object.keys(value)
+      .sort()
+      .reduce((normalized, key) => {
+        normalized[key] = stableRemotePayload(value[key]);
+        return normalized;
+      }, {});
+  }
+  return value;
+}
+
+function remotePayloadMatches(localPayload, remotePayload) {
+  if (!localPayload || !remotePayload || typeof localPayload !== "object" || typeof remotePayload !== "object") return false;
+  return JSON.stringify(stableRemotePayload(localPayload)) === JSON.stringify(stableRemotePayload(remotePayload));
+}
+
+function customerWithRemoteSyncMetadata(customer = {}) {
+  const normalized = normalizeCustomerRecord(customer);
+  const revision = Number(customer._remoteRevision);
+  if (Number.isFinite(revision) && revision > 0) normalized._remoteRevision = revision;
+  if (customer._remoteFingerprint) normalized._remoteFingerprint = String(customer._remoteFingerprint);
+  return normalized;
+}
+
 function markRemoteRecordSynced(record, revision, remotePayload = null) {
   if (!record) return;
   record._remoteRevision = Math.max(0, Number(revision) || 0);
@@ -9621,6 +9666,9 @@ function remoteSyncConflictError(kind, result = {}) {
   error.kind = kind;
   error.recordId = result.id || "";
   error.remoteRevision = Number(result.revision) || 0;
+  error.remotePayload = result.payload && typeof result.payload === "object"
+    ? JSON.parse(JSON.stringify(result.payload))
+    : null;
   return error;
 }
 
@@ -24916,7 +24964,7 @@ function registerBacklineServiceWorker() {
   if (window.location.protocol === "file:" || !("serviceWorker" in navigator)) return;
   window.addEventListener("load", () => {
     navigator.serviceWorker
-      .register("./service-worker.js?v=20260827-template-layout-audit", { scope: "./" })
+      .register("./service-worker.js?v=20260828-offline-sync-fix", { scope: "./" })
       .catch((error) => console.warn("Backline service worker registration failed.", error));
   });
 }
