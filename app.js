@@ -3402,11 +3402,17 @@ function roleOperationalPreviewMarkup(role) {
       </div>
       <div class="role-preview-columns">
         <section>
-          <h4>Tabs visible</h4>
+          <div class="role-permission-heading">
+            <h4>Tabs visible</h4>
+            <span>${escapeHtml(`${openCount} pages`)}</span>
+          </div>
           <div class="role-test-chips">${rolePermissionChipMarkup(views, "No tabs")}</div>
         </section>
         <section>
-          <h4>Actions visible</h4>
+          <div class="role-permission-heading">
+            <h4>Actions visible</h4>
+            <span>${escapeHtml(`${actionCount} actions`)}</span>
+          </div>
           <div class="role-test-chips">${rolePermissionChipMarkup(actions, "No actions")}</div>
         </section>
       </div>
@@ -19801,6 +19807,10 @@ function renderTeam() {
   if (teamAdminPanel) {
     teamAdminPanel.hidden = !canManage;
   }
+  const rolePreviewDock = document.querySelector("[data-role-preview-dock]");
+  if (rolePreviewDock) {
+    rolePreviewDock.hidden = !canManage;
+  }
 
   const selectedInviteRole = elements.teamInviteForm?.elements.role?.value;
   renderTeamInviteRolePicker(roleDefinition(selectedInviteRole) && selectedInviteRole !== "owner" ? selectedInviteRole : "tech");
@@ -25038,7 +25048,7 @@ function registerBacklineServiceWorker() {
   if (window.location.protocol === "file:" || !("serviceWorker" in navigator)) return;
   window.addEventListener("load", () => {
     navigator.serviceWorker
-      .register("./service-worker.js?v=20260829-role-preview", { scope: "./" })
+      .register("./service-worker.js?v=20260829-role-preview-dock-compact", { scope: "./" })
       .catch((error) => console.warn("Backline service worker registration failed.", error));
   });
 }

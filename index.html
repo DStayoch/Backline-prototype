@@ -12,7 +12,7 @@
     <link rel="icon" type="image/png" href="assets/backline-icon-transparent.png">
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="apple-touch-icon" href="assets/backline-icon-transparent.png">
-    <link rel="stylesheet" href="styles.css?v=20260829-role-preview">
+    <link rel="stylesheet" href="styles.css?v=20260829-role-preview-dock-compact">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
     <script src="supabase-config.js"></script>
@@ -579,6 +579,20 @@
               </div>
               <div class="team-access-summary" id="teamAccessSummary"></div>
               <div class="team-list" id="teamList"></div>
+              <section class="role-preview-panel role-preview-dock" data-role-preview-dock hidden>
+                <div class="role-preview-toolbar">
+                  <div>
+                    <p class="eyebrow">Access check</p>
+                    <h3>Check role access</h3>
+                    <p>See what a role can open and do before you assign it.</p>
+                  </div>
+                  <label>
+                    Role
+                    <div class="backline-picker-field" id="rolePreviewSelect"></div>
+                  </label>
+                </div>
+                <div class="role-preview" id="rolePreviewPanel"></div>
+              </section>
             </section>
 
             <aside class="team-control-rail" data-team-admin-panel hidden>
@@ -628,19 +642,6 @@
                     </div>
                     <button class="primary-button" type="button" id="createCustomRoleButton">Create role</button>
                   </div>
-                  <section class="role-preview-panel">
-                    <div class="role-preview-toolbar">
-                      <div>
-                        <h3>Check role access</h3>
-                        <p>See what a role can open and do before you assign it.</p>
-                      </div>
-                      <label>
-                        Role
-                        <div class="backline-picker-field" id="rolePreviewSelect"></div>
-                      </label>
-                    </div>
-                    <div class="role-preview" id="rolePreviewPanel"></div>
-                  </section>
                 </div>
               </details>
             </aside>
@@ -1393,6 +1394,6 @@
       </section>
     </dialog>
 
-    <script src="app.js?v=20260829-role-preview"></script>
+    <script src="app.js?v=20260829-role-preview-dock-compact"></script>
   </body>
 </html>

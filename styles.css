@@ -1411,6 +1411,17 @@ textarea {
   background: var(--surface);
 }
 
+.role-preview-dock {
+  margin: 0 18px 18px;
+  padding: 16px;
+  border-color: color-mix(in srgb, var(--blue) 30%, var(--line));
+  background: color-mix(in srgb, var(--blue-soft) 14%, var(--surface));
+}
+
+.role-preview-dock[hidden] {
+  display: none;
+}
+
 .role-preview-toolbar {
   display: flex;
   align-items: end;
@@ -1551,7 +1562,7 @@ textarea {
 
 .role-preview-columns {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   gap: 10px;
 }
 
@@ -1559,10 +1570,28 @@ textarea {
   display: grid;
   gap: 7px;
   min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
 }
 
 .role-operational-preview h4 {
   margin: 0;
+}
+
+.role-permission-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.role-permission-heading span {
+  flex: 0 0 auto;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 850;
 }
 
 .role-workflow-grid {
@@ -1677,6 +1706,29 @@ textarea {
 
 .role-test-chips em {
   background: var(--surface);
+  color: var(--muted);
+}
+
+.role-preview-columns .role-test-chips {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+  gap: 7px;
+}
+
+.role-preview-columns .role-test-chips span,
+.role-preview-columns .role-test-chips em {
+  min-height: 32px;
+  padding: 6px 9px;
+  border: 1px solid color-mix(in srgb, var(--blue) 20%, var(--line));
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--blue-soft) 55%, var(--surface));
+  color: var(--blue-dark);
+  font-size: 0.76rem;
+  line-height: 1.25;
+}
+
+.role-preview-columns .role-test-chips em {
+  background: var(--surface-muted);
   color: var(--muted);
 }
 
@@ -13751,7 +13803,8 @@ html[data-theme="dark"] .approval-logo-full {
   }
 
   .team-access-summary,
-  .team-list {
+  .team-list,
+  .role-preview-dock {
     margin-left: 12px;
     margin-right: 12px;
   }
