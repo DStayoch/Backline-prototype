@@ -352,6 +352,109 @@ const BUSINESS_TERMINOLOGY = {
   }
 };
 
+const BUSINESS_ACCESS_TERMINOLOGY = {
+  trades: {
+    coordinatorRole: "Dispatcher",
+    coordinatorSummary: "Books jobs, manages schedules, handles the inbox, follow-ups, and customers.",
+    workWorkflow: "Field work",
+    customerLabel: "Customer",
+    customerPlural: "Customers",
+    estimateAction: "Send estimates",
+    approvalAction: "Create approval links",
+    changeAction: "Change orders",
+    billingAction: "Invoices, pricebook, inventory",
+    portalAction: "Customer portal links",
+    updateAction: "Customer updates",
+    customerProfileAction: "Edit customer profiles",
+    resourceAction: "Log parts and equipment",
+    diagnosisAction: "Diagnosis checklist",
+    photoAction: "Photo checklist",
+    signatureAction: "Signature checklist",
+    leadRole: "Lead technician",
+    clientRole: "Sales / estimator"
+  },
+  appointments: {
+    coordinatorRole: "Front desk",
+    coordinatorSummary: "Schedules appointments, manages the inbox, follow-ups, and client records.",
+    workWorkflow: "Appointments",
+    customerLabel: "Client",
+    customerPlural: "Clients",
+    estimateAction: "Send service estimates",
+    approvalAction: "Create consent links",
+    changeAction: "Update appointments",
+    billingAction: "Invoices and service pricing",
+    portalAction: "Client portal links",
+    updateAction: "Client updates",
+    customerProfileAction: "Edit client profiles",
+    resourceAction: "Log supplies and session notes",
+    diagnosisAction: "Preparation checklist",
+    photoAction: "Photo checklist",
+    signatureAction: "Consent checklist",
+    leadRole: "Lead team member",
+    clientRole: "Client services"
+  },
+  professional: {
+    coordinatorRole: "Coordinator",
+    coordinatorSummary: "Plans projects, manages the inbox, follow-ups, and client records.",
+    workWorkflow: "Project delivery",
+    customerLabel: "Client",
+    customerPlural: "Clients",
+    estimateAction: "Send proposals",
+    approvalAction: "Create approval links",
+    changeAction: "Update project scope",
+    billingAction: "Invoices and project pricing",
+    portalAction: "Client portal links",
+    updateAction: "Client updates",
+    customerProfileAction: "Edit client profiles",
+    resourceAction: "Log resources and expenses",
+    diagnosisAction: "Project checklist",
+    photoAction: "File checklist",
+    signatureAction: "Approval checklist",
+    leadRole: "Project lead",
+    clientRole: "Client services"
+  },
+  automotive: {
+    coordinatorRole: "Service advisor",
+    coordinatorSummary: "Schedules work orders, manages customer communication, follow-ups, and vehicle records.",
+    workWorkflow: "Shop work",
+    customerLabel: "Customer",
+    customerPlural: "Customers",
+    estimateAction: "Send repair estimates",
+    approvalAction: "Create authorization links",
+    changeAction: "Update work orders",
+    billingAction: "Invoices and parts pricing",
+    portalAction: "Customer portal links",
+    updateAction: "Customer updates",
+    customerProfileAction: "Edit customer profiles",
+    resourceAction: "Log parts and materials",
+    diagnosisAction: "Inspection checklist",
+    photoAction: "Inspection photo checklist",
+    signatureAction: "Authorization checklist",
+    leadRole: "Lead technician",
+    clientRole: "Service advisor"
+  },
+  general: {
+    coordinatorRole: "Coordinator",
+    coordinatorSummary: "Coordinates work, manages the inbox, follow-ups, and customer records.",
+    workWorkflow: "Work delivery",
+    customerLabel: "Customer",
+    customerPlural: "Customers",
+    estimateAction: "Send quotes",
+    approvalAction: "Create approval links",
+    changeAction: "Update work",
+    billingAction: "Invoices and pricing",
+    portalAction: "Customer portal links",
+    updateAction: "Customer updates",
+    customerProfileAction: "Edit customer profiles",
+    resourceAction: "Log materials and expenses",
+    diagnosisAction: "Work checklist",
+    photoAction: "File checklist",
+    signatureAction: "Approval checklist",
+    leadRole: "Team lead",
+    clientRole: "Customer service"
+  }
+};
+
 const BUSINESS_WORKSPACE_CARDS = {
   trades: {
     asset: {
@@ -1659,9 +1762,33 @@ function rolePermissionDependencyDetails(keys = []) {
 }
 
 function permissionCatalogLabel(permission = {}) {
-  if (permission.key === "view-inbox") return "Inbox + job detail";
-  if (permission.key === "view-money") return "Money";
-  if (permission.key === "view-customers") return "Customers";
+  const terms = businessTerminology();
+  const access = businessAccessTerminology();
+  const workItems = terms.workItemsPlural.toLowerCase();
+  const labels = {
+    "view-inbox": `Inbox + ${terms.workItem} detail`,
+    "view-jobsdb": `${terms.workItemsPlural} database`,
+    "view-customers": access.customerPlural,
+    createJob: `Create ${workItems}`,
+    book: `Schedule and assign ${terms.assignees.toLowerCase()}`,
+    start: `Start ${workItems}`,
+    complete: access.workWorkflow === "Field work" ? "Complete field work" : `Complete ${workItems}`,
+    estimate: access.estimateAction,
+    approval: access.approvalAction,
+    change: access.changeAction,
+    invoice: access.billingAction,
+    portal: access.portalAction,
+    "portal-update": access.updateAction,
+    "customer-profile": access.customerProfileAction,
+    parts: access.resourceAction,
+    "check-diagnosis": access.diagnosisAction,
+    "check-photos": access.photoAction,
+    "check-signature": access.signatureAction,
+    reopen: `Reopen ${workItems}`,
+    close: `Close ${workItems}`,
+    delete: `Delete/archive ${workItems}`
+  };
+  if (labels[permission.key]) return labels[permission.key];
   return permission.label || permission.key || "";
 }
 
@@ -1701,7 +1828,57 @@ function customRolePresetKey(value = "") {
 }
 
 function customRolePreset(value = "") {
-  return customRoleTemplates[customRolePresetKey(value)] || null;
+  const key = customRolePresetKey(value);
+  const preset = customRoleTemplates[key];
+  if (!preset) return null;
+  const terms = businessTerminology();
+  const access = businessAccessTerminology();
+  const workItems = terms.workItemsPlural.toLowerCase();
+  if (key === "office-manager") {
+    return {
+      ...preset,
+      summary: `Runs scheduling, ${access.customerLabel.toLowerCase()} updates, payments, files, and daily follow-up.`
+    };
+  }
+  if (key === "lead-tech") {
+    return {
+      ...preset,
+      label: access.leadRole,
+      summary: `Handles assigned ${workItems}, documentation, ${businessWorkspaceCards().parts.itemPlural}, pricing, and closeout.`
+    };
+  }
+  if (key === "sales-estimator") {
+    return {
+      ...preset,
+      label: access.clientRole,
+      summary: `Views ${access.customerPlural.toLowerCase()} and ${workItems}, sends pricing, approval links, and follow-up.`
+    };
+  }
+  if (key === "bookkeeper") {
+    return {
+      ...preset,
+      summary: "Manages invoices, payments, pricing, money, and workspace exports."
+    };
+  }
+  return preset;
+}
+
+function rolePermissionGroupCopy(group = {}) {
+  const terms = businessTerminology();
+  const access = businessAccessTerminology();
+  if (group.title === "Can do on jobs") {
+    return {
+      title: `Can do on ${terms.workItemsPlural.toLowerCase()}`,
+      description: `${terms.workItemCapital} actions. Backline includes the required page access automatically.`
+    };
+  }
+  if (group.title === "Customer and admin") {
+    return {
+      title: `${access.customerLabel} and admin`,
+      description: `${access.customerLabel} records, team controls, settings, and export utilities.`
+    };
+  }
+  return group;
 }
 
 function roleTemplateBase(value = "tech") {
@@ -2041,6 +2218,10 @@ function companySettings() {
 
 function businessTerminology(type = state.companySettings?.businessType) {
   return BUSINESS_TERMINOLOGY[type] || BUSINESS_TERMINOLOGY.trades;
+}
+
+function businessAccessTerminology(type = state.companySettings?.businessType) {
+  return BUSINESS_ACCESS_TERMINOLOGY[type] || BUSINESS_ACCESS_TERMINOLOGY.trades;
 }
 
 function jobBusinessType(job = {}) {
@@ -3270,10 +3451,11 @@ function roleLabel() {
 }
 
 function roleName(role) {
+  const access = businessAccessTerminology();
   const labels = {
     owner: "Owner",
     admin: "Admin",
-    dispatcher: "Dispatcher",
+    dispatcher: access.coordinatorRole,
     tech: businessTerminology().assignee
   };
   return builtInRoleOverride(role)?.label || labels[role] || customRoleMap()[role]?.label || "Owner";
@@ -3281,11 +3463,12 @@ function roleName(role) {
 
 function roleSummary(role) {
   const terms = businessTerminology();
+  const access = businessAccessTerminology();
   const summaries = {
     owner: "Full access, team controls, exports, money, and insights.",
     admin: "Full workspace access and team controls, except ownership transfer.",
-    dispatcher: "Books jobs, manages schedule, handles inbox, follow-ups, and customers.",
-    tech: `Sees assigned ${terms.workItemsPlural.toLowerCase()} only, completes assigned work, uploads proof, and logs parts.`
+    dispatcher: access.coordinatorSummary,
+    tech: `Sees assigned ${terms.workItemsPlural.toLowerCase()} only, completes assigned work, uploads files, and logs ${businessWorkspaceCards().parts.itemPlural}.`
   };
   return builtInRoleOverride(role)?.summary || summaries[role] || customRoleMap()[role]?.summary || "Custom permissions set by the owner.";
 }
@@ -3326,6 +3509,7 @@ function roleCan(role, action) {
 }
 
 function roleWorkflowPreviewItems(role) {
+  const access = businessAccessTerminology();
   const item = (label, checks = []) => {
     const complete = checks.filter((check) => roleCan(role, check)).length;
     return {
@@ -3337,18 +3521,19 @@ function roleWorkflowPreviewItems(role) {
   };
   return [
     item("Scheduling", ["view:schedule", "view:inbox", "book"]),
-    item("Field work", ["view:inbox", "start", "complete", "task-toggle", "parts", "check-diagnosis", "check-photos", "check-signature"]),
-    item("Customer updates", ["view:inbox", "view:customers", "portal", "portal-update", "customer-profile"]),
+    item(access.workWorkflow, ["view:inbox", "start", "complete", "task-toggle", "parts", "check-diagnosis", "check-photos", "check-signature"]),
+    item(`${access.customerLabel} updates`, ["view:inbox", "view:customers", "portal", "portal-update", "customer-profile"]),
     item("Billing", ["view:money", "estimate", "approval", "invoice", "payment-request", "paid"]),
     item("Admin controls", ["view:team", "view:activity", "manageTeam", "exportData"])
   ];
 }
 
 function roleRestrictedPreviewItems(role) {
+  const workItems = businessTerminology().workItemsPlural.toLowerCase();
   const sensitive = [
-    { label: "Delete or archive jobs", action: "delete" },
-    { label: "Reopen closed work", action: "reopen" },
-    { label: "Close jobs", action: "close" },
+    { label: `Delete or archive ${workItems}`, action: "delete" },
+    { label: `Reopen closed ${workItems}`, action: "reopen" },
+    { label: `Close ${workItems}`, action: "close" },
     { label: "Manage team and roles", action: "manageTeam" },
     { label: "Download workspace backup", action: "exportData" }
   ];
@@ -5869,6 +6054,7 @@ function renderCustomRolePermissions(template = "tech", selectedKeys = null, edi
   const catalog = permissionCatalogByKey();
   elements.customRolePermissions.innerHTML = rolePermissionGroups
     .map((group) => {
+      const copy = rolePermissionGroupCopy(group);
       const toggles = group.keys
         .map((key) => catalog[key])
         .filter((permission) => canRoleEditPermission(editingRole, permission))
@@ -5882,8 +6068,8 @@ function renderCustomRolePermissions(template = "tech", selectedKeys = null, edi
       return `
         <section class="permission-group">
           <div class="permission-group-header">
-            <strong>${escapeHtml(group.title)}</strong>
-            <span>${escapeHtml(group.description)}</span>
+            <strong>${escapeHtml(copy.title)}</strong>
+            <span>${escapeHtml(copy.description)}</span>
           </div>
           <div class="permission-group-grid">${toggles}</div>
         </section>
@@ -11520,12 +11706,12 @@ function paymentMethodOptionItems(selected = "card") {
 
 function customRoleTemplateOptionItems(selected = "preset:office-manager") {
   return [
-    { value: "preset:office-manager", label: "Office manager" },
-    { value: "preset:lead-tech", label: "Lead tech" },
-    { value: "preset:sales-estimator", label: "Sales / estimator" },
-    { value: "preset:bookkeeper", label: "Bookkeeper" },
-    { value: "tech", label: "Technician" },
-    { value: "dispatcher", label: "Dispatcher" },
+    { value: "preset:office-manager", label: customRolePreset("preset:office-manager").label },
+    { value: "preset:lead-tech", label: customRolePreset("preset:lead-tech").label },
+    { value: "preset:sales-estimator", label: customRolePreset("preset:sales-estimator").label },
+    { value: "preset:bookkeeper", label: customRolePreset("preset:bookkeeper").label },
+    { value: "tech", label: roleName("tech") },
+    { value: "dispatcher", label: roleName("dispatcher") },
     { value: "admin", label: "Admin" }
   ].map((option) => ({ ...option, selected: option.value === selected }));
 }
@@ -19739,8 +19925,9 @@ function renderTeam() {
   const roleChoices = allAssignableRoles();
   const canManage = can("manageTeam");
   if (elements.teamHeaderSubtitle) {
+    const terms = businessTerminology();
     elements.teamHeaderSubtitle.textContent = canManage
-      ? "Invite teammates, set roles, and assign field work"
+      ? `Invite teammates, set roles, and coordinate ${terms.workItemsPlural.toLowerCase()}`
       : "Team directory and role visibility";
   }
   renderTeamAccessSummary();
@@ -25048,7 +25235,7 @@ function registerBacklineServiceWorker() {
   if (window.location.protocol === "file:" || !("serviceWorker" in navigator)) return;
   window.addEventListener("load", () => {
     navigator.serviceWorker
-      .register("./service-worker.js?v=20260829-role-preview-dock-compact", { scope: "./" })
+      .register("./service-worker.js?v=20260829-business-access", { scope: "./" })
       .catch((error) => console.warn("Backline service worker registration failed.", error));
   });
 }
