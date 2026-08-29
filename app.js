@@ -3127,6 +3127,44 @@ function teamMemberDisplayLabel(member) {
   return displayPersonName(teamMemberDisplayName(member));
 }
 
+function teamActivityAgeLabel(value) {
+  const timestamp = new Date(value || 0).getTime();
+  if (!Number.isFinite(timestamp)) return "";
+  const elapsed = Math.max(0, Date.now() - timestamp);
+  const minutes = Math.floor(elapsed / 60000);
+  if (minutes < 1) return "just now";
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days === 1) return "yesterday";
+  if (days < 7) return `${days}d ago`;
+  return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(new Date(timestamp));
+}
+
+function teamMemberLastActivityLabel(member) {
+  if (member?.isCurrentUser) return "Active now";
+  const compactIdentity = (value) => String(value || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+  const memberId = String(member?.userId || "");
+  const identities = new Set([
+    teamMemberDisplayName(member),
+    teamMemberDisplayLabel(member),
+    member?.displayName,
+    member?.email,
+    usernameFromIdentity(member?.email)
+  ].map(compactIdentity).filter(Boolean));
+  const latest = state.activityEvents
+    .filter((event) => {
+      if (memberId && String(event?.actor?.id || "") === memberId) return true;
+      return identities.has(compactIdentity(event?.actor?.name));
+    })
+    .map((event) => event?.createdAt)
+    .filter((value) => Number.isFinite(new Date(value || 0).getTime()))
+    .sort((a, b) => new Date(b).getTime() - new Date(a).getTime())[0];
+  const age = teamActivityAgeLabel(latest);
+  return age ? `Last active ${age}` : "No activity recorded yet";
+}
+
 function customRoleMap() {
   const map = {};
   companySettings().customRoles.forEach((role) => {
@@ -19713,7 +19751,7 @@ function renderTeam() {
             <span class="team-member-avatar" aria-hidden="true">${escapeHtml(teamMemberDisplayLabel(member).charAt(0))}</span>
             <span>
               <strong>${escapeHtml(teamMemberDisplayLabel(member))}</strong>
-              <small>${escapeHtml(member.isCurrentUser ? "Signed in now" : roleSummary(member.role))}</small>
+              <small>${escapeHtml(teamMemberLastActivityLabel(member))}</small>
             </span>
           </div>
           ${canManage ? `
@@ -25000,7 +25038,7 @@ function registerBacklineServiceWorker() {
   if (window.location.protocol === "file:" || !("serviceWorker" in navigator)) return;
   window.addEventListener("load", () => {
     navigator.serviceWorker
-      .register("./service-worker.js?v=20260829-team-redesign", { scope: "./" })
+      .register("./service-worker.js?v=20260829-team-activity", { scope: "./" })
       .catch((error) => console.warn("Backline service worker registration failed.", error));
   });
 }
