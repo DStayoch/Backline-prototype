@@ -1807,6 +1807,439 @@ textarea {
   margin: 0 16px;
 }
 
+/* Team workspace: keep daily people management clear and tuck advanced role work away. */
+.team-layout {
+  grid-template-columns: minmax(0, 1fr) minmax(330px, 0.52fr);
+  align-items: start;
+  gap: 20px;
+}
+
+.team-layout.readonly {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.team-directory-panel {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.team-page-heading {
+  display: grid;
+  gap: 4px;
+  padding: 22px 22px 18px;
+  border-bottom: 1px solid var(--line);
+  background: color-mix(in srgb, var(--blue-soft) 36%, var(--surface));
+}
+
+.team-page-heading .eyebrow,
+.team-rail-heading .eyebrow {
+  margin-bottom: 2px;
+  font-size: 0.72rem;
+}
+
+.team-page-heading h2,
+.team-rail-heading h2 {
+  color: var(--ink);
+  font-size: 1.28rem;
+}
+
+.team-page-heading > div > p:last-child,
+.team-rail-heading > div > p:last-child {
+  max-width: 62ch;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.team-access-summary {
+  margin: 16px 18px 14px;
+}
+
+.team-list {
+  gap: 14px;
+  padding: 0 18px 18px;
+}
+
+.team-section {
+  gap: 0;
+  overflow: hidden;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.team-section + .team-section {
+  margin-top: 2px;
+}
+
+.team-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface-muted);
+}
+
+.team-section h3 {
+  padding: 0;
+  color: var(--ink);
+  font-size: 0.84rem;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.team-section-count {
+  display: inline-grid;
+  place-items: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: var(--blue-soft);
+  color: var(--blue-dark);
+  font-size: 0.76rem;
+  font-weight: 850;
+}
+
+.team-row {
+  grid-template-columns: minmax(0, 1fr) minmax(132px, 164px) auto;
+  gap: 14px;
+  min-height: 74px;
+  padding: 13px 14px;
+  border: 0;
+  border-radius: 0;
+  border-top: 1px solid color-mix(in srgb, var(--line) 82%, transparent);
+  background: var(--surface);
+}
+
+.team-section-heading + .team-row {
+  border-top: 0;
+}
+
+.team-row:hover {
+  background: color-mix(in srgb, var(--blue-soft) 20%, var(--surface));
+}
+
+.team-row.readonly {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.team-member-identity {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 11px;
+}
+
+.team-member-identity > span:last-child {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+}
+
+.team-member-avatar {
+  display: inline-grid;
+  flex: 0 0 34px;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--blue) 36%, var(--line));
+  border-radius: 50%;
+  background: var(--blue-soft);
+  color: var(--blue-dark);
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+
+.team-member-avatar.pending-avatar {
+  border-style: dashed;
+  background: var(--surface-muted);
+  color: var(--muted);
+}
+
+.team-row strong {
+  overflow: hidden;
+  color: var(--ink);
+  font-size: 0.92rem;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.team-row small {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.team-row .backline-picker-button,
+.team-row .utility-button {
+  min-height: 36px;
+}
+
+.team-role-badge {
+  min-height: 30px;
+  padding: 0 10px;
+  border-color: color-mix(in srgb, var(--blue) 25%, var(--line));
+  background: var(--blue-soft);
+  color: var(--blue-dark);
+  font-size: 0.76rem;
+}
+
+.team-actions {
+  grid-auto-flow: initial;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  width: min(100%, 310px);
+  gap: 6px;
+}
+
+.team-actions .utility-button {
+  padding: 0 8px;
+  font-size: 0.74rem;
+  white-space: nowrap;
+}
+
+.team-actions .invoice-remove-button {
+  color: var(--coral);
+}
+
+.team-invites-section .team-row {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.team-invites-section .team-actions {
+  grid-column: 1 / -1;
+  width: 100%;
+}
+
+.team-control-rail {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+}
+
+.team-invite-panel {
+  display: grid;
+  gap: 18px;
+  padding: 18px;
+  border: 1px solid color-mix(in srgb, var(--blue) 28%, var(--line));
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--blue-soft) 24%, var(--surface));
+}
+
+.team-rail-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+}
+
+.team-rail-heading > div {
+  display: grid;
+  gap: 4px;
+}
+
+.team-rail-icon {
+  display: inline-grid;
+  flex: 0 0 32px;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border-radius: 8px;
+  background: var(--blue);
+  color: #fff;
+  font-size: 1.3rem;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.team-invite-form {
+  gap: 12px;
+}
+
+.team-invite-form label {
+  gap: 7px;
+  padding: 0;
+  color: var(--ink);
+  font-size: 0.76rem;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.team-invite-form input,
+.team-invite-form .backline-picker-button {
+  min-height: 42px;
+  background: var(--surface);
+}
+
+.team-invite-form button {
+  width: 100%;
+  margin: 2px 0 0;
+}
+
+.team-invite-form + .settings-note {
+  margin: -8px 0 0;
+}
+
+.team-management-details {
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.team-management-details > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 14px 16px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.team-management-details > summary::-webkit-details-marker {
+  display: none;
+}
+
+.team-management-details > summary > span:first-child {
+  display: grid;
+  gap: 3px;
+}
+
+.team-management-details summary strong {
+  color: var(--ink);
+  font-size: 0.9rem;
+}
+
+.team-management-details summary small {
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.3;
+}
+
+.team-details-indicator {
+  width: 9px;
+  height: 9px;
+  flex: 0 0 auto;
+  border-right: 2px solid var(--blue-dark);
+  border-bottom: 2px solid var(--blue-dark);
+  transform: rotate(45deg) translateY(-2px);
+  transition: transform 160ms ease;
+}
+
+.team-management-details[open] .team-details-indicator {
+  transform: rotate(225deg) translate(-2px, 2px);
+}
+
+.team-management-content {
+  display: grid;
+  gap: 14px;
+  padding: 0 14px 14px;
+  border-top: 1px solid var(--line);
+}
+
+.team-management-heading {
+  padding: 14px 2px 0;
+}
+
+.team-management-heading h3,
+.team-management-heading p {
+  margin: 0;
+}
+
+.team-management-heading h3 {
+  color: var(--ink);
+  font-size: 0.9rem;
+}
+
+.team-management-heading p {
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
+.team-management-content .role-guide {
+  gap: 8px;
+}
+
+.team-management-content .role-card {
+  padding: 11px;
+  background: var(--surface-muted);
+}
+
+.team-management-content .role-preview-panel {
+  margin-top: 0;
+}
+
+.team-access-summary .role-access-card {
+  gap: 8px;
+  padding: 12px 14px;
+}
+
+.team-access-summary .role-access-header {
+  align-items: center;
+}
+
+.team-access-summary .role-access-header strong {
+  font-size: 0.96rem;
+}
+
+.team-access-summary .role-access-header small {
+  max-width: 60ch;
+  font-size: 0.78rem;
+}
+
+.role-access-details {
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.role-access-details > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 34px;
+  padding: 0 10px;
+  color: var(--blue-dark);
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 850;
+  list-style: none;
+}
+
+.role-access-details > summary::-webkit-details-marker {
+  display: none;
+}
+
+.role-access-details > summary span {
+  display: inline-grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--blue-soft);
+  color: var(--blue-dark);
+  font-size: 0.7rem;
+}
+
+.role-access-details-body {
+  display: grid;
+  gap: 8px;
+  padding: 0 10px 10px;
+}
+
 .role-card {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -13280,6 +13713,78 @@ html[data-theme="dark"] .approval-logo-full {
   font-size: 0.84rem;
   line-height: 1.28;
   overflow-wrap: anywhere;
+}
+
+@media (max-width: 980px) {
+  .team-layout,
+  .team-layout.readonly {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .team-control-rail {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: start;
+  }
+}
+
+@media (max-width: 720px) {
+  .team-page-heading {
+    padding: 18px 16px 15px;
+  }
+
+  .team-access-summary,
+  .team-list {
+    margin-left: 12px;
+    margin-right: 12px;
+  }
+
+  .team-list {
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .team-control-rail {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .team-invite-panel {
+    padding: 16px;
+  }
+
+  .team-row,
+  .team-row.readonly,
+  .team-invites-section .team-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+    min-height: 0;
+  }
+
+  .team-row .member-role-picker,
+  .team-row .team-role-badge {
+    justify-self: start;
+    width: min(100%, 220px);
+  }
+
+  .team-row .utility-button[data-remove-member] {
+    justify-self: start;
+    width: auto;
+  }
+
+  .team-invites-section .team-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .team-invites-section .team-actions .invite-send-button {
+    grid-column: 1 / -1;
+  }
+
+  .team-management-details > summary {
+    padding: 14px;
+  }
+
+  .team-management-content {
+    padding: 0 12px 12px;
+  }
 }
 
 @media print {

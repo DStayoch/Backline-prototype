@@ -370,7 +370,7 @@ assert.match(app, /querySelector\("#settingsExportButton"\)\?\.toggleAttribute\(
 assert.match(app, /const canManageTeam = can\("manageTeam"\)/);
 assert.match(app, /teamAdminPanel\.hidden = !canManageTeam/);
 assert.match(app, /canManage \? `[\s\S]*data-member-role-picker/);
-assert.match(app, /canManage \? `<div class="team-section">/);
+assert.match(app, /canManage \? `<section class="team-section team-invites-section">/);
 assert.match(app, /field\.disabled = !canManage/);
 assert.match(app, /function isFieldScopedRole\(role = currentRole\(\)\)/);
 assert.match(app, /return role === "tech" \|\| customRoleMap\(\)\[role\]\?\.template === "tech"/);

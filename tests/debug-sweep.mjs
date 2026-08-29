@@ -55,9 +55,9 @@ assert.match(html, /id="teamHeaderSubtitle"/, "Team view should have role-aware 
 assert.match(html, /id="teamAccessSummary"/, "Team view should show the signed-in user's access summary");
 assert.match(html, /id="rolePreviewSelect"/, "Team managers should be able to preview role access");
 assert.match(html, /id="rolePreviewPanel"/, "Role preview output should have a render target");
-assert.match(html, /Role access tester/, "Role preview should be framed as an access tester");
-assert.match(html, /Preview what each role can open, do, and verify before assigning it\./, "Role tester should explain its purpose");
-assert.doesNotMatch(html, /id="roleTestChecklist"/, "Role access tester should not duplicate a separate checklist");
+assert.match(html, /Check role access/, "Role preview should be framed as an access check");
+assert.match(html, /See what a role can open and do before you assign it\./, "Role access check should explain its purpose");
+assert.doesNotMatch(html, /id="roleTestChecklist"/, "Role access check should not duplicate a separate checklist");
 assert.match(html, /id="permissionAuditPanel"/, "Activity should include an owner-visible permission audit summary");
 assert.match(js, /function activityTypeOptionItems[\s\S]*"role"[\s\S]*activityTypeLabel\(value\)/, "Activity type filter should include permission changes");
 assert.match(html, /data-team-admin-panel/, "Team management controls should be hideable for read-only team viewers");

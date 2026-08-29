@@ -3393,7 +3393,7 @@ function roleOperationalPreviewMarkup(role) {
   `;
 }
 
-function roleAccessSummaryMarkup(role, { title = "", note = "", preview = false, permissionSet = null, label = "", summary = "" } = {}) {
+function roleAccessSummaryMarkup(role, { title = "", note = "", preview = false, permissionSet = null, label = "", summary = "", compact = false } = {}) {
   const permissions = permissionSet
     ? rolePermissionCatalog.filter((permission) => {
       if (permission.type === "view") return (permissionSet.views || []).includes(permission.value);
@@ -3414,21 +3414,44 @@ function roleAccessSummaryMarkup(role, { title = "", note = "", preview = false,
         </div>
         ${hasTeamManagement ? '<b class="role-power-badge">Can manage roles</b>' : ""}
       </div>
-      <div class="permission-summary compact">
-        <div class="permission-summary-row">
-          <strong>Can open</strong>
-          <div>${rolePermissionChipMarkup(views, "No pages")}</div>
+      ${compact ? `
+        <details class="role-access-details">
+          <summary>View permissions <span>${views.length + actions.length}</span></summary>
+          <div class="role-access-details-body">
+            <div class="permission-summary compact">
+              <div class="permission-summary-row">
+                <strong>Can open</strong>
+                <div>${rolePermissionChipMarkup(views, "No pages")}</div>
+              </div>
+              <div class="permission-summary-row">
+                <strong>Can do</strong>
+                <div>${rolePermissionChipMarkup(actions, "No actions")}</div>
+              </div>
+            </div>
+            ${hasTeamManagement ? `
+              <div class="permission-summary-alert">
+                This role can invite people, change roles, and edit permissions. Assign it only to trusted managers.
+              </div>
+            ` : ""}
+          </div>
+        </details>
+      ` : `
+        <div class="permission-summary compact">
+          <div class="permission-summary-row">
+            <strong>Can open</strong>
+            <div>${rolePermissionChipMarkup(views, "No pages")}</div>
+          </div>
+          <div class="permission-summary-row">
+            <strong>Can do</strong>
+            <div>${rolePermissionChipMarkup(actions, "No actions")}</div>
+          </div>
         </div>
-        <div class="permission-summary-row">
-          <strong>Can do</strong>
-          <div>${rolePermissionChipMarkup(actions, "No actions")}</div>
-        </div>
-      </div>
-      ${hasTeamManagement ? `
-        <div class="permission-summary-alert">
-          This role can invite people, change roles, and edit permissions. Assign it only to trusted managers.
-        </div>
-      ` : ""}
+        ${hasTeamManagement ? `
+          <div class="permission-summary-alert">
+            This role can invite people, change roles, and edit permissions. Assign it only to trusted managers.
+          </div>
+        ` : ""}
+      `}
     </article>
   `;
 }
@@ -19649,7 +19672,8 @@ function renderTeamAccessSummary() {
   if (!elements.teamAccessSummary) return;
   elements.teamAccessSummary.innerHTML = roleAccessSummaryMarkup(currentRole(), {
     title: "Your access",
-    note: state.currentUser?.email ? `Signed in as ${accountDisplayName()}` : roleSummary(currentRole())
+    note: state.currentUser?.email ? `Signed in as ${accountDisplayName()}` : roleSummary(currentRole()),
+    compact: true
   });
 }
 
@@ -19678,14 +19702,20 @@ function renderTeam() {
   renderTeamAccessSummary();
 
   elements.teamList.innerHTML = `
-    <div class="team-section">
-      <h3>Members</h3>
+    <section class="team-section team-members-section">
+      <div class="team-section-heading">
+        <h3>Team members</h3>
+        <span class="team-section-count">${members.length}</span>
+      </div>
       ${members.map((member) => `
         <div class="team-row ${canManage ? "" : "readonly"}">
-          <span>
-            <strong>${escapeHtml(teamMemberDisplayLabel(member))}</strong>
-            <small>${escapeHtml(member.isCurrentUser ? "Signed in now" : roleSummary(member.role))}</small>
-          </span>
+          <div class="team-member-identity">
+            <span class="team-member-avatar" aria-hidden="true">${escapeHtml(teamMemberDisplayLabel(member).charAt(0))}</span>
+            <span>
+              <strong>${escapeHtml(teamMemberDisplayLabel(member))}</strong>
+              <small>${escapeHtml(member.isCurrentUser ? "Signed in now" : roleSummary(member.role))}</small>
+            </span>
+          </div>
           ${canManage ? `
             <div class="member-role-picker ${member.role === "owner" ? "disabled-picker" : ""}" data-member-role-picker="${escapeHtml(member.userId)}">
               ${backlineDropdown({
@@ -19702,15 +19732,21 @@ function renderTeam() {
           `}
         </div>
       `).join("")}
-    </div>
-    ${canManage ? `<div class="team-section">
-      <h3>Pending invites</h3>
+    </section>
+    ${canManage ? `<section class="team-section team-invites-section">
+      <div class="team-section-heading">
+        <h3>Pending invitations</h3>
+        <span class="team-section-count">${invites.length}</span>
+      </div>
       ${invites.length ? invites.map((invite) => `
         <div class="team-row pending">
-          <span>
-            <strong>${escapeHtml(displayPersonName(invite.email))}</strong>
-            <small>${escapeHtml(roleName(invite.role))} invite waiting for signup. Backline saves the invite; use Send email or Copy instructions.</small>
-          </span>
+          <div class="team-member-identity">
+            <span class="team-member-avatar pending-avatar" aria-hidden="true">${escapeHtml(displayPersonName(invite.email).charAt(0))}</span>
+            <span>
+              <strong>${escapeHtml(displayPersonName(invite.email))}</strong>
+              <small>${escapeHtml(roleName(invite.role))} role. Waiting for account creation.</small>
+            </span>
+          </div>
           <span class="pill estimated">Pending</span>
           <div class="team-actions">
             <button class="utility-button invite-send-button" type="button" data-send-invite-email="${escapeHtml(invite.id)}">Send email</button>
@@ -19719,7 +19755,7 @@ function renderTeam() {
           </div>
         </div>
       `).join("") : '<div class="empty-state compact-empty"><strong>No pending invites</strong><span>Create an invite when you are ready to add someone.</span></div>'}
-    </div>` : ""}
+    </section>` : ""}
   `;
 
   document.querySelector("#view-team .team-layout")?.classList.toggle("readonly", !canManage);
@@ -24964,7 +25000,7 @@ function registerBacklineServiceWorker() {
   if (window.location.protocol === "file:" || !("serviceWorker" in navigator)) return;
   window.addEventListener("load", () => {
     navigator.serviceWorker
-      .register("./service-worker.js?v=20260828-invite-email-copy", { scope: "./" })
+      .register("./service-worker.js?v=20260829-team-redesign", { scope: "./" })
       .catch((error) => console.warn("Backline service worker registration failed.", error));
   });
 }

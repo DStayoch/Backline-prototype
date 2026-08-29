@@ -12,7 +12,7 @@
     <link rel="icon" type="image/png" href="assets/backline-icon-transparent.png">
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="apple-touch-icon" href="assets/backline-icon-transparent.png">
-    <link rel="stylesheet" href="styles.css?v=20260828-invite-email-copy">
+    <link rel="stylesheet" href="styles.css?v=20260829-team-redesign">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
     <script src="supabase-config.js"></script>
@@ -569,9 +569,10 @@
 
         <section class="view" id="view-team" aria-label="Team">
           <div class="team-layout">
-            <section class="panel">
-              <div class="panel-header">
+            <section class="panel team-directory-panel">
+              <div class="team-page-heading">
                 <div>
+                  <p class="eyebrow">Workspace people</p>
                   <h2>Team</h2>
                   <p id="teamHeaderSubtitle">Invite teammates, set roles, and assign field work</p>
                 </div>
@@ -580,47 +581,69 @@
               <div class="team-list" id="teamList"></div>
             </section>
 
-            <section class="panel" data-team-admin-panel hidden>
-              <div class="panel-header">
-                <div>
-                  <h2>Invite</h2>
-                  <p>Create a secure team invite, then send the instructions from your email or messages</p>
-                </div>
-              </div>
-              <form class="team-invite-form" id="teamInviteForm">
-                <label>
-                  Email
-                  <input type="email" name="email" autocomplete="email" required placeholder="tech@example.com">
-                </label>
-                <label>
-                  Role
-                  <div class="backline-picker-field" id="teamInviteRolePicker"></div>
-                </label>
-                <button class="primary-button" type="submit">Create invite</button>
-              </form>
-              <p class="settings-note" id="teamInviteStatus" hidden></p>
-              <div class="role-guide" id="roleGuide"></div>
-              <section class="role-preview-panel">
-                <div class="role-preview-toolbar">
+            <aside class="team-control-rail" data-team-admin-panel hidden>
+              <section class="panel team-invite-panel">
+                <div class="team-rail-heading">
+                  <span class="team-rail-icon" aria-hidden="true">+</span>
                   <div>
-                    <h3>Role access tester</h3>
-                    <p>Preview what each role can open, do, and verify before assigning it.</p>
+                    <p class="eyebrow">Team access</p>
+                    <h2>Add a teammate</h2>
+                    <p>Send a secure invitation when you are ready to give someone access.</p>
                   </div>
+                </div>
+                <form class="team-invite-form" id="teamInviteForm">
                   <label>
-                    Role
-                    <div class="backline-picker-field" id="rolePreviewSelect"></div>
+                    Email address
+                    <input type="email" name="email" autocomplete="email" required placeholder="joan.smith@example.com">
                   </label>
-                </div>
-                <div class="role-preview" id="rolePreviewPanel"></div>
+                  <label>
+                    Workspace role
+                    <div class="backline-picker-field" id="teamInviteRolePicker"></div>
+                  </label>
+                  <button class="primary-button" type="submit">Create invitation</button>
+                </form>
+                <p class="settings-note" id="teamInviteStatus" hidden></p>
               </section>
-              <div class="role-editor-launcher">
-                <div>
-                  <h3>Role builder</h3>
-                  <p>Create a custom role or edit an existing role from the cards above.</p>
+
+              <details class="team-management-details">
+                <summary>
+                  <span>
+                    <strong>Roles and permissions</strong>
+                    <small>Review access, edit roles, or create a custom role.</small>
+                  </span>
+                  <span class="team-details-indicator" aria-hidden="true"></span>
+                </summary>
+                <div class="team-management-content">
+                  <div class="team-management-heading">
+                    <div>
+                      <h3>Available roles</h3>
+                      <p>Keep responsibilities clear across your workspace.</p>
+                    </div>
+                  </div>
+                  <div class="role-guide" id="roleGuide"></div>
+                  <div class="role-editor-launcher">
+                    <div>
+                      <h3>Role builder</h3>
+                      <p>Create a custom role or edit an existing role.</p>
+                    </div>
+                    <button class="primary-button" type="button" id="createCustomRoleButton">Create role</button>
+                  </div>
+                  <section class="role-preview-panel">
+                    <div class="role-preview-toolbar">
+                      <div>
+                        <h3>Check role access</h3>
+                        <p>See what a role can open and do before you assign it.</p>
+                      </div>
+                      <label>
+                        Role
+                        <div class="backline-picker-field" id="rolePreviewSelect"></div>
+                      </label>
+                    </div>
+                    <div class="role-preview" id="rolePreviewPanel"></div>
+                  </section>
                 </div>
-                <button class="primary-button" type="button" id="createCustomRoleButton">Create role</button>
-              </div>
-            </section>
+              </details>
+            </aside>
           </div>
         </section>
 
@@ -1370,6 +1393,6 @@
       </section>
     </dialog>
 
-    <script src="app.js?v=20260828-invite-email-copy"></script>
+    <script src="app.js?v=20260829-team-redesign"></script>
   </body>
 </html>
