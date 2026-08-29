@@ -3415,7 +3415,7 @@ function roleOperationalPreviewMarkup(role) {
           <div class="role-workflow-card ${escapeHtml(workflow.status)}">
             <span>${escapeHtml(workflow.status === "ready" ? "Ready" : workflow.status === "partial" ? "Partial" : "Blocked")}</span>
             <strong>${escapeHtml(workflow.label)}</strong>
-            <small>${escapeHtml(`${workflow.complete}/${workflow.total} needed access points`)}</small>
+            <small aria-label="${escapeHtml(`${workflow.complete} of ${workflow.total} required access points`)}">${escapeHtml(`${workflow.complete}/${workflow.total}`)}</small>
           </div>
         `).join("")}
       </div>
@@ -25038,7 +25038,7 @@ function registerBacklineServiceWorker() {
   if (window.location.protocol === "file:" || !("serviceWorker" in navigator)) return;
   window.addEventListener("load", () => {
     navigator.serviceWorker
-      .register("./service-worker.js?v=20260829-team-activity", { scope: "./" })
+      .register("./service-worker.js?v=20260829-role-preview", { scope: "./" })
       .catch((error) => console.warn("Backline service worker registration failed.", error));
   });
 }

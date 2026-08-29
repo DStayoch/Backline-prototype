@@ -1567,23 +1567,37 @@ textarea {
 
 .role-workflow-grid {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 8px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 7px;
 }
 
 .role-workflow-card {
-  min-height: 84px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 9px;
+  min-height: 44px;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: var(--surface);
-  padding: 9px;
+  padding: 8px 10px;
 }
 
 .role-workflow-card strong {
-  display: block;
-  margin: 6px 0 4px;
+  min-width: 0;
+  margin: 0;
   color: var(--ink);
-  font-size: 0.86rem;
+  font-size: 0.82rem;
+  line-height: 1.25;
+}
+
+.role-workflow-card span,
+.role-workflow-card small {
+  white-space: nowrap;
+}
+
+.role-workflow-card small {
+  text-align: right;
 }
 
 .role-workflow-card.ready {
@@ -1606,22 +1620,26 @@ textarea {
 
 .role-restriction-list {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 8px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 7px;
 }
 
 .role-restriction-list div {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 9px;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: var(--surface);
-  padding: 8px;
+  padding: 8px 10px;
 }
 
 .role-restriction-list strong {
-  display: block;
-  margin-top: 4px;
+  min-width: 0;
+  margin: 0;
   color: var(--ink);
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   line-height: 1.25;
 }
 
@@ -10712,7 +10730,7 @@ html[data-theme="dark"] .approval-logo-full {
 
   .role-workflow-grid,
   .role-restriction-list {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .role-preview-metrics,
