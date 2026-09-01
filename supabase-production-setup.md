@@ -81,17 +81,17 @@ In Supabase Auth URL settings:
 - Do not use `localhost`, `127.0.0.1`, or `file://` for production auth URLs.
 - Confirm account email links return to the hosted Backline URL, not a local machine URL.
 
-## 5. Enable Google And Apple OAuth
+## 5. Enable Google And Facebook OAuth
 
 In Supabase Auth provider settings:
 
 - Enable Google.
-- Enable Apple.
-- Copy the Supabase callback URL from each provider panel into the matching Google/Apple developer console.
-- Add the Google Client ID/secret and Apple Services ID/team/key details back into Supabase.
+- Enable Facebook.
+- Copy the Supabase callback URL from each provider panel into the matching Google/Facebook developer console.
+- Add the Google Client ID/secret and Facebook App ID/secret back into Supabase.
 - Keep the hosted Backline URL above as the return URL for the app.
 
-OAuth sign-in is started by Backline, but Google, Apple, and Supabase own the credential handling.
+OAuth sign-in is started by Backline, but Google, Facebook, and Supabase own the credential handling.
 
 ## 6. Confirm Storage
 

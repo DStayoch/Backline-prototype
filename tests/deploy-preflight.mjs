@@ -78,7 +78,7 @@ assert.match(launchChecklist, /BACKLINE_SUPABASE_URL/, "Launch checklist should 
 assert.match(launchChecklist, /BACKLINE_SUPABASE_ANON_KEY/, "Launch checklist should include the Pages production secret.");
 assert.match(launchChecklist, /Supabase Auth Site URL is `https:\/\/backlineoffice\.com\/app\/`/, "Launch checklist should include the hosted auth Site URL.");
 assert.match(launchChecklist, /Google OAuth provider is enabled in Supabase/, "Launch checklist should include Google OAuth setup.");
-assert.match(launchChecklist, /Apple OAuth provider is enabled in Supabase/, "Launch checklist should include Apple OAuth setup.");
+assert.match(launchChecklist, /Facebook OAuth provider is enabled in Supabase/, "Launch checklist should include Facebook OAuth setup.");
 assert.match(launchChecklist, /tests\/real-shop-workflow-test\.mjs/, "Launch checklist should include the real shop workflow audit.");
 assert.match(launchChecklist, /Phone And SMS/, "Launch checklist should require an explicit phone and SMS beta decision.");
 assert.match(launchChecklist, /customer-facing links never use `127\.0\.0\.1`, `localhost`, or `file:\/\/`/, "Launch checklist should block local customer-facing production links.");
@@ -92,8 +92,8 @@ assert.match(supabaseProductionSetup, /insert into public\.platform_admins/, "Su
 assert.match(supabaseProductionSetup, /RESEND_API_KEY/, "Supabase setup helper should document invite email secrets.");
 assert.match(supabaseProductionSetup, /BACKLINE_SUPABASE_URL/, "Supabase setup helper should document hosted config variables.");
 assert.match(supabaseProductionSetup, /https:\/\/backlineoffice\.com\/app\//, "Supabase setup helper should document the hosted auth return URL.");
-assert.match(supabaseProductionSetup, /Enable Google And Apple OAuth/, "Supabase setup helper should document OAuth provider setup.");
-assert.match(readme, /Google and Apple sign-in through Supabase OAuth/, "README should document OAuth provider setup.");
+assert.match(supabaseProductionSetup, /Enable Google And Facebook OAuth/, "Supabase setup helper should document OAuth provider setup.");
+assert.match(readme, /Google and Facebook sign-in through Supabase OAuth/, "README should document OAuth provider setup.");
 assert.match(packageJson, /"deploy:preflight":\s*"node tests\/deploy-preflight\.mjs"/, "package.json should expose the deploy preflight check.");
 assert.match(packageJson, /node tests\/pages-artifact-test\.mjs/, "package.json test script should include the Pages artifact dry-run.");
 assert.match(pagesArtifactTest, /"supabase-config\.local\.example\.js"/, "Pages artifact test should exclude local Supabase config.");

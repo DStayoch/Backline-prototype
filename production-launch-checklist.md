@@ -89,7 +89,7 @@ This checklist is for moving Backline from local prototype to a real beta URL. I
 - [ ] Supabase Auth Site URL is `https://backlineoffice.com/app/`
 - [ ] Supabase Auth Redirect URLs include `https://backlineoffice.com/app/**`
 - [ ] Google OAuth provider is enabled in Supabase if Google sign-in is shown
-- [ ] Apple OAuth provider is enabled in Supabase if Apple sign-in is shown
+- [ ] Facebook OAuth provider is enabled in Supabase if Facebook sign-in is shown
 - [ ] `npm run deploy:preflight` passes before pushing a production deploy
 - [ ] Confirm customer approval links use the production URL
 - [ ] Confirm customer portal links use the production URL

@@ -49,7 +49,7 @@ assert.match(html, /data-auth-back-login hidden/, "Create-account mode should of
 assert.match(html, /Sign in instead/, "Create-account mode should offer a return-to-sign-in control");
 assert.match(html, /data-auth-signup-button/, "Create account action should be addressable during auth mode changes");
 assert.match(html, /data-oauth-provider="google"/, "Google OAuth should be available from the auth gate");
-assert.match(html, /data-oauth-provider="apple"/, "Apple OAuth should be available from the auth gate");
+assert.match(html, /data-oauth-provider="facebook"/, "Facebook OAuth should be available from the auth gate");
 assert.match(html, /jspdf@2\.5\.1/, "Approval PDFs need the PDF generator loaded");
 assert.match(html, /id="teamHeaderSubtitle"/, "Team view should have role-aware subtitle copy");
 assert.match(html, /id="teamAccessSummary"/, "Team view should show the signed-in user's access summary");

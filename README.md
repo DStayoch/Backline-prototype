@@ -183,7 +183,7 @@ In Supabase, open **Authentication** -> **URL Configuration**:
 - Add `https://backlineoffice.com/app/**` to **Redirect URLs**.
 - Keep local URLs only in a local/dev Supabase project, not production.
 
-Backline also supports Google and Apple sign-in through Supabase OAuth. Enable each provider in **Authentication** -> **Providers**, add the provider credentials from Google/Apple, and use the Supabase callback URL shown in that provider panel when configuring Google/Apple.
+Backline also supports Google and Facebook sign-in through Supabase OAuth. Enable each provider in **Authentication** -> **Providers**, add the provider credentials from Google/Facebook, and use the Supabase callback URL shown in that provider panel when configuring Google/Facebook.
 
 ## GitHub Pages
 

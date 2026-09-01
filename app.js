@@ -22525,14 +22525,14 @@ document.addEventListener("click", async (event) => {
   const oauthButton = event.target.closest("[data-oauth-provider]");
   if (oauthButton) {
     const provider = oauthButton.dataset.oauthProvider;
-    if (!["google", "apple"].includes(provider)) return;
+    if (!["google", "facebook"].includes(provider)) return;
     const client = getSupabaseClient();
     if (!client) {
       elements.authGateStatus.textContent = "Supabase is not configured yet.";
       return;
     }
     oauthButton.disabled = true;
-    elements.authGateStatus.textContent = `Opening ${provider === "google" ? "Google" : "Apple"} sign in...`;
+    elements.authGateStatus.textContent = `Opening ${provider === "google" ? "Google" : "Facebook"} sign in...`;
     const { error } = await client.auth.signInWithOAuth({
       provider,
       options: {
