@@ -1,5 +1,21 @@
+function backlineAppUrl() {
+  const configured = String(Deno.env.get("BACKLINE_APP_URL") || "").trim();
+  if (!configured) return "";
+  try {
+    const url = new URL(configured);
+    return url.protocol === "https:" ? url.toString() : "";
+  } catch {
+    return "";
+  }
+}
+
+function backlineAppOrigin() {
+  const configured = backlineAppUrl();
+  return configured ? new URL(configured).origin : "*";
+}
+
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Origin": backlineAppOrigin(),
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS"
 };
@@ -118,7 +134,6 @@ Deno.serve(async (request) => {
 
     const body = await request.json().catch(() => ({}));
     const inviteId = String(body?.inviteId || "");
-    const appUrl = String(body?.appUrl || "").trim();
     if (!isUuid(inviteId)) {
       return jsonResponse({ error: "A valid invite ID is required." }, 400);
     }
@@ -142,7 +157,10 @@ Deno.serve(async (request) => {
       ? payload.companySettings as Record<string, unknown>
       : payload;
     const shopName = String(companySettings.companyName || organization?.name || "Backline");
-    const inviteUrl = appUrl || "Open your Backline workspace link";
+    const inviteUrl = backlineAppUrl();
+    if (!inviteUrl) {
+      return jsonResponse({ error: "Invite email is not configured. Set BACKLINE_APP_URL to your HTTPS Backline app URL." }, 500);
+    }
     const roleName = textFromRole(invite.role);
     const senderName = displayPersonName(member.display_name || member.email || "Your shop");
     const replyTo = Deno.env.get("INVITE_REPLY_TO_EMAIL") || member.email || undefined;

@@ -1,7 +1,7 @@
 {
   "name": "Backline",
   "short_name": "Backline",
-  "description": "Job control, scheduling, customer communication, approvals, and invoices for small trade shops.",
+  "description": "Customer management, scheduling, communication, approvals, and invoices for small businesses.",
   "start_url": "./?source=pwa",
   "scope": "./",
   "display": "standalone",

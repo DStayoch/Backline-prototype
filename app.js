@@ -6610,8 +6610,7 @@ async function sendTeamInviteEmail(inviteId) {
   try {
     const result = await client.functions.invoke("send-team-invite", {
       body: {
-        inviteId: invite.id,
-        appUrl: appEntryUrl()
+        inviteId: invite.id
       }
     });
     data = result.data;
