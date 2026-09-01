@@ -22506,7 +22506,8 @@ document.addEventListener("click", async (event) => {
     const { error } = await client.auth.signInWithOAuth({
       provider,
       options: {
-        redirectTo: authRedirectTo()
+        redirectTo: authRedirectTo(),
+        queryParams: provider === "google" ? { prompt: "select_account" } : undefined
       }
     });
     if (error) {
@@ -25244,7 +25245,7 @@ function registerBacklineServiceWorker() {
   if (window.location.protocol === "file:" || !("serviceWorker" in navigator)) return;
   window.addEventListener("load", () => {
     navigator.serviceWorker
-      .register("./service-worker.js?v=20260901-subscription-account", { scope: "./" })
+      .register("./service-worker.js?v=20260901-google-account-picker", { scope: "./" })
       .catch((error) => console.warn("Backline service worker registration failed.", error));
   });
 }
