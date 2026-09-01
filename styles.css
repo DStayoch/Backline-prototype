@@ -7436,6 +7436,45 @@ html[data-theme="dark"] .auth-logo {
   white-space: nowrap;
 }
 
+.subscription-gate-account {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 28px;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface-muted);
+}
+
+.subscription-gate-account-label {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 750;
+}
+
+.subscription-gate-account-identity {
+  min-width: 0;
+}
+
+.subscription-gate-account-identity strong,
+.subscription-gate-account-identity small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.subscription-gate-account-identity strong {
+  color: var(--text);
+  font-size: 0.86rem;
+}
+
+.subscription-gate-account-identity small {
+  margin-top: 1px;
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
 .subscription-gate-plans {
   display: grid;
   gap: 10px;
@@ -8073,6 +8112,16 @@ html[data-theme="dark"] .auth-logo {
   .auth-surface .offline-unlock-panel {
     margin-left: 18px;
     margin-right: 18px;
+  }
+
+  .subscription-gate-account {
+    grid-template-columns: 1fr auto;
+    gap: 7px 12px;
+    padding: 13px 18px;
+  }
+
+  .subscription-gate-account-label {
+    grid-column: 1 / -1;
   }
 
   .auth-name-fields {

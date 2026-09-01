@@ -12,7 +12,7 @@
     <link rel="icon" type="image/png" href="assets/backline-icon-transparent.png">
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="apple-touch-icon" href="assets/backline-icon-transparent.png">
-    <link rel="stylesheet" href="styles.css?v=20260829-business-access">
+    <link rel="stylesheet" href="styles.css?v=20260901-subscription-account">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
     <script src="supabase-config.js?v=20260901-cloudflare-production"></script>
@@ -129,6 +129,11 @@
             </div>
             <span class="subscription-gate-trial-badge" id="subscriptionGateTrialBadge">14 DAYS FREE</span>
           </div>
+          <div class="subscription-gate-account">
+            <span class="subscription-gate-account-label">Signed in as</span>
+            <span class="subscription-gate-account-identity"><strong id="subscriptionGateAccountName">Backline user</strong><small id="subscriptionGateAccountEmail">Checking account...</small></span>
+            <button class="text-button subscription-gate-switch-account" type="button" id="subscriptionGateSwitchAccount">Switch account</button>
+          </div>
           <form class="subscription-gate-plans" id="subscriptionGatePlanForm">
             <label class="subscription-gate-plan-option">
               <input type="radio" name="subscriptionGatePlan" value="solo">
@@ -157,7 +162,6 @@
             <div class="subscription-gate-secondary-actions">
               <button class="text-button" type="button" id="subscriptionGateRefresh">Check subscription</button>
               <button class="text-button" type="button" id="subscriptionGateExport" hidden>Download backup</button>
-              <button class="text-button subscription-gate-switch-account" type="button" id="subscriptionGateSwitchAccount">Switch account</button>
             </div>
             <p id="subscriptionGateCheckoutNote">Secure checkout is handled by Stripe. You can manage or cancel your subscription from Backline Settings.</p>
           </div>
@@ -1394,6 +1398,6 @@
       </section>
     </dialog>
 
-    <script src="app.js?v=20260829-business-access"></script>
+    <script src="app.js?v=20260901-subscription-account"></script>
   </body>
 </html>

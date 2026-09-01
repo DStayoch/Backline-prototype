@@ -935,6 +935,8 @@ const elements = {
   subscriptionGatePanelTitle: document.querySelector("#subscriptionGatePanelTitle"),
   subscriptionGatePanelDetail: document.querySelector("#subscriptionGatePanelDetail"),
   subscriptionGateTrialBadge: document.querySelector("#subscriptionGateTrialBadge"),
+  subscriptionGateAccountName: document.querySelector("#subscriptionGateAccountName"),
+  subscriptionGateAccountEmail: document.querySelector("#subscriptionGateAccountEmail"),
   subscriptionGatePlanForm: document.querySelector("#subscriptionGatePlanForm"),
   subscriptionGateRecommendation: document.querySelector("#subscriptionGateRecommendation"),
   subscriptionGatePlanSummary: document.querySelector("#subscriptionGatePlanSummary"),
@@ -20087,6 +20089,13 @@ function renderSubscriptionGate() {
       ? "The payment grace period has ended. Update billing to restore full workspace access."
       : "This workspace is read-only because its Backline subscription is not active.";
 
+  if (elements.subscriptionGateAccountName) {
+    elements.subscriptionGateAccountName.textContent = displayPersonName(accountDisplayName());
+  }
+  if (elements.subscriptionGateAccountEmail) {
+    elements.subscriptionGateAccountEmail.textContent = String(state.currentUser?.email || "Signed-in Backline account").trim();
+  }
+
   elements.subscriptionGateEyebrow.textContent = pastDue ? "Payment needs attention" : "Backline for your shop";
   elements.subscriptionGateTitle.textContent = neverStarted
     ? "Start with the work that is already waiting."
@@ -25235,7 +25244,7 @@ function registerBacklineServiceWorker() {
   if (window.location.protocol === "file:" || !("serviceWorker" in navigator)) return;
   window.addEventListener("load", () => {
     navigator.serviceWorker
-      .register("./service-worker.js?v=20260829-business-access", { scope: "./" })
+      .register("./service-worker.js?v=20260901-subscription-account", { scope: "./" })
       .catch((error) => console.warn("Backline service worker registration failed.", error));
   });
 }
