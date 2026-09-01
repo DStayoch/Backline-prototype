@@ -8129,6 +8129,18 @@ html[data-theme="dark"] .auth-logo {
   }
 }
 
+.platform-policy-links {
+  margin: 14px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.platform-policy-links a {
+  color: var(--primary);
+  font-weight: 750;
+}
+
 .account-section > span:last-of-type {
   color: var(--ink);
   font-weight: 800;
