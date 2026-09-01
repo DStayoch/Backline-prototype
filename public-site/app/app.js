@@ -110,7 +110,7 @@ const productionReadinessStatuses = {
 
 const supabaseProductionSetupChecklist = [
   { key: "production-project", label: "Production project created", detail: "Fresh Supabase project exists and is separate from local/dev testing." },
-  { key: "schema-installed", label: "Schema installed through 22", detail: "Run supabase-schema.sql or split files through supabase-schema-22-secure-sync.sql." },
+  { key: "schema-installed", label: "Schema installed through 23", detail: "Run supabase-schema.sql or split files through supabase-schema-23-launch-hardening.sql." },
   { key: "team-schema-fallback", label: "Team schema fallback noted", detail: "Use 07a/07b/07c instead of 07 if Supabase shows a line 0 paste error." },
   { key: "foundry-bootstrap", label: "Foundry operator added", detail: "Trusted Backline operator account inserted into platform_admins after auth account exists." },
   { key: "auth-urls", label: "Auth URLs configured", detail: "Site URL and redirect URLs point to the hosted HTTPS Backline URL." },
@@ -1305,21 +1305,12 @@ function loadSecureCompanySettingsBackup(orgId = state.organizationId) {
 }
 
 function saveSecureCompanySettingsBackup(company = state.companySettings, suppliers = state.suppliers, orgId = state.organizationId) {
-  const key = secureCompanySettingsKey(orgId);
-  if (!key) return;
-  try {
-    localStorage.setItem(key, JSON.stringify({
-      organizationId: orgId,
-      companySettings: normalizeCompanySettings(company),
-      suppliers: suppliers.map(normalizeSupplierRecord),
-      pricebookItems: state.pricebookItems.map(normalizePricebookItem),
-      deletedJobs: state.deletedJobs.map(ensureDeletedJobDefaults),
-      activityEvents: state.activityEvents,
-      savedAt: new Date().toISOString()
-    }));
-  } catch {
-    // A remote save can still succeed even if the browser blocks local fallback storage.
-  }
+  // Protected offline snapshots hold this data with a device PIN. Keep the
+  // legacy helper as a no-op so new secure sessions never create plaintext
+  // workspace backups in localStorage.
+  void company;
+  void suppliers;
+  void orgId;
 }
 
 function loadThemePreference() {
@@ -2569,6 +2560,10 @@ function isSupabaseConfigured() {
   return Boolean(config.url && config.anonKey && !hasPlaceholder && window.supabase?.createClient);
 }
 
+function shouldFailClosedBillingCheck() {
+  return deploymentEnvironment() === "production" && !isLocalOrigin();
+}
+
 function updateAuthStatus() {
   if (!isSupabaseConfigured()) {
     elements.authStatus.textContent = "Local mode";
@@ -3699,9 +3694,9 @@ function userAssignmentTokens() {
 
 function isAssignedToCurrentUser(job) {
   if (!isFieldScopedRole()) return true;
-  const technician = String(job.technician || "").toLowerCase();
+  const technician = String(job.technician || "").trim().toLowerCase();
   if (!technician || technician === "to be determined") return false;
-  return userAssignmentTokens().some((token) => technician.includes(token));
+  return userAssignmentTokens().includes(technician);
 }
 
 function assignmentSeenKey() {
@@ -4491,6 +4486,12 @@ async function loadRemoteBillingStatus() {
   const client = getSupabaseClient();
   if (!client || !state.organizationId) return;
   state.billingAccess = { mode: "full", status: "" };
+  const failBillingCheck = () => {
+    state.billing = null;
+    state.billingAccess = shouldFailClosedBillingCheck()
+      ? { mode: "read_only", status: "inactive" }
+      : { mode: "full", status: "" };
+  };
   try {
     const [{ data, error }, accessResult] = await Promise.all([
       client
@@ -4501,9 +4502,10 @@ async function loadRemoteBillingStatus() {
       client.rpc("backline_workspace_access", { target_org: state.organizationId })
     ]);
     if (error) {
-      // A workspace can load normally before schema 20 has been applied.
+      // Local development can support an earlier schema, but production must
+      // never grant write access when subscription enforcement is unavailable.
       if (/organization_billing|schema cache|does not exist/i.test(String(error.message || ""))) {
-        state.billing = null;
+        failBillingCheck();
         return;
       }
       throw error;
@@ -4511,10 +4513,12 @@ async function loadRemoteBillingStatus() {
     state.billing = data || null;
 
     if (accessResult.error) {
-      // Keep existing workspaces available until schema 21 is intentionally applied.
+      // Keep local development available during schema work. Hosted production
+      // becomes read-only until the billing access function responds.
       if (!/backline_workspace_access|schema cache|does not exist/i.test(String(accessResult.error.message || ""))) {
         throw accessResult.error;
       }
+      failBillingCheck();
       return;
     }
     if (accessResult.data?.mode === "read_only") {
@@ -4524,8 +4528,7 @@ async function loadRemoteBillingStatus() {
     }
   } catch (error) {
     console.warn("Backline billing status could not load.", error);
-    state.billing = null;
-    state.billingAccess = { mode: "full", status: "" };
+    failBillingCheck();
   }
 }
 
@@ -7244,7 +7247,7 @@ function statusLabel(status) {
     paid: "paid",
     closed: "closed"
   };
-  return labels[status] || status;
+  return labels[status] || labels.open;
 }
 
 function jobTypeLabel(job) {
@@ -14551,7 +14554,7 @@ function renderJobs() {
         <button class="job-row ${isActive}" type="button" data-job-id="${job.id}">
           <span class="job-row-top">
             <span class="customer-name">${escapeHtml(job.name)}</span>
-            <span class="pill ${escapeHtml(job.status)}">${statusLabel(job.status)}</span>
+            <span class="pill ${escapeHtml(job.status)}">${escapeHtml(statusLabel(job.status))}</span>
           </span>
           <span class="job-summary">${escapeHtml(job.issue)}</span>
           <span class="job-row-bottom">
@@ -14995,7 +14998,7 @@ function renderDetail() {
             <h2>${escapeHtml(job.name)}</h2>
             <p class="address">${escapeHtml(job.address)} - ${escapeHtml(job.phone)}</p>
           </div>
-          <span class="pill ${escapeHtml(job.status)}">${statusLabel(job.status)}</span>
+          <span class="pill ${escapeHtml(job.status)}">${escapeHtml(statusLabel(job.status))}</span>
         </div>
 
         <div class="detail-actions">
@@ -25244,7 +25247,7 @@ function registerBacklineServiceWorker() {
   if (window.location.protocol === "file:" || !("serviceWorker" in navigator)) return;
   window.addEventListener("load", () => {
     navigator.serviceWorker
-      .register("./service-worker.js?v=20260901-google-account-picker", { scope: "./" })
+      .register("./service-worker.js?v=20260901-launch-hardening", { scope: "./" })
       .catch((error) => console.warn("Backline service worker registration failed.", error));
   });
 }

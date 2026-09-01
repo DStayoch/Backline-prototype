@@ -1,0 +1,38 @@
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+
+const app = readFileSync("app.js", "utf8");
+const schema = readFileSync("supabase-schema-23-launch-hardening.sql", "utf8");
+const fullSchema = readFileSync("supabase-schema.sql", "utf8");
+
+assert.match(schema, /Backline schema 23: launch security hardening/);
+assert.match(schema, /create or replace function public\.is_org_field_worker/);
+assert.match(schema, /create or replace function public\.is_current_user_assigned_technician/);
+assert.match(schema, /create or replace function public\.can_access_job/);
+assert.match(schema, /create or replace function public\.can_access_customer/);
+assert.match(schema, /Permitted members can read jobs/);
+assert.match(schema, /using \(public\.can_access_job\(organization_id, id\)\)/);
+assert.match(schema, /Permitted members can read customers/);
+assert.match(schema, /using \(public\.can_access_customer\(organization_id, id\)\)/);
+assert.match(schema, /You can only change work assigned to you/);
+assert.match(schema, /completedAt/);
+assert.match(schema, /\['files', 'fieldChecklist', 'messages'\]/);
+assert.match(schema, /backline_valid_job_status/);
+assert.match(schema, /backline_valid_record_id/);
+assert.match(schema, /Workspace ownership cannot be changed/);
+assert.match(schema, /The workspace owner role cannot be changed/);
+assert.match(schema, /The owner role cannot be assigned through an invitation/);
+assert.match(schema, /do update set\s+email = excluded\.email,\s+display_name = excluded\.display_name/s);
+assert.doesNotMatch(schema, /display_name = excluded\.display_name,\s+role = excluded\.role/s);
+assert.match(schema, /Permitted members can read job files/);
+assert.match(schema, /public\.can_access_job\(\s*public\.safe_uuid\(\(storage\.foldername\(name\)\)\[1\]\),\s*\(storage\.foldername\(name\)\)\[2\]/s);
+assert.match(app, /return labels\[status\] \|\| labels\.open/);
+assert.match(app, /<span class="pill \$\{escapeHtml\(job\.status\)\}">\$\{escapeHtml\(statusLabel\(job\.status\)\)\}<\/span>/);
+assert.match(app, /return userAssignmentTokens\(\)\.includes\(technician\)/);
+assert.match(app, /function shouldFailClosedBillingCheck\(\)/);
+assert.match(app, /mode: "read_only", status: "inactive"/);
+assert.match(app, /legacy helper as a no-op/);
+assert.doesNotMatch(app, /localStorage\.setItem\(key, JSON\.stringify\(\{\s+organizationId: orgId/s);
+assert.match(fullSchema, /Backline schema 23: launch security hardening/);
+
+console.log("Launch hardening test passed.");

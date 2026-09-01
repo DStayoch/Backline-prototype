@@ -111,6 +111,7 @@ Backline can use Supabase Auth + Postgres + Row Level Security.
    - `supabase-schema-20-billing.sql`
    - `supabase-schema-21-billing-access.sql`
    - `supabase-schema-22-secure-sync.sql`
+   - `supabase-schema-23-launch-hardening.sql`
 4. Copy the right config template to `supabase-config.js`:
    - Local testing: start from `supabase-config.local.example.js`
    - Production beta: start from `supabase-config.production.example.js`
@@ -129,7 +130,7 @@ If sign-in says the credentials are invalid, use **Create account** first. Supab
 
 Team access uses the `organization_members.role` field. Built-in roles are `owner`, `admin`, `dispatcher`, and `tech`; owner-defined custom role slugs are also supported after `supabase-schema-15-custom-roles.sql` removes the original role check constraints.
 
-Creator/platform access is separate from shop roles. Run `supabase-schema-19-platform-admins.sql`, then manually add trusted Backline operator accounts to `platform_admins` from the Supabase SQL editor. Follow it with schemas 20 through 22 for billing access and guarded job/customer sync. Shop owners and custom roles cannot grant creator access from the app.
+Creator/platform access is separate from shop roles. Run `supabase-schema-19-platform-admins.sql`, then manually add trusted Backline operator accounts to `platform_admins` from the Supabase SQL editor. Follow it with schemas 20 through 23 for billing access, guarded job/customer sync, field-assignment enforcement, and ownership protection. Shop owners and custom roles cannot grant creator access from the app.
 
 Team invites use `team_invites` plus the `accept_team_invite()` RPC from `supabase-schema-07-team-management.sql`. Invite someone by email in Backline, then have them create/sign in with that same email so the invite can attach them to the shop.
 
@@ -172,13 +173,13 @@ Before using a production URL, add that URL to the Supabase Auth URL configurati
 For this deployment, use:
 
 ```text
-https://app.backlineoffice.com/
+https://backlineoffice.com/app/
 ```
 
 In Supabase, open **Authentication** -> **URL Configuration**:
 
 - Set **Site URL** to the hosted Backline URL above.
-- Add the hosted Backline URL above to **Redirect URLs**.
+- Add `https://backlineoffice.com/app/**` to **Redirect URLs**.
 - Keep local URLs only in a local/dev Supabase project, not production.
 
 Backline also supports Google and Apple sign-in through Supabase OAuth. Enable each provider in **Authentication** -> **Providers**, add the provider credentials from Google/Apple, and use the Supabase callback URL shown in that provider panel when configuring Google/Apple.

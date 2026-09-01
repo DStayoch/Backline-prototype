@@ -8,7 +8,7 @@ Use this when moving Backline from local testing to a hosted beta URL.
 
 - Create a fresh production Supabase project.
 - Follow `supabase-production-setup.md`.
-- Run `supabase-schema.sql`, or run the split schema files through `supabase-schema-22-secure-sync.sql`.
+- Run `supabase-schema.sql`, or run the split schema files through `supabase-schema-23-launch-hardening.sql`.
 - Add trusted Backline operators to `platform_admins` for Foundry access.
 - Configure Supabase Auth:
   - Site URL: hosted Backline HTTPS URL

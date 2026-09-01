@@ -44,7 +44,7 @@ jobs:
             environment: "production",
             url: "$BACKLINE_SUPABASE_URL",
             anonKey: "$BACKLINE_SUPABASE_ANON_KEY",
-            publicAppUrl: "https://app.backlineoffice.com/"
+            publicAppUrl: "https://backlineoffice.com/app/"
           };
           (function () {
             if (document.querySelector('link[href^="field-polish.css"]')) return;

@@ -7,7 +7,7 @@ import { tmpdir } from "node:os";
 const rootFiles = ["index.html", "backline-home.html", "styles.css", "field-polish.css", "app.js", "manifest.webmanifest", "service-worker.js"];
 const fakeProductionUrl = "https://production-example.supabase.co";
 const fakeProductionAnonKey = "production-anon-key-placeholder";
-const fakePublicAppUrl = "https://app.backlineoffice.com/";
+const fakePublicAppUrl = "https://backlineoffice.com/app/";
 
 const siteDir = await mkdtemp(join(tmpdir(), "backline-pages-artifact-"));
 

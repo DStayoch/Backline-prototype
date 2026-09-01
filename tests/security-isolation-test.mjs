@@ -40,8 +40,8 @@ for (const mapper of ["customerToRemoteRow", "jobToRemoteRow", "deletedJobToRemo
 }
 
 assert.match(app, /function secureCompanySettingsKey\(orgId = state\.organizationId\)/);
-assert.match(app, /if \(record\?\.organizationId && record\.organizationId !== orgId\) return null/);
-assert.match(app, /organizationId: orgId/);
+assert.match(app, /legacy helper as a no-op/);
+assert.doesNotMatch(app, /localStorage\.setItem\(key, JSON\.stringify\(\{/);
 assert.match(app, /payload: \{ companySettings: company, suppliers: state\.suppliers\.map\(normalizeSupplierRecord\) \}/);
 assert.match(app, /\.from\("organizations"\)[\s\S]{0,220}\.eq\("id", state\.organizationId\)/);
 assert.match(app, /const SELECTED_WORKSPACE_KEY_PREFIX = "backline\.selectedWorkspace"/);

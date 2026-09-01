@@ -1,6 +1,6 @@
 # Backline Supabase Production Setup
 
-Last updated: August 28, 2026
+Last updated: September 1, 2026
 
 Use this after creating the production Supabase project and before inviting a real beta shop.
 
@@ -43,6 +43,7 @@ If the SQL editor fails with a line 0 or paste-size issue, run the split files i
 20. `supabase-schema-20-billing.sql`
 21. `supabase-schema-21-billing-access.sql`
 22. `supabase-schema-22-secure-sync.sql`
+23. `supabase-schema-23-launch-hardening.sql`
 
 If `supabase-schema-07-team-management.sql` hits a line 0 paste error, run these three files instead of step 7:
 
@@ -50,7 +51,7 @@ If `supabase-schema-07-team-management.sql` hits a line 0 paste error, run these
 2. `supabase-schema-07b-team-functions.sql`
 3. `supabase-schema-07c-team-policies.sql`
 
-For an existing workspace already through schema 21, run only `supabase-schema-22-secure-sync.sql` before loading the matching Backline release. It replaces direct browser writes for jobs and customers with role-checked, conflict-safe database functions.
+For an existing workspace already through schema 22, run `supabase-schema-23-launch-hardening.sql` before loading the matching Backline release. It enforces assigned-work visibility for field roles, prevents owner role escalation/demotion, validates job IDs and statuses, and fixes field completion/file sync permissions.
 
 ## 3. Add Foundry Operator Access
 
@@ -73,9 +74,9 @@ Foundry access is separate from shop owner/admin roles. Shop owners cannot grant
 In Supabase Auth URL settings:
 
 - Set Site URL to the hosted Backline HTTPS URL:
-  `https://app.backlineoffice.com/`
+  `https://backlineoffice.com/app/`
 - Add the hosted Backline HTTPS URL to allowed redirect URLs:
-  `https://app.backlineoffice.com/**`
+  `https://backlineoffice.com/app/**`
 - Do not use `localhost`, `127.0.0.1`, or `file://` for production auth URLs.
 - Confirm account email links return to the hosted Backline URL, not a local machine URL.
 
