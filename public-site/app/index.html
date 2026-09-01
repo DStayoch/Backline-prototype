@@ -1,0 +1,1399 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Backline</title>
+    <meta name="theme-color" content="#162234">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Backline">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="icon" type="image/png" href="assets/backline-icon-transparent.png">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="apple-touch-icon" href="assets/backline-icon-transparent.png">
+    <link rel="stylesheet" href="styles.css?v=20260829-business-access">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <script src="supabase-config.js"></script>
+  </head>
+  <body class="app-loading">
+    <main class="auth-gate" id="authGate" hidden>
+      <header class="auth-gate-header">
+        <div class="auth-gate-brand">
+          <span class="auth-gate-brand-mark"><img src="assets/backline-icon.png" alt=""></span>
+          <span>BACKLINE</span>
+        </div>
+        <span class="auth-gate-tagline">Your office, handled</span>
+      </header>
+      <div class="auth-gate-layout">
+        <section class="auth-gate-welcome" aria-labelledby="authGateHeading">
+          <p class="eyebrow">Your shop workspace</p>
+          <h1 id="authGateHeading">Pick up where your day left off.</h1>
+          <p>Sign in to the jobs, customers, schedules, and conversations that keep your shop moving.</p>
+          <ul class="auth-gate-outcomes">
+            <li><span aria-hidden="true">&#10003;</span><span>See today's work and the next best action for every job.</span></li>
+            <li><span aria-hidden="true">&#10003;</span><span>Keep customer conversations, approvals, and payment history connected.</span></li>
+            <li><span aria-hidden="true">&#10003;</span><span>Give office staff and technicians the right view of the same shop.</span></li>
+          </ul>
+          <p class="auth-gate-access-note">Your workspace is secured through Backline sign-in. Offline access can be enabled later on a device you trust.</p>
+        </section>
+
+        <section class="auth-surface" aria-label="Backline account access">
+          <div class="auth-surface-top">
+            <h2 id="authGatePanelHeading">Welcome back</h2>
+            <p id="authGatePanelDetail">Sign in to return to your shop workspace.</p>
+          </div>
+          <form class="auth-form" id="authForm">
+            <div class="auth-name-fields" data-name-fields hidden>
+              <label>
+                First name
+                <input name="firstName" autocomplete="given-name" placeholder="Joan">
+              </label>
+              <label>
+                Last name
+                <input name="lastName" autocomplete="family-name" placeholder="Smith">
+              </label>
+            </div>
+            <p class="auth-username-note" data-username-preview hidden>Your Backline username will be <strong data-username-preview-value>first.last</strong>.</p>
+            <label>
+              Email
+              <input type="email" name="email" autocomplete="email" placeholder="you@yourshop.com" required>
+            </label>
+            <label>
+              Password
+              <input type="password" name="password" autocomplete="current-password" placeholder="Enter your password" required minlength="6">
+            </label>
+            <label data-confirm-password-field hidden>
+              Confirm password
+              <input type="password" name="confirmPassword" autocomplete="new-password" placeholder="Re-enter your password" minlength="6">
+            </label>
+            <button class="primary-button auth-submit-button" type="submit" data-auth-mode="signin" data-auth-signin-button>Sign in to Backline</button>
+          </form>
+          <div class="auth-divider"><span>or continue with</span></div>
+          <div class="oauth-actions" aria-label="Single sign-on options">
+            <button class="oauth-button" type="button" data-oauth-provider="google">Continue with Google</button>
+            <button class="oauth-button" type="button" data-oauth-provider="apple">Continue with Apple</button>
+          </div>
+          <div class="auth-footer">
+            <span id="authGateFooterPrompt">New to Backline?</span>
+            <button class="auth-back-button" type="button" data-auth-back-login hidden>Sign in instead</button>
+            <button class="auth-switch-button" type="submit" form="authForm" data-auth-mode="signup" data-auth-signup-button>Create your workspace</button>
+          </div>
+          <section class="offline-unlock-panel" id="offlineUnlockPanel" hidden aria-labelledby="offlineUnlockHeading">
+            <p class="eyebrow">Offline access</p>
+            <h2 id="offlineUnlockHeading">Unlock saved workspace</h2>
+            <p id="offlineUnlockProfile"></p>
+            <form id="offlineUnlockForm">
+              <label>
+                Offline PIN
+                <input name="pin" type="password" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" minlength="6" maxlength="6" required>
+              </label>
+              <div class="auth-actions">
+                <button class="primary-button" type="submit">Unlock workspace</button>
+                <button class="secondary-button" type="button" data-offline-unlock-online>Use online sign in</button>
+              </div>
+            </form>
+          </section>
+          <p class="auth-gate-status" id="authGateStatus">Secure database mode is ready when Supabase is configured.</p>
+        </section>
+      </div>
+    </main>
+
+    <main class="subscription-gate" id="subscriptionGate" hidden>
+      <header class="subscription-gate-header">
+        <div class="subscription-gate-brand">
+          <span class="subscription-gate-brand-mark"><img src="assets/backline-icon.png" alt=""></span>
+          <span>BACKLINE</span>
+        </div>
+        <span class="subscription-gate-tagline">Your office, handled</span>
+      </header>
+      <div class="subscription-gate-layout">
+        <section class="subscription-gate-welcome" aria-labelledby="subscriptionGateTitle">
+          <p class="eyebrow" id="subscriptionGateEyebrow">Backline for your shop</p>
+          <h1 id="subscriptionGateTitle">Start with the work that is already waiting.</h1>
+          <p id="subscriptionGateDetail">Choose the plan that fits your team. Your 14-day trial opens every core Backline workflow.</p>
+          <ul class="subscription-gate-outcomes">
+            <li><span aria-hidden="true">&#10003;</span><span>Keep jobs, customer records, and field updates in one place.</span></li>
+            <li><span aria-hidden="true">&#10003;</span><span>Give every technician a clear schedule and job history.</span></li>
+            <li><span aria-hidden="true">&#10003;</span><span>Send estimates, invoices, approvals, and customer updates without extra tools.</span></li>
+          </ul>
+          <p class="subscription-gate-trust">Your workspace stays available for viewing and backup even if you decide not to continue after the trial.</p>
+        </section>
+
+        <section class="subscription-gate-surface" aria-labelledby="subscriptionGatePanelTitle">
+          <div class="subscription-gate-surface-top">
+            <div>
+              <h2 id="subscriptionGatePanelTitle">Pick a plan for your team</h2>
+              <p id="subscriptionGatePanelDetail">You can change plans from Backline Settings anytime.</p>
+            </div>
+            <span class="subscription-gate-trial-badge" id="subscriptionGateTrialBadge">14 DAYS FREE</span>
+          </div>
+          <form class="subscription-gate-plans" id="subscriptionGatePlanForm">
+            <label class="subscription-gate-plan-option">
+              <input type="radio" name="subscriptionGatePlan" value="solo">
+              <span class="subscription-gate-radio" aria-hidden="true"></span>
+              <span><strong>Solo</strong><small>One active Backline user</small></span>
+              <b>$49 <small>/ month</small></b>
+            </label>
+            <label class="subscription-gate-plan-option">
+              <input type="radio" name="subscriptionGatePlan" value="crew">
+              <span class="subscription-gate-radio" aria-hidden="true"></span>
+              <span><strong>Crew</strong><small>Up to five active users</small></span>
+              <b>$99 <small>/ month</small></b>
+            </label>
+            <label class="subscription-gate-plan-option">
+              <input type="radio" name="subscriptionGatePlan" value="shop">
+              <span class="subscription-gate-radio" aria-hidden="true"></span>
+              <span><strong>Shop</strong><small>Ten users included, then $15 per user</small></span>
+              <b>$179 <small>/ month</small></b>
+            </label>
+          </form>
+          <p class="subscription-gate-recommendation" id="subscriptionGateRecommendation"><strong>Recommended:</strong> Start with the smallest plan that covers your active Backline users.</p>
+          <p class="subscription-gate-status" id="subscriptionGateStatus"></p>
+          <div class="subscription-gate-checkout">
+            <div class="subscription-gate-summary"><span id="subscriptionGatePlanSummary">For one owner-operator.</span><strong id="subscriptionGatePlanPrice">$49/month</strong></div>
+            <button class="primary-button subscription-gate-primary" type="button" id="subscriptionGatePrimary">Start Solo trial</button>
+            <div class="subscription-gate-secondary-actions">
+              <button class="text-button" type="button" id="subscriptionGateRefresh">Check subscription</button>
+              <button class="text-button" type="button" id="subscriptionGateExport" hidden>Download backup</button>
+              <button class="text-button subscription-gate-switch-account" type="button" id="subscriptionGateSwitchAccount">Switch account</button>
+            </div>
+            <p id="subscriptionGateCheckoutNote">Secure checkout is handled by Stripe. You can manage or cancel your subscription from Backline Settings.</p>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <main class="approval-page" id="approvalPage" hidden></main>
+
+    <div class="toast-region" id="toastRegion" aria-live="polite" aria-atomic="false"></div>
+
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="Primary">
+        <div class="brand">
+          <div class="brand-mark">
+            <img src="assets/backline-icon.png" alt="" aria-hidden="true">
+          </div>
+          <div>
+            <img class="brand-wordmark" src="assets/backline-wordmark.png" alt="Backline">
+            <div class="brand-subtitle">Your office, handled</div>
+          </div>
+        </div>
+
+        <nav class="nav-list">
+          <button class="nav-item active" type="button" data-view="dashboard" title="Home">
+            <span class="nav-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" focusable="false">
+                <path d="M4.5 11.2 12 4.8l7.5 6.4v7.5a1.8 1.8 0 0 1-1.8 1.8h-3.3v-5.7H9.6v5.7H6.3a1.8 1.8 0 0 1-1.8-1.8z"/>
+              </svg>
+            </span>
+            <span>Home</span>
+          </button>
+          <button class="nav-item" type="button" data-view="schedule" title="Schedule">
+            <span class="nav-icon" aria-hidden="true">◷</span>
+            <span>Schedule</span>
+            <span class="nav-badge" data-nav-badge="schedule" hidden>0</span>
+          </button>
+          <button class="nav-item" type="button" data-view="inbox" title="Inbox">
+            <span class="nav-icon" aria-hidden="true">✉</span>
+            <span>Inbox</span>
+            <span class="nav-badge" data-nav-badge="inbox" hidden>0</span>
+          </button>
+          <button class="nav-item" type="button" data-view="money" title="Money">
+            <span class="nav-icon" aria-hidden="true">$</span>
+            <span>Money</span>
+          </button>
+          <button class="nav-item" type="button" data-view="followups" title="Follow-Ups">
+            <span class="nav-icon" aria-hidden="true">↻</span>
+            <span>Follow-Ups</span>
+          </button>
+          <button class="nav-item" type="button" data-view="communications" title="Communications">
+            <span class="nav-icon" aria-hidden="true">≋</span>
+            <span>Comms</span>
+            <span class="nav-badge" data-nav-badge="communications" hidden>0</span>
+          </button>
+          <button class="nav-item" type="button" data-view="jobsdb" title="Jobs">
+            <span class="nav-icon" aria-hidden="true">☑</span>
+            <span data-business-term="workItemsPlural">Jobs</span>
+          </button>
+          <button class="nav-item" type="button" data-view="customers" title="Customers">
+            <span class="nav-icon" aria-hidden="true">◎</span>
+            <span>Customers</span>
+          </button>
+          <button class="nav-item" type="button" data-view="team" title="Team">
+            <span class="nav-icon" aria-hidden="true">◇</span>
+            <span>Team</span>
+          </button>
+          <button class="nav-item" type="button" data-view="activity" title="Activity">
+            <span class="nav-icon activity-nav-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" focusable="false">
+                <path d="M3.5 12h3.2l1.8-3.8 3.1 8.8 2.5-12 2.2 7H20.5"/>
+              </svg>
+            </span>
+            <span>Activity</span>
+          </button>
+          <button class="nav-item creator-nav-item" type="button" data-view="creator" title="Foundry" hidden>
+            <span class="nav-icon creator-nav-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" focusable="false">
+                <path d="M12 3.5 5 7.5v9l7 4 7-4v-9z"/>
+                <path d="M8.5 10.4h7M9.8 14.2h4.4M12 7.5v9"/>
+              </svg>
+            </span>
+            <span>Foundry</span>
+          </button>
+          <button class="nav-item" type="button" data-view="insights" title="Insights">
+            <span class="nav-icon" aria-hidden="true">▥</span>
+            <span>Insights</span>
+          </button>
+        </nav>
+
+        <div class="sidebar-footer">
+          <div class="signal">
+            <span class="signal-dot"></span>
+            <span id="storageStatus">Local data saved</span>
+          </div>
+          <input class="sr-only" type="file" id="importInput" accept="application/json">
+        </div>
+      </aside>
+
+      <main class="workspace">
+        <header class="topbar">
+          <div class="topbar-title">
+            <p class="eyebrow" id="todayLabel"></p>
+            <div class="topbar-heading-row">
+              <h1 id="topbarGreeting">Welcome back.</h1>
+              <button class="topbar-help-button" type="button" data-open-contextual-guide aria-label="Open help for this page" title="Help for this page">?</button>
+            </div>
+            <p id="topbarInsight">Loading the latest across your shop.</p>
+          </div>
+          <div class="topbar-actions">
+            <div class="customer-search">
+              <input class="search-input" type="search" id="searchInput" placeholder="Find customer">
+              <div class="customer-search-results" id="customerSearchResults" hidden></div>
+            </div>
+            <div class="settings-menu">
+              <button class="secondary-button settings-button" type="button" id="settingsButton" aria-expanded="false" aria-controls="settingsMenu">Settings</button>
+              <div class="settings-popover" id="settingsMenu" hidden>
+                <div class="settings-section">
+                  <label>
+                    <span>Appearance</span>
+                    <div class="backline-picker-field" id="themePicker"></div>
+                  </label>
+                </div>
+                <div class="settings-section">
+                  <span class="settings-label">Help</span>
+                  <label class="settings-toggle" for="contextualHelpToggle">
+                    <span>
+                      <strong>Show page help</strong>
+                      <small>Display the page advice banner and top-bar help button.</small>
+                    </span>
+                    <input type="checkbox" id="contextualHelpToggle">
+                  </label>
+                </div>
+                <div class="settings-section account-section">
+                  <span class="settings-label">Account</span>
+                  <span id="authStatus">Local mode</span>
+                  <button class="utility-button" type="button" id="signOutButton" hidden>Sign out</button>
+                </div>
+                <div class="settings-section billing-settings-section" id="billingSettingsSection" hidden>
+                  <span class="settings-label">Backline plan</span>
+                  <div class="billing-summary">
+                    <div>
+                      <strong id="billingPlanName">Backline plan</strong>
+                      <small id="billingPlanDetail">Subscription details load after you sign in.</small>
+                    </div>
+                    <span class="billing-status-badge" id="billingStatusBadge">Not set</span>
+                  </div>
+                  <button class="utility-button billing-action" type="button" id="billingActionButton">Choose plan</button>
+                </div>
+                <div class="settings-section utility-section">
+                  <span class="settings-label">Utilities</span>
+                  <button class="utility-button" type="button" id="workspaceSettingsButton">Workspace settings</button>
+                  <button class="utility-button" type="button" id="offlineAccessButton">Offline access</button>
+                  <button class="utility-button" type="button" id="settingsConnectionButton">Test secure connection</button>
+                  <button class="utility-button" type="button" id="settingsExportButton">Download backup</button>
+                  <label class="utility-button file-button" for="importInput">Restore from backup</label>
+                  <label class="print-select">
+                    <span>Schedule print range</span>
+                    <div class="backline-picker-field" id="printScheduleRange"></div>
+                  </label>
+                  <button class="utility-button" type="button" id="settingsPrintButton">Print schedule</button>
+                </div>
+                <p class="settings-note">Local settings stay on this device.</p>
+              </div>
+            </div>
+            <button class="primary-button" type="button" id="newJobButton" data-business-term="newWorkItem">New job</button>
+          </div>
+        </header>
+
+        <aside class="contextual-guide" id="contextualGuide" aria-live="polite" hidden></aside>
+
+        <section class="view active" id="view-dashboard" aria-label="Home">
+          <div class="attention-layout">
+            <section class="panel attention-panel">
+              <div class="panel-header">
+                <div>
+                  <h2>Needs attention</h2>
+                  <p id="attentionSummary">What needs your attention right now</p>
+                </div>
+              </div>
+              <div class="attention-list" id="attentionList"></div>
+            </section>
+
+            <section class="panel assistant-panel">
+              <div class="panel-header">
+                <div>
+                  <h2>AI admin</h2>
+                  <p>Automatic follow-up settings</p>
+                </div>
+              </div>
+              <div class="automation-list compact" id="automationList"></div>
+            </section>
+          </div>
+
+          <div class="stats-strip" id="statsStrip"></div>
+
+          <section class="panel onboarding-panel" id="onboardingPanel" aria-label="Getting started"></section>
+
+          <section class="panel beta-readiness-panel">
+            <div class="panel-header">
+              <div>
+                <h2>Beta readiness</h2>
+                <p id="betaReadinessSummary">Checking this workspace for a real-world test run</p>
+              </div>
+            </div>
+            <div class="beta-readiness-list" id="betaReadinessPanel"></div>
+          </section>
+
+          <div class="dashboard-grid">
+            <section class="panel">
+              <div class="panel-header">
+                <div>
+                  <h2>Today</h2>
+                  <p>Booked work and open capacity</p>
+                </div>
+              </div>
+              <div id="todayPanel"></div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-header">
+                <div>
+                  <h2>Money</h2>
+                  <p>Estimates and invoices to move</p>
+                </div>
+              </div>
+              <div id="moneyPanel"></div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-header">
+                <div>
+                  <h2>Follow-ups</h2>
+                  <p>Recommended next actions</p>
+                </div>
+              </div>
+              <div id="followupPanel"></div>
+            </section>
+          </div>
+        </section>
+
+        <section class="view" id="view-inbox" aria-label="Inbox">
+          <div class="work-grid" id="workGrid">
+            <section class="panel inbox-panel" aria-label="Recovered calls">
+              <div class="panel-header">
+                <div>
+                  <h2>Inbox</h2>
+                  <p>Missed calls, web leads, texts, and customer replies</p>
+                </div>
+                <div class="segmented" role="tablist" aria-label="Filter jobs">
+                  <button class="segment active" type="button" data-filter="all">All</button>
+                  <button class="segment" type="button" data-filter="urgent">Urgent</button>
+                  <button class="segment" type="button" data-filter="open">Open</button>
+                  <button class="segment" type="button" data-filter="booked">Booked</button>
+                  <button class="segment" type="button" data-filter="in_progress">Field</button>
+                </div>
+                <button class="utility-button collapse-inbox-button" type="button" id="collapseInboxButton" aria-expanded="true">Hide Inbox</button>
+              </div>
+              <div class="job-list" id="jobList"></div>
+            </section>
+
+            <section class="panel detail-panel" aria-label="Job detail">
+              <div id="jobDetail"></div>
+            </section>
+          </div>
+        </section>
+
+        <section class="view" id="view-schedule" aria-label="Schedule">
+          <section class="panel schedule-panel">
+            <div class="panel-header">
+              <div>
+                <h2>Schedule</h2>
+                <p>Schedule, dispatch, and arrival windows</p>
+              </div>
+              <button class="secondary-button" type="button" id="confirmAllButton">Send confirmations</button>
+            </div>
+            <div class="tech-work-panel" id="techWorkPanel" hidden></div>
+            <div class="timeline" id="timeline"></div>
+          </section>
+        </section>
+
+        <section class="view" id="view-money" aria-label="Money">
+          <div class="metrics-grid" id="metricsGrid"></div>
+          <section class="panel table-panel">
+            <div class="panel-header">
+              <div>
+                <h2>Money queue</h2>
+                <p>Open estimates, unpaid invoices, deposits due</p>
+              </div>
+            </div>
+            <div class="pipeline-table" id="moneyList"></div>
+          </section>
+          <section class="panel table-panel">
+            <div class="panel-header">
+              <div>
+                <h2>Receivables aging</h2>
+                <p>Open balances, due dates, and collection reminders</p>
+              </div>
+            </div>
+            <div class="receivables-list" id="receivablesList"></div>
+          </section>
+          <section class="panel table-panel">
+            <div class="panel-header">
+              <div>
+                <h2>Payment review</h2>
+                <p>Customer-submitted payment details waiting for office review</p>
+              </div>
+            </div>
+            <div class="payment-review-list" id="paymentReviewList"></div>
+          </section>
+          <section class="panel table-panel">
+            <div class="panel-header">
+              <div>
+                <h2>Pricebook</h2>
+                <p>Custom services, materials, rates, and discounts for this business</p>
+              </div>
+            </div>
+            <form class="pricebook-form" id="pricebookForm">
+              <input name="name" placeholder="Item name" required>
+              <input name="description" placeholder="Description">
+              <div class="backline-picker-field" id="pricebookCategoryPicker"></div>
+              <div class="backline-picker-field" id="pricebookUnitPicker"></div>
+              <input name="unitPrice" type="number" step="0.01" placeholder="Unit price" required>
+              <input name="defaultCost" type="number" step="0.01" placeholder="Default cost">
+              <input name="preferredSupplier" placeholder="Preferred supplier">
+              <input name="truckStock" type="number" step="1" min="0" placeholder="On hand">
+              <input name="reorderPoint" type="number" step="1" min="0" placeholder="Reorder point">
+              <label class="checkbox-field">
+                <input type="checkbox" name="taxable">
+                Taxable
+              </label>
+              <button class="secondary-button" type="submit">Add item</button>
+            </form>
+            <div class="pricebook-list" id="pricebookList"></div>
+          </section>
+          <section class="panel table-panel">
+            <div class="panel-header">
+              <div>
+                <h2>Parts inventory</h2>
+                <p>Inventory-lite for reusable material, costs, suppliers, and on-hand warnings</p>
+              </div>
+            </div>
+            <div class="inventory-summary" id="inventorySummary"></div>
+            <div class="inventory-orders-list" id="inventoryOrdersList"></div>
+            <div class="inventory-supplier-list" id="inventorySupplierList"></div>
+            <div class="inventory-reorder-list" id="inventoryReorderList"></div>
+            <div class="inventory-list" id="inventoryList"></div>
+          </section>
+        </section>
+
+        <section class="view" id="view-followups" aria-label="Follow-Ups">
+          <section class="panel">
+            <div class="panel-header">
+              <div>
+                <h2>Follow-ups</h2>
+                <p>AI-recommended nudges for jobs and customers</p>
+              </div>
+            </div>
+            <div class="action-list" id="followupList"></div>
+          </section>
+        </section>
+
+        <section class="view" id="view-communications" aria-label="Communications">
+          <section class="panel">
+            <div class="panel-header">
+              <div>
+                <h2>Communications</h2>
+                <p id="communicationSummary">Unread replies and communication exceptions</p>
+              </div>
+            </div>
+            <div class="communication-list" id="communicationList"></div>
+          </section>
+        </section>
+
+        <section class="view" id="view-jobsdb" aria-label="Jobs Database">
+          <section class="panel table-panel">
+            <div class="panel-header">
+              <div>
+                <h2>Jobs database</h2>
+                <p>Past, present, future, and deleted job records</p>
+              </div>
+            </div>
+            <div class="metrics-grid" id="jobsDatabaseSummary"></div>
+            <div class="database-section">
+              <h3>Active jobs</h3>
+              <div class="pipeline-table" id="jobsDatabaseList"></div>
+            </div>
+            <div class="database-section">
+              <h3>Deleted jobs</h3>
+              <div class="pipeline-table" id="deletedJobsList"></div>
+            </div>
+          </section>
+        </section>
+
+        <section class="view" id="view-customers" aria-label="Customers">
+          <section class="panel">
+            <div class="panel-header">
+              <div>
+                <h2>Customers</h2>
+                <p>Directory, demographics, and service history</p>
+              </div>
+            </div>
+            <div class="customer-directory">
+              <div class="customer-list" id="customerList"></div>
+              <div class="customer-profile" id="customerProfile"></div>
+            </div>
+          </section>
+        </section>
+
+        <section class="view" id="view-team" aria-label="Team">
+          <div class="team-layout">
+            <section class="panel team-directory-panel">
+              <div class="team-page-heading">
+                <div>
+                  <p class="eyebrow">Workspace people</p>
+                  <h2>Team</h2>
+                  <p id="teamHeaderSubtitle">Invite teammates, set roles, and assign field work</p>
+                </div>
+              </div>
+              <div class="team-access-summary" id="teamAccessSummary"></div>
+              <div class="team-list" id="teamList"></div>
+              <section class="role-preview-panel role-preview-dock" data-role-preview-dock hidden>
+                <div class="role-preview-toolbar">
+                  <div>
+                    <p class="eyebrow">Access check</p>
+                    <h3>Check role access</h3>
+                    <p>See what a role can open and do before you assign it.</p>
+                  </div>
+                  <label>
+                    Role
+                    <div class="backline-picker-field" id="rolePreviewSelect"></div>
+                  </label>
+                </div>
+                <div class="role-preview" id="rolePreviewPanel"></div>
+              </section>
+            </section>
+
+            <aside class="team-control-rail" data-team-admin-panel hidden>
+              <section class="panel team-invite-panel">
+                <div class="team-rail-heading">
+                  <span class="team-rail-icon" aria-hidden="true">+</span>
+                  <div>
+                    <p class="eyebrow">Team access</p>
+                    <h2>Add a teammate</h2>
+                    <p>Send a secure invitation when you are ready to give someone access.</p>
+                  </div>
+                </div>
+                <form class="team-invite-form" id="teamInviteForm">
+                  <label>
+                    Email address
+                    <input type="email" name="email" autocomplete="email" required placeholder="joan.smith@example.com">
+                  </label>
+                  <label>
+                    Workspace role
+                    <div class="backline-picker-field" id="teamInviteRolePicker"></div>
+                  </label>
+                  <button class="primary-button" type="submit">Create invitation</button>
+                </form>
+                <p class="settings-note" id="teamInviteStatus" hidden></p>
+              </section>
+
+              <details class="team-management-details">
+                <summary>
+                  <span>
+                    <strong>Roles and permissions</strong>
+                    <small>Review access, edit roles, or create a custom role.</small>
+                  </span>
+                  <span class="team-details-indicator" aria-hidden="true"></span>
+                </summary>
+                <div class="team-management-content">
+                  <div class="team-management-heading">
+                    <div>
+                      <h3>Available roles</h3>
+                      <p>Keep responsibilities clear across your workspace.</p>
+                    </div>
+                  </div>
+                  <div class="role-guide" id="roleGuide"></div>
+                  <div class="role-editor-launcher">
+                    <div>
+                      <h3>Role builder</h3>
+                      <p>Create a custom role or edit an existing role.</p>
+                    </div>
+                    <button class="primary-button" type="button" id="createCustomRoleButton">Create role</button>
+                  </div>
+                </div>
+              </details>
+            </aside>
+          </div>
+        </section>
+
+        <section class="view" id="view-activity" aria-label="Activity">
+          <section class="panel table-panel">
+            <div class="panel-header">
+              <div>
+                <h2>Activity</h2>
+                <p id="activitySummary">Backend change log for owners and admins</p>
+              </div>
+            </div>
+            <div class="activity-toolbar">
+              <label>
+                Day
+                <div class="backline-picker-field" id="activityDateFilter"></div>
+              </label>
+              <label>
+                Type
+                <div class="backline-picker-field" id="activityTypeFilter"></div>
+              </label>
+            </div>
+            <div class="permission-audit-panel" id="permissionAuditPanel" hidden></div>
+            <div class="activity-list" id="activityList"></div>
+          </section>
+        </section>
+
+        <section class="view" id="view-insights" aria-label="Insights">
+          <section class="panel table-panel">
+            <div class="panel-header">
+              <div>
+                <h2>Insights</h2>
+                <p>Booked revenue, close rate, unpaid balance, missed-call recovery</p>
+              </div>
+            </div>
+            <div class="profit-watch" id="profitWatch"></div>
+            <div class="pipeline-table" id="pipelineTable"></div>
+          </section>
+        </section>
+
+        <section class="view" id="view-creator" aria-label="Foundry Console">
+          <section class="panel table-panel creator-console-panel">
+            <div class="panel-header">
+              <div>
+                <h2>Foundry</h2>
+                <p>Read-only platform diagnostics for Backline operators.</p>
+              </div>
+            </div>
+            <div class="creator-console-note">
+              Foundry access is separate from shop owner roles. These tools are for Backline platform checks and do not grant shop users extra permissions.
+            </div>
+            <div class="creator-diagnostics" id="creatorDiagnostics"></div>
+          </section>
+        </section>
+      </main>
+    </div>
+
+    <section class="print-schedule" id="printSchedule" aria-hidden="true"></section>
+
+    <dialog class="modal" id="offlineAccessModal">
+      <form class="modal-card offline-access-card" id="offlineAccessForm">
+        <div class="modal-header modal-header-with-close">
+          <div>
+            <p class="eyebrow">Device security</p>
+            <h2 id="offlineAccessTitle">Enable offline access</h2>
+            <p id="offlineAccessDetail">Set a six-digit PIN to protect the workspace saved on this device.</p>
+          </div>
+          <button class="modal-close-button" type="button" data-cancel-modal="offline-access" aria-label="Close offline access">&times;</button>
+        </div>
+        <div class="form-grid">
+          <label>
+            Offline PIN
+            <input name="pin" type="password" inputmode="numeric" autocomplete="new-password" pattern="[0-9]{6}" minlength="6" maxlength="6" required>
+          </label>
+          <label data-offline-pin-confirm>
+            Confirm PIN
+            <input name="confirmPin" type="password" inputmode="numeric" autocomplete="new-password" pattern="[0-9]{6}" minlength="6" maxlength="6" required>
+          </label>
+        </div>
+        <p class="form-status" id="offlineAccessStatus"></p>
+        <div class="modal-actions">
+          <button class="secondary-button" type="button" data-cancel-modal="offline-access">Cancel</button>
+          <button class="primary-button" type="submit" id="offlineAccessSubmit">Enable offline access</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="modal" id="companySettingsModal">
+      <form class="modal-card company-settings-card" method="dialog" id="companySettingsForm">
+        <div class="modal-header modal-header-with-close">
+          <div>
+            <p class="eyebrow">Workspace settings</p>
+            <h2>Customize this shop</h2>
+            <p>Company identity, payment language, approval wording, and customer-facing defaults.</p>
+          </div>
+          <button class="modal-close-button" type="button" data-cancel-modal="company-settings" aria-label="Close workspace settings">&times;</button>
+        </div>
+
+        <section class="setup-progress-panel" id="workspaceSetupProgress"></section>
+
+        <div class="form-grid company-settings-grid">
+          <label>
+            Company name
+            <input name="companyName" required placeholder="Backline">
+          </label>
+          <label>
+            Shop slogan
+            <input name="companySlogan" placeholder="Fast, honest service. Done right.">
+          </label>
+          <label>
+            Business type
+            <select name="businessType">
+              <option value="trades">Trades &amp; field service</option>
+              <option value="appointments">Appointment-based service</option>
+              <option value="professional">Professional service</option>
+              <option value="automotive">Automotive &amp; repair</option>
+              <option value="general">Other small business</option>
+            </select>
+          </label>
+          <label>
+            Legal business name
+            <input name="legalName" placeholder="Legal name for customer documents">
+          </label>
+          <label>
+            Phone
+            <input name="phone" autocomplete="tel" inputmode="numeric" maxlength="13" placeholder="(555)123-4567" data-phone-input>
+          </label>
+          <label>
+            Email
+            <input name="email" type="email" autocomplete="email" placeholder="office@example.com">
+          </label>
+          <label>
+            Support phone
+            <input name="supportPhone" autocomplete="tel" inputmode="numeric" maxlength="13" placeholder="(555)123-4567" data-phone-input>
+          </label>
+          <label>
+            Support email
+            <input name="supportEmail" type="email" autocomplete="email" placeholder="support@example.com">
+          </label>
+          <label>
+            Time zone
+            <div class="backline-picker-field" id="companyTimezonePicker"></div>
+          </label>
+          <label class="wide">
+            Business address
+            <input name="address" autocomplete="street-address" placeholder="Street, city, state">
+          </label>
+          <label class="wide">
+            Service area
+            <input name="serviceArea" placeholder="County, metro area, or regions served">
+          </label>
+          <label>
+            Default tax rate
+            <input name="defaultTaxRate" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0">
+          </label>
+          <label>
+            Default deposit %
+            <input name="defaultDepositPercent" type="number" inputmode="decimal" min="0" max="100" step="1" placeholder="25">
+          </label>
+          <label>
+            Labor cost / hour
+            <input name="defaultLaborCostRate" type="number" inputmode="decimal" min="0" step="1" placeholder="85">
+          </label>
+          <label>
+            Target margin %
+            <input name="targetMarginPercent" type="number" inputmode="decimal" min="0" max="100" step="1" placeholder="45">
+          </label>
+          <label>
+            Estimate expires after
+            <input name="estimateExpirationDays" type="number" inputmode="numeric" min="1" step="1" placeholder="14">
+          </label>
+          <label>
+            Review link
+            <input name="reviewLink" type="url" placeholder="https://g.page/r/...">
+          </label>
+          <label class="wide">
+            Estimate intro
+            <textarea name="estimateIntroText" rows="3"></textarea>
+          </label>
+          <label class="wide">
+            Warranty / guarantee text
+            <textarea name="estimateWarrantyText" rows="2"></textarea>
+          </label>
+          <label class="wide">
+            Estimate disclaimer
+            <textarea name="estimateDisclaimer" rows="3"></textarea>
+          </label>
+          <label class="wide">
+            Invoice payment terms
+            <textarea name="invoiceTerms" rows="3"></textarea>
+          </label>
+          <label class="wide">
+            Deposit wording
+            <textarea name="defaultDepositWording" rows="2"></textarea>
+          </label>
+          <label class="wide">
+            Approval wording
+            <textarea name="approvalWording" rows="3"></textarea>
+          </label>
+          <label class="wide">
+            Approval disclaimer
+            <textarea name="approvalDisclaimerText" rows="2"></textarea>
+          </label>
+          <label class="wide">
+            PDF footer
+            <textarea name="pdfFooter" rows="2"></textarea>
+          </label>
+          <label class="wide">
+            Customer footer
+            <textarea name="customerFooterText" rows="2" placeholder="Shown on portal pages and customer documents"></textarea>
+          </label>
+          <label class="wide">
+            Receipt support line
+            <textarea name="receiptSupportLine" rows="2" placeholder="Who customers contact about payment receipts"></textarea>
+          </label>
+          <label class="wide">
+            Service / cancellation policy
+            <textarea name="servicePolicyText" rows="3" placeholder="Short customer-facing service or cancellation policy"></textarea>
+          </label>
+          <label>
+            Privacy link
+            <input name="privacyUrl" type="url" placeholder="https://example.com/privacy">
+          </label>
+          <label>
+            Terms link
+            <input name="termsUrl" type="url" placeholder="https://example.com/terms">
+          </label>
+        </div>
+
+        <section class="template-settings-section">
+          <div class="section-heading">
+            <div>
+              <h3 data-business-term="workTemplates">Job templates</h3>
+              <p data-business-term="templateSettingsHint">Customize the default checklists and task playbooks Backline applies by trade.</p>
+            </div>
+            <button class="secondary-button" type="button" data-add-template-card>Add template</button>
+          </div>
+          <div class="template-settings-list" id="templateSettingsList"></div>
+        </section>
+
+        <div class="modal-actions">
+          <button class="secondary-button" type="button" data-cancel-modal="company-settings">Cancel</button>
+          <button class="primary-button" type="submit">Save settings</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="modal" id="billingPlanModal">
+      <form class="modal-card billing-plan-card" method="dialog" id="billingPlanForm">
+        <div class="modal-header modal-header-with-close">
+          <div>
+            <p class="eyebrow">Backline subscription</p>
+            <h2>Choose your shop plan</h2>
+            <p>Every plan includes the complete Backline workflow. Your price is based only on active Backline users.</p>
+          </div>
+          <button class="modal-close-button" type="button" data-cancel-modal="billing-plan" aria-label="Close plan selection">&times;</button>
+        </div>
+        <fieldset class="billing-plan-options" id="billingPlanOptions">
+          <label class="billing-plan-option">
+            <input type="radio" name="billingPlan" value="solo" required>
+            <span class="billing-plan-copy">
+              <strong>Solo</strong>
+              <small>1 active Backline user</small>
+            </span>
+            <strong class="billing-plan-price">$49<span>/mo</span></strong>
+          </label>
+          <label class="billing-plan-option">
+            <input type="radio" name="billingPlan" value="crew" required>
+            <span class="billing-plan-copy">
+              <strong>Crew</strong>
+              <small>Up to 5 active Backline users</small>
+            </span>
+            <strong class="billing-plan-price">$99<span>/mo</span></strong>
+          </label>
+          <label class="billing-plan-option">
+            <input type="radio" name="billingPlan" value="shop" required>
+            <span class="billing-plan-copy">
+              <strong>Shop</strong>
+              <small>Includes 10 users, then $15/mo per additional user</small>
+            </span>
+            <strong class="billing-plan-price">$179<span>/mo</span></strong>
+          </label>
+        </fieldset>
+        <p class="billing-plan-note" id="billingPlanNote"></p>
+        <div class="modal-actions">
+          <button class="secondary-button" type="button" data-cancel-modal="billing-plan">Cancel</button>
+          <button class="primary-button" type="submit" id="billingCheckoutButton">Continue to secure checkout</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="modal onboarding-guide-modal" id="onboardingGuideModal">
+      <section class="modal-card onboarding-guide-card" aria-labelledby="onboardingGuideTitle">
+        <div class="modal-header modal-header-with-close">
+          <div>
+            <p class="eyebrow">Quick tour</p>
+            <h2 id="onboardingGuideTitle">Run your shop in Backline</h2>
+            <p>Use these four steps whenever you need a simple refresher. Nothing here changes your data.</p>
+          </div>
+          <button class="modal-close-button" type="button" data-cancel-modal="onboarding-guide" aria-label="Close quick tour">&times;</button>
+        </div>
+        <ol class="onboarding-tour-list">
+          <li>
+            <span>1</span>
+            <div>
+              <strong>Start with Home</strong>
+              <p>See what needs attention, today's work, money waiting, and the next setup task.</p>
+              <button class="utility-button" type="button" data-onboarding-destination="dashboard">Open Home</button>
+            </div>
+          </li>
+          <li>
+            <span>2</span>
+            <div>
+              <strong>Add the customer and job</strong>
+              <p>Enter the caller's details once. Backline keeps the customer, job, messages, and history connected.</p>
+              <button class="utility-button" type="button" data-onboarding-destination="new-job">Create a job</button>
+            </div>
+          </li>
+          <li>
+            <span>3</span>
+            <div>
+              <strong>Follow the next step</strong>
+              <p>Open a job and use its suggested next step to book it, start field work, send an estimate, or record payment.</p>
+              <button class="utility-button" type="button" data-onboarding-destination="inbox">Open jobs</button>
+            </div>
+          </li>
+          <li>
+            <span>4</span>
+            <div>
+              <strong>Close the loop with the customer</strong>
+              <p>Send estimates, share the customer portal, invoice the work, and record the payment in one place.</p>
+              <button class="utility-button" type="button" data-onboarding-destination="money">Open money</button>
+            </div>
+          </li>
+        </ol>
+        <div class="modal-actions">
+          <button class="secondary-button" type="button" data-cancel-modal="onboarding-guide">Close tour</button>
+        </div>
+      </section>
+    </dialog>
+
+    <dialog class="modal" id="jobModal">
+      <form class="modal-card" method="dialog" id="jobForm">
+        <div class="modal-header modal-header-with-close">
+          <div>
+            <p class="eyebrow">New request</p>
+            <h2 data-business-term="newWorkItemHeading">Add recovered job</h2>
+          </div>
+          <button class="modal-close-button" type="button" data-cancel-modal="job" aria-label="Close new job form">&times;</button>
+        </div>
+
+        <aside class="form-guide" id="jobFormGuide" aria-label="New job help">
+          <div class="form-guide-header">
+            <span>Quick guide</span>
+            <button class="contextual-guide-dismiss" type="button" data-dismiss-new-job-guide aria-label="Dismiss new job help" title="Dismiss help">&times;</button>
+          </div>
+          <p data-business-term="newWorkItemGuide">Start with the customer's name, phone, and issue. You can schedule and assign a technician now or come back to it later.</p>
+        </aside>
+
+        <div class="form-grid">
+          <label>
+            Customer name
+            <input name="name" required autocomplete="name">
+          </label>
+          <label>
+            Phone
+            <input name="phone" required autocomplete="tel" inputmode="numeric" maxlength="13" placeholder="(555)123-4567" data-phone-input>
+          </label>
+          <label class="wide">
+            Service address
+            <input name="address" required autocomplete="street-address">
+          </label>
+          <label>
+            <span data-business-term="workCategory">Trade</span>
+            <div class="backline-picker-field" id="jobTradePicker"></div>
+          </label>
+          <label>
+            <span data-business-term="workItemType">Job type</span>
+            <div class="backline-picker-field" id="jobTypePicker"></div>
+          </label>
+          <label>
+            <span data-business-term="workItemTemplate">Job template</span>
+            <div class="backline-picker-field" id="jobTemplatePicker"></div>
+          </label>
+          <label>
+            Urgency
+            <div class="backline-picker-field" id="jobUrgencyPicker"></div>
+          </label>
+          <label>
+            Estimated value
+            <input name="value" inputmode="decimal" placeholder="650">
+          </label>
+          <label>
+            Schedule date
+            <input name="scheduleDate" type="date">
+          </label>
+          <label>
+            Start time
+            <input name="startTime" type="time">
+          </label>
+          <label>
+            Duration
+            <div class="backline-picker-field" id="jobDurationPicker"></div>
+          </label>
+          <label>
+            <span data-business-term="assignee">Technician</span>
+            <div class="backline-picker-field" id="technicianOptions" data-technician-select></div>
+          </label>
+          <label>
+            <span data-business-term="contactLabel">Site contact</span>
+            <input name="siteContact" placeholder="Tenant, manager, spouse" data-business-placeholder="contactPlaceholder">
+          </label>
+          <label>
+            <span data-business-term="workMaterials">Parts/tools</span>
+            <input name="partsNote" placeholder="Capacitor, auger, water heater..." data-business-placeholder="workMaterialsPlaceholder">
+          </label>
+          <label class="wide">
+            <span data-business-term="workDetails">Issue</span>
+            <textarea name="issue" rows="4" required placeholder="What did the customer need?" data-business-placeholder="workDetailsPlaceholder"></textarea>
+          </label>
+        </div>
+
+        <div class="modal-actions">
+          <button class="secondary-button" type="button" data-cancel-modal="job">Cancel</button>
+          <button class="primary-button" type="submit" data-business-term="createWorkItem">Create job</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="modal" id="actionModal">
+      <form class="modal-card action-modal-card" id="actionForm">
+        <div class="modal-header modal-header-with-close">
+          <div>
+            <p class="eyebrow" id="actionModalEyebrow">Job action</p>
+            <h2 id="actionModalTitle">Update job</h2>
+            <p id="actionModalSubtitle"></p>
+          </div>
+          <button class="modal-close-button" type="button" data-cancel-modal="action" aria-label="Close job action">&times;</button>
+        </div>
+        <div class="form-grid" id="actionModalFields"></div>
+        <div class="modal-actions">
+          <button class="secondary-button" type="button" data-cancel-modal="action">Cancel</button>
+          <button class="primary-button" type="submit" id="actionModalSubmit">Save</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="modal" id="pricebookEditModal">
+      <form class="modal-card pricebook-edit-card" id="pricebookEditForm">
+        <div class="modal-header modal-header-with-close">
+          <div>
+            <p class="eyebrow">Inventory</p>
+            <h2>Edit pricebook item</h2>
+            <p>Update future pricing, supplier, and on-hand defaults. Existing invoices stay unchanged.</p>
+          </div>
+          <button class="modal-close-button" type="button" data-cancel-modal="pricebook-edit" aria-label="Close pricebook item editor">&times;</button>
+        </div>
+        <input type="hidden" name="id">
+        <div class="form-grid">
+          <label>
+            Item name
+            <input name="name" required>
+          </label>
+          <label>
+            Bill rate
+            <input name="unitPrice" type="number" step="0.01" min="0" required>
+          </label>
+          <label>
+            Category
+            <div class="backline-picker-field" id="pricebookEditCategoryPicker"></div>
+          </label>
+          <label>
+            Unit
+            <div class="backline-picker-field" id="pricebookEditUnitPicker"></div>
+          </label>
+          <label class="wide">
+            Description
+            <input name="description">
+          </label>
+          <label>
+            Default cost
+            <input name="defaultCost" type="number" step="0.01" min="0">
+          </label>
+          <label>
+            Preferred supplier
+            <input name="preferredSupplier">
+          </label>
+          <label>
+            On hand
+            <input name="truckStock" type="number" step="1" min="0">
+          </label>
+          <label>
+            Reorder point
+            <input name="reorderPoint" type="number" step="1" min="0">
+          </label>
+          <label class="checkbox-field">
+            <input type="checkbox" name="taxable">
+            Taxable
+          </label>
+          <label class="checkbox-field">
+            <input type="checkbox" name="active">
+            Active
+          </label>
+        </div>
+        <div class="modal-actions">
+          <button class="secondary-button" type="button" data-cancel-modal="pricebook-edit">Cancel</button>
+          <button class="primary-button" type="submit">Save item</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="modal activity-detail-drawer" id="inventoryUsageModal">
+      <section class="modal-card inventory-usage-card">
+        <div class="inventory-usage-content" id="inventoryUsageContent"></div>
+        <div class="modal-actions">
+          <button class="secondary-button" type="button" data-cancel-modal="inventory-usage">Close</button>
+        </div>
+      </section>
+    </dialog>
+
+    <dialog class="modal activity-detail-drawer" id="inventoryOrderDetailModal">
+      <section class="modal-card inventory-usage-card">
+        <div class="inventory-usage-content" id="inventoryOrderDetailContent"></div>
+        <div class="modal-actions">
+          <button class="secondary-button" type="button" data-cancel-modal="inventory-order-detail">Close</button>
+        </div>
+      </section>
+    </dialog>
+
+    <dialog class="modal" id="inventoryOrderModal">
+      <form class="modal-card inventory-order-card" id="inventoryOrderForm">
+        <div class="modal-header modal-header-with-close">
+          <div>
+            <p class="eyebrow">Inventory</p>
+            <h2 id="inventoryOrderTitle">Mark material ordered</h2>
+            <p id="inventoryOrderSubtitle"></p>
+          </div>
+          <button class="modal-close-button" type="button" data-cancel-modal="inventory-order" aria-label="Close inventory order form">&times;</button>
+        </div>
+        <input type="hidden" name="mode">
+        <input type="hidden" name="itemId">
+        <input type="hidden" name="orderId">
+        <input type="hidden" name="purchaseOrderId">
+        <div class="inventory-order-lines" id="inventoryOrderLines" hidden></div>
+        <div class="form-grid">
+          <label>
+            Supplier
+            <input name="supplier" placeholder="Supplier or supply house">
+          </label>
+          <label data-order-single>
+            Quantity
+            <input name="qty" type="number" min="1" step="1" required>
+          </label>
+          <label data-order-single>
+            Unit cost
+            <input name="unitCost" type="number" min="0" step="0.01" placeholder="0.00">
+          </label>
+          <label>
+            Expected / received date
+            <input name="expectedDate" type="date">
+          </label>
+          <label class="wide">
+            Note
+            <input name="note" placeholder="PO number, pickup note, or delivery detail">
+          </label>
+        </div>
+        <div class="modal-actions">
+          <button class="secondary-button" type="button" data-cancel-modal="inventory-order">Cancel</button>
+          <button class="primary-button" type="submit" id="inventoryOrderSubmit">Mark ordered</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="modal" id="supplierModal">
+      <form class="modal-card supplier-card" id="supplierForm" method="dialog" novalidate>
+        <div class="modal-header modal-header-with-close">
+          <div>
+            <p class="eyebrow">Supplier</p>
+            <h2 id="supplierModalTitle">Edit supplier</h2>
+            <p>Save contact details, account notes, and ordering preferences for this supplier.</p>
+          </div>
+          <button class="modal-close-button" type="button" data-cancel-modal="supplier" aria-label="Close supplier editor">&times;</button>
+        </div>
+        <input type="hidden" name="id">
+        <div class="form-grid">
+          <label>
+            Supplier name
+            <input name="name" required>
+          </label>
+          <label>
+            Preferred contact
+            <div class="backline-picker-field" id="supplierPreferredContactPicker"></div>
+          </label>
+          <label>
+            Phone
+            <input name="phone" autocomplete="tel" inputmode="numeric" maxlength="13" placeholder="(555)123-4567" data-phone-input>
+          </label>
+          <label>
+            Email
+            <input name="email" type="email" autocomplete="email">
+          </label>
+          <label>
+            Website
+            <input name="website" type="text" inputmode="url" placeholder="homedepot.com">
+          </label>
+          <label>
+            Account number
+            <input name="accountNumber">
+          </label>
+          <label class="wide">
+            Pickup / delivery notes
+            <textarea name="deliveryNotes" rows="3" placeholder="Counter account, preferred branch, delivery instructions, cutoff times"></textarea>
+          </label>
+        </div>
+        <p class="form-status" id="supplierFormStatus" data-supplier-status></p>
+        <div class="modal-actions">
+          <button class="secondary-button" type="button" data-cancel-modal="supplier">Cancel</button>
+          <button class="primary-button" type="button" data-save-supplier>Save supplier</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="modal" id="reorderCopyModal">
+      <section class="modal-card reorder-copy-card">
+        <div class="modal-header modal-header-with-close">
+          <div>
+            <p class="eyebrow">Inventory</p>
+            <h2>Copy reorder list</h2>
+            <p>Your browser blocked automatic copying. Select this list and copy it manually.</p>
+          </div>
+          <button class="modal-close-button" type="button" data-cancel-modal="reorder-copy" aria-label="Close reorder list">&times;</button>
+        </div>
+        <textarea id="reorderCopyText" readonly rows="9"></textarea>
+        <div class="modal-actions">
+          <button class="secondary-button" type="button" data-cancel-modal="reorder-copy">Close</button>
+        </div>
+      </section>
+    </dialog>
+
+    <dialog class="modal" id="deleteModal">
+      <form class="modal-card delete-modal-card" method="dialog" id="deleteForm">
+        <div class="modal-header modal-header-with-close">
+          <div>
+            <p class="eyebrow">Delete job</p>
+            <h2>Move this job to deleted archive?</h2>
+            <p id="deleteModalSummary">This job will leave active work but stay recoverable in the Jobs database.</p>
+          </div>
+          <button class="modal-close-button" type="button" data-cancel-modal="delete" aria-label="Close delete job confirmation">&times;</button>
+        </div>
+        <div class="delete-warning">
+          <strong>Deleted jobs are archived.</strong>
+          <span>You can restore this job later from the Jobs tab.</span>
+        </div>
+        <div class="modal-actions">
+          <button class="secondary-button" type="button" data-cancel-modal="delete">Cancel</button>
+          <button class="primary-button danger-button" type="submit">Delete job</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="modal" id="teamRemoveModal">
+      <form class="modal-card delete-modal-card" method="dialog" id="teamRemoveForm">
+        <div class="modal-header modal-header-with-close">
+          <div>
+            <p class="eyebrow">Team access</p>
+            <h2>Remove this team member?</h2>
+            <p id="teamRemoveModalSummary">This person will lose access to this Backline workspace.</p>
+          </div>
+          <button class="modal-close-button" type="button" data-cancel-modal="team-remove" aria-label="Close remove team member confirmation">&times;</button>
+        </div>
+        <div class="delete-warning">
+          <strong>Workspace access will be removed.</strong>
+          <span>Their account stays intact, but this shop will no longer appear for them.</span>
+        </div>
+        <div class="modal-actions">
+          <button class="secondary-button" type="button" data-cancel-modal="team-remove">Cancel</button>
+          <button class="primary-button danger-button" type="submit">Remove member</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="modal" id="importConfirmModal">
+      <form class="modal-card delete-modal-card" method="dialog" id="importConfirmForm">
+        <div class="modal-header modal-header-with-close">
+          <div>
+            <p class="eyebrow">Restore backup</p>
+            <h2>Restore this workspace from backup?</h2>
+            <p id="importConfirmSummary">This export does not identify a secure workspace.</p>
+          </div>
+          <button class="modal-close-button" type="button" data-cancel-modal="import-confirm" aria-label="Close restore backup confirmation">&times;</button>
+        </div>
+        <div class="delete-warning">
+          <strong>Review before restoring.</strong>
+          <span>This will replace the current jobs, customers, pricebook, suppliers, settings, and activity data in this workspace.</span>
+        </div>
+        <div class="modal-actions">
+          <button class="secondary-button" type="button" data-cancel-modal="import-confirm">Cancel</button>
+          <button class="primary-button" type="submit">Restore backup</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="modal role-editor-modal" id="customRoleModal">
+      <form class="modal-card custom-role-form role-editor-card" id="customRoleForm">
+        <div class="modal-header modal-header-with-close">
+          <div>
+            <p class="eyebrow">Permissions</p>
+            <h3 id="customRoleFormTitle">Create custom role</h3>
+            <p id="customRoleFormSubtitle">Start from a built-in role, then choose exactly what this role can see and do.</p>
+          </div>
+          <button class="modal-close-button" type="button" data-cancel-modal="custom-role" aria-label="Close role editor">&times;</button>
+        </div>
+        <div class="role-editor-body">
+          <label>
+            Role name
+            <input name="label" required placeholder="Lead technician">
+          </label>
+          <label>
+            Start from
+            <div class="backline-picker-field" id="customRoleTemplatePicker"></div>
+          </label>
+          <label class="wide">
+            Summary
+            <input name="summary" placeholder="Can estimate and close assigned jobs">
+          </label>
+          <div class="role-editor-preview wide" id="customRolePreview"></div>
+          <div class="role-editor-section-heading wide">
+            <h4>Fine tune permissions</h4>
+            <p>Adjust the exact pages and job actions this role can use. Required access is included automatically.</p>
+          </div>
+          <div class="permission-grid wide" id="customRolePermissions"></div>
+          <div class="permission-summary wide" id="customRolePermissionSummary"></div>
+          <p class="settings-note wide" id="customRoleStatus"></p>
+        </div>
+        <div class="modal-actions custom-role-actions">
+          <button class="secondary-button" type="button" id="cancelCustomRoleEdit">Cancel</button>
+          <button class="primary-button" type="submit" id="customRoleSubmit">Add custom role</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="modal activity-detail-drawer" id="activityDetailModal">
+      <section class="modal-card activity-detail-card">
+        <div class="activity-detail-content" id="activityDetailContent"></div>
+        <div class="modal-actions">
+          <button class="secondary-button" type="button" data-cancel-modal="activity-detail">Close</button>
+        </div>
+      </section>
+    </dialog>
+
+    <script src="app.js?v=20260829-business-access"></script>
+  </body>
+</html>
