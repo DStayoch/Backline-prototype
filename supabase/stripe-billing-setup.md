@@ -33,9 +33,12 @@ Run `supabase-schema-20-billing.sql` in Supabase SQL Editor after schemas 01 thr
 create-billing-checkout
 create-billing-portal
 stripe-webhook
+sync-billing-seats
 ```
 
 Deploy `stripe-webhook` with JWT verification disabled because Stripe authenticates it using the webhook signature. The function verifies that signature before it processes any event.
+
+`sync-billing-seats` keeps the $15 Shop add-on aligned to the active team count. Deploy it with normal JWT verification enabled. Backline runs it when the workspace owner loads the team data, and it only updates Stripe when the paid seat quantity differs.
 
 ## Subscription access control
 

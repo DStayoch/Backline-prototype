@@ -84,9 +84,9 @@ assert.match(launchChecklist, /Phone And SMS/, "Launch checklist should require 
 assert.match(launchChecklist, /customer-facing links never use `127\.0\.0\.1`, `localhost`, or `file:\/\/`/, "Launch checklist should block local customer-facing production links.");
 assert.match(betaDeploymentGuide, /BACKLINE_SUPABASE_URL/, "Beta deployment guide should document the Pages Supabase URL variable.");
 assert.match(betaDeploymentGuide, /BACKLINE_SUPABASE_ANON_KEY/, "Beta deployment guide should document the Pages Supabase anon key secret.");
-assert.match(betaDeploymentGuide, /supabase-schema-23-launch-hardening\.sql/, "Beta deployment guide should use the latest schema cutoff.");
+assert.match(betaDeploymentGuide, /supabase-schema-24-public-link-guardrails\.sql/, "Beta deployment guide should use the latest schema cutoff.");
 assert.match(betaDeploymentGuide, /never `localhost`, `127\.0\.0\.1`, or `file:\/\/`/, "Beta deployment guide should block local customer-facing production links.");
-assert.match(supabaseProductionSetup, /supabase-schema-23-launch-hardening\.sql/, "Supabase setup helper should use the latest schema cutoff.");
+assert.match(supabaseProductionSetup, /supabase-schema-24-public-link-guardrails\.sql/, "Supabase setup helper should use the latest schema cutoff.");
 assert.match(supabaseProductionSetup, /supabase-schema-07a-team-tables\.sql/, "Supabase setup helper should document the split team schema fallback.");
 assert.match(supabaseProductionSetup, /insert into public\.platform_admins/, "Supabase setup helper should document Foundry bootstrap SQL.");
 assert.match(supabaseProductionSetup, /RESEND_API_KEY/, "Supabase setup helper should document invite email secrets.");

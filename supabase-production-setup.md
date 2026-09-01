@@ -44,6 +44,7 @@ If the SQL editor fails with a line 0 or paste-size issue, run the split files i
 21. `supabase-schema-21-billing-access.sql`
 22. `supabase-schema-22-secure-sync.sql`
 23. `supabase-schema-23-launch-hardening.sql`
+24. `supabase-schema-24-public-link-guardrails.sql`
 
 If `supabase-schema-07-team-management.sql` hits a line 0 paste error, run these three files instead of step 7:
 
@@ -51,7 +52,7 @@ If `supabase-schema-07-team-management.sql` hits a line 0 paste error, run these
 2. `supabase-schema-07b-team-functions.sql`
 3. `supabase-schema-07c-team-policies.sql`
 
-For an existing workspace already through schema 22, run `supabase-schema-23-launch-hardening.sql` before loading the matching Backline release. It enforces assigned-work visibility for field roles, prevents owner role escalation/demotion, validates job IDs and statuses, and fixes field completion/file sync permissions.
+For an existing workspace already through schema 23, run `supabase-schema-24-public-link-guardrails.sql` before loading the matching Backline release. It keeps reusable customer portal links, rejects malformed portal tokens, and limits reply bursts from a single link.
 
 ## 3. Add Foundry Operator Access
 

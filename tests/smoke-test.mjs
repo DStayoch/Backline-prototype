@@ -46,6 +46,7 @@ const requiredFiles = [
   "supabase-schema-21-billing-access.sql",
   "supabase-schema-22-secure-sync.sql",
   "supabase-schema-23-launch-hardening.sql",
+  "supabase-schema-24-public-link-guardrails.sql",
   "assets/backline-banner.png",
   "assets/backline-banner-clean.png",
   "assets/backline-banner-clean-grey.png",
@@ -174,7 +175,7 @@ assert.match(html, /<link rel="stylesheet" href="styles\.css\?v=20260901-google-
 assert.match(html, /@supabase\/supabase-js@2\.112\.4/);
 assert.match(html, /jspdf@2\.5\.1/);
 assert.match(html, /<script src="supabase-config\.js"><\/script>/);
-assert.match(html, /<script src="app\.js\?v=20260901-launch-hardening"><\/script>/);
+assert.match(html, /<script src="app\.js\?v=20260901-public-link-seats"><\/script>/);
 assert.match(js, /Secure database saved\. Go to Settings to set up offline access\./);
 assert.match(html, /id="topbarGreeting"/);
 assert.match(html, /id="topbarInsight"/);
@@ -1157,7 +1158,7 @@ assert.match(css, /\.customer-facing-support/);
 assert.match(css, /\.customer-facing-links/);
 assert.match(betaDeploymentGuide, /BACKLINE_SUPABASE_URL/);
 assert.match(betaDeploymentGuide, /BACKLINE_SUPABASE_ANON_KEY/);
-assert.match(betaDeploymentGuide, /supabase-schema-23-launch-hardening\.sql/);
+assert.match(betaDeploymentGuide, /supabase-schema-24-public-link-guardrails\.sql/);
 assert.match(betaDeploymentGuide, /Phone\/SMS beta mode/);
 assert.match(betaDeploymentGuide, /never `localhost`, `127\.0\.0\.1`, or `file:\/\/`/);
 assert.match(supabaseProductionSetup, /supabase-schema-19-platform-admins\.sql/);

@@ -110,7 +110,7 @@ const productionReadinessStatuses = {
 
 const supabaseProductionSetupChecklist = [
   { key: "production-project", label: "Production project created", detail: "Fresh Supabase project exists and is separate from local/dev testing." },
-  { key: "schema-installed", label: "Schema installed through 23", detail: "Run supabase-schema.sql or split files through supabase-schema-23-launch-hardening.sql." },
+  { key: "schema-installed", label: "Schema installed through 24", detail: "Run supabase-schema.sql or split files through supabase-schema-24-public-link-guardrails.sql." },
   { key: "team-schema-fallback", label: "Team schema fallback noted", detail: "Use 07a/07b/07c instead of 07 if Supabase shows a line 0 paste error." },
   { key: "foundry-bootstrap", label: "Foundry operator added", detail: "Trusted Backline operator account inserted into platform_admins after auth account exists." },
   { key: "auth-urls", label: "Auth URLs configured", detail: "Site URL and redirect URLs point to the hosted HTTPS Backline URL." },
@@ -866,6 +866,7 @@ let state = {
   userRole: "owner",
   billing: null,
   billingAccess: { mode: "full", status: "" },
+  billingSeatSyncSignature: "",
   supabaseClient: null,
   offlineMode: false,
   offlineSyncPending: false,
@@ -4775,6 +4776,33 @@ async function loadRemoteTeamData() {
     state.teamMembers = [fallbackTeamMember()];
   }
   state.teamInvites = invites || [];
+  void reconcileBillingSeatCount();
+}
+
+async function reconcileBillingSeatCount() {
+  const client = getSupabaseClient();
+  if (
+    !client ||
+    !state.organizationId ||
+    !state.currentUser ||
+    !state.secureMode ||
+    state.offlineMode ||
+    currentRole() !== "owner"
+  ) return;
+
+  const signature = `${state.organizationId}:${state.teamMembers.length}`;
+  if (state.billingSeatSyncSignature === signature) return;
+
+  const { data, error } = await client.functions.invoke("sync-billing-seats", {
+    body: { organizationId: state.organizationId }
+  });
+  if (error || data?.error) {
+    // Retry on the next owner team load without disrupting a local or older
+    // Supabase project that does not yet have the function deployed.
+    console.warn("Backline billing seat reconciliation could not run.", error || data?.error);
+    return;
+  }
+  state.billingSeatSyncSignature = signature;
 }
 
 async function persistRemotePricebookItems() {
@@ -25247,7 +25275,7 @@ function registerBacklineServiceWorker() {
   if (window.location.protocol === "file:" || !("serviceWorker" in navigator)) return;
   window.addEventListener("load", () => {
     navigator.serviceWorker
-      .register("./service-worker.js?v=20260901-launch-hardening", { scope: "./" })
+      .register("./service-worker.js?v=20260901-public-link-seats", { scope: "./" })
       .catch((error) => console.warn("Backline service worker registration failed.", error));
   });
 }

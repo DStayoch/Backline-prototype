@@ -11,6 +11,7 @@ const accessSchema = read("supabase-schema-21-billing-access.sql");
 const checkout = read("supabase/functions/create-billing-checkout/index.ts");
 const portal = read("supabase/functions/create-billing-portal/index.ts");
 const webhook = read("supabase/functions/stripe-webhook/index.ts");
+const seatSync = read("supabase/functions/sync-billing-seats/index.ts");
 const setup = read("supabase/stripe-billing-setup.md");
 
 assert.match(schema, /create table if not exists public\.organization_billing/i, "Billing schema needs a workspace billing record.");
@@ -50,6 +51,13 @@ assert.match(webhook, /invoice\.payment_failed/, "Webhook must track failed rene
 assert.match(webhook, /parent\?\.subscription_details/, "Webhook must support the current Stripe invoice subscription shape.");
 assert.match(webhook, /7 \* 24 \* 60 \* 60 \* 1000/, "Webhook must establish the seven-day payment grace period.");
 assert.match(webhook, /stripe\.subscriptions\.retrieve\(subscriptionId\)/, "Checkout completion must record the current subscription status without waiting for another webhook.");
+assert.match(seatSync, /role=eq\.owner/, "Only a workspace owner may reconcile paid seats.");
+assert.match(seatSync, /organization_members\?organization_id/, "Seat reconciliation must count members server-side.");
+assert.match(seatSync, /STRIPE_BACKLINE_ADDITIONAL_USER_PRICE_ID/, "Seat reconciliation must use the configured additional-user price.");
+assert.match(seatSync, /subscriptionItems\.create/, "Seat reconciliation must add a Stripe seat item when needed.");
+assert.match(seatSync, /subscriptionItems\.update/, "Seat reconciliation must update the Stripe seat quantity.");
+assert.match(seatSync, /subscriptionItems\.del/, "Seat reconciliation must remove a no-longer-needed Stripe seat item.");
+assert.match(seatSync, /proration_behavior: "create_prorations"/, "Seat changes must use documented proration behavior.");
 
 assert.match(setup, /STRIPE_TAX_ENABLED=false/, "Tax must remain off until registrations are confirmed.");
 assert.match(setup, /stripe-webhook/i, "Setup must document webhook deployment.");
@@ -61,6 +69,8 @@ assert.match(page, /\$15\/mo per additional user/, "Shop add-on pricing must be 
 assert.match(page, /data-cancel-modal="billing-plan"/, "Billing plan dialog needs a cancel action.");
 assert.match(app, /create-billing-checkout/, "The plan dialog must open secure Stripe Checkout.");
 assert.match(app, /create-billing-portal/, "Active subscribers must manage billing through the portal.");
+assert.match(app, /function reconcileBillingSeatCount\(\)/, "The owner app must reconcile seats after team data loads.");
+assert.match(app, /sync-billing-seats/, "The browser must invoke the protected seat reconciliation function.");
 assert.match(app, /backline_workspace_access/, "Backline must load the server-enforced workspace access state.");
 assert.match(page, /id="subscriptionGate"/, "Read-only workspaces need a dedicated subscription screen.");
 assert.match(page, /id="subscriptionGatePlanForm"/, "New workspaces need plan selection directly on the subscription screen.");
