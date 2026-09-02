@@ -14,6 +14,7 @@ const portal = read("supabase/functions/create-billing-portal/index.ts");
 const webhook = read("supabase/functions/stripe-webhook/index.ts");
 const seatSync = read("supabase/functions/sync-billing-seats/index.ts");
 const setup = read("supabase/stripe-billing-setup.md");
+const incidentRunbook = read("supabase/billing-incident-runbook.md");
 
 assert.match(schema, /create table if not exists public\.organization_billing/i, "Billing schema needs a workspace billing record.");
 assert.match(schema, /enable row level security/i, "Billing schema must use RLS.");
@@ -72,6 +73,11 @@ assert.doesNotMatch(seatSync, /subscriptionItems\.(create|update|del)/, "Only St
 
 assert.match(setup, /STRIPE_TAX_ENABLED=false/, "Tax must remain off until registrations are confirmed.");
 assert.match(setup, /stripe-webhook/i, "Setup must document webhook deployment.");
+assert.match(setup, /billing-incident-runbook/i, "Billing setup must point to the incident response process.");
+assert.match(incidentRunbook, /Check subscription/i, "The incident process must give owners a self-service refresh step.");
+assert.match(incidentRunbook, /workspace_access_overrides/i, "The incident process must document the controlled support override.");
+assert.match(page, /id="subscriptionGateSupport"/, "Read-only owners need a billing-support action.");
+assert.match(app, /support@backlineoffice\.com/, "Billing support must reach the monitored Backline support address.");
 assert.match(page, /id="billingPlanModal"/, "Owners need a dedicated billing plan dialog.");
 assert.match(page, /\$49<span>\/mo<\/span>/, "Solo pricing must be shown in the product.");
 assert.match(page, /\$99<span>\/mo<\/span>/, "Crew pricing must be shown in the product.");

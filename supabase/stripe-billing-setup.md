@@ -88,6 +88,10 @@ invoice.finalization_failed
 
 Copy that endpoint's signing secret into `STRIPE_WEBHOOK_SECRET`. The webhook, rather than the Checkout return page, updates Backline's billing records after sign-up, renewals, payment failures, and cancellations.
 
+## Failed-webhook response
+
+Before launch, follow `supabase/billing-incident-runbook.md`. Keep the Stripe account email monitored, review the Backline webhook's Pending and Failed deliveries in Stripe Workbench, and use Stripe's **Resend** action after correcting a delivery issue. Backline provides the workspace owner a **Check subscription** refresh and a **I paid but I am still locked** support path on the read-only screen.
+
 ## Test before live mode
 
 1. Create a test Checkout session for a workspace owner.

@@ -944,6 +944,7 @@ const elements = {
   subscriptionGateCheckoutNote: document.querySelector("#subscriptionGateCheckoutNote"),
   subscriptionGatePrimary: document.querySelector("#subscriptionGatePrimary"),
   subscriptionGateRefresh: document.querySelector("#subscriptionGateRefresh"),
+  subscriptionGateSupport: document.querySelector("#subscriptionGateSupport"),
   subscriptionGateExport: document.querySelector("#subscriptionGateExport"),
   subscriptionGateSwitchAccount: document.querySelector("#subscriptionGateSwitchAccount"),
   toastRegion: document.querySelector("#toastRegion"),
@@ -20183,6 +20184,7 @@ function renderSubscriptionGate() {
   elements.subscriptionGateTrialBadge.hidden = !canStartTrial;
   elements.subscriptionGateStatus.hidden = canStartTrial;
   elements.subscriptionGatePrimary.hidden = !owner;
+  elements.subscriptionGateSupport.hidden = canStartTrial;
   elements.subscriptionGateExport.hidden = !owner;
 
   if (canStartTrial) {
@@ -25252,6 +25254,25 @@ elements.subscriptionGateRefresh?.addEventListener("click", async () => {
   elements.subscriptionGateRefresh.disabled = false;
   elements.subscriptionGateRefresh.textContent = "Check subscription";
   render();
+  if (isSubscriptionReadOnly()) {
+    showToast("Subscription still pending", "If you have already paid, use the support option and include the details from your Stripe receipt.", "warning", { timeout: 7000 });
+  } else {
+    showToast("Subscription confirmed", "Backline access has been restored.", "success", { timeout: 5000 });
+  }
+});
+
+elements.subscriptionGateSupport?.addEventListener("click", () => {
+  const email = String(state.currentUser?.email || "").trim();
+  const workspace = String(state.organizationId || "").trim();
+  const subject = "Backline billing access review";
+  const body = [
+    "I have paid for Backline but this workspace is still read-only.",
+    "",
+    `Signed-in email: ${email || "not available"}`,
+    `Workspace ID: ${workspace || "not available"}`,
+    "Stripe receipt or subscription ID:"
+  ].join("\n");
+  window.location.href = `mailto:support@backlineoffice.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 });
 
 elements.subscriptionGateExport?.addEventListener("click", exportData);
