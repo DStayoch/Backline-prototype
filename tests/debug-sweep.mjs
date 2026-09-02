@@ -661,7 +661,7 @@ assert.match(html, /id="companyTimezonePicker"/);
 assert.match(html, /id="topbarGreeting"/);
 assert.match(html, /id="topbarInsight"/);
 assert.match(html, /Welcome back\./);
-assert.match(html, /Loading the latest across your shop\./);
+assert.match(html, /Loading the latest across your workspace\./);
 assert.match(js, /function dashboardMoneyAmount\(job\)/);
 assert.match(js, /function betaReadinessItems\(/);
 assert.match(js, /function renderBetaReadiness\(/);

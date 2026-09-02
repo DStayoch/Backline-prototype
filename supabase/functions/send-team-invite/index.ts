@@ -49,13 +49,13 @@ function textFromRole(role: string) {
 
 function displayPersonName(value: unknown) {
   const identity = String(value ?? "").trim();
-  if (!identity) return "Your shop";
+  if (!identity) return "Your workspace";
   const username = identity.includes("@") ? identity.split("@")[0] : identity;
   return username
     .split(/[.\s_-]+/)
     .filter(Boolean)
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
-    .join(" ") || "Your shop";
+    .join(" ") || "Your workspace";
 }
 
 function isUuid(value: string) {
@@ -162,7 +162,7 @@ Deno.serve(async (request) => {
       return jsonResponse({ error: "Invite email is not configured. Set BACKLINE_APP_URL to your HTTPS Backline app URL." }, 500);
     }
     const roleName = textFromRole(invite.role);
-    const senderName = displayPersonName(member.display_name || member.email || "Your shop");
+    const senderName = displayPersonName(member.display_name || member.email || "Your workspace");
     const replyTo = Deno.env.get("INVITE_REPLY_TO_EMAIL") || member.email || undefined;
     const subject = `${shopName} invited you to Backline`;
     const text = [
@@ -178,7 +178,7 @@ Deno.serve(async (request) => {
     const html = `
       <div style="font-family:Inter,Arial,sans-serif;line-height:1.5;color:#0f172a">
         <h1 style="font-size:22px;margin:0 0 12px">${escapeHtml(shopName)} invited you to Backline</h1>
-        <p>${escapeHtml(senderName)} invited you to join their shop workspace.</p>
+        <p>${escapeHtml(senderName)} invited you to join their Backline workspace.</p>
         <p><strong>Role:</strong> ${escapeHtml(roleName)}<br><strong>Email to use:</strong> ${escapeHtml(invite.email)}</p>
         <p><a href="${escapeHtml(inviteUrl)}" style="display:inline-block;background:#2563eb;color:white;padding:10px 14px;border-radius:8px;text-decoration:none;font-weight:700">Open Backline</a></p>
         <p>Create your Backline account with this email. Backline will connect you to the shop automatically.</p>

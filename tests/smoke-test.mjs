@@ -175,7 +175,7 @@ assert.match(js, /Secure database saved\. Go to Settings to set up offline acces
 assert.match(html, /id="topbarGreeting"/);
 assert.match(html, /id="topbarInsight"/);
 assert.match(html, /Welcome back\./);
-assert.match(html, /Loading the latest across your shop\./);
+assert.match(html, /Loading the latest across your workspace\./);
 assert.match(js, /function dashboardMoneyAmount\(job\)/);
 assert.match(js, /function dashboardMoneyNeedsAttention\(job\)/);
 assert.match(js, /const money = scopedJobs\.filter\(dashboardMoneyNeedsAttention\)/);

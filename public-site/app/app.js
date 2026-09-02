@@ -596,7 +596,7 @@ const BUSINESS_WORKSPACE_CARDS = {
 const defaultCompanySettings = {
   companyName: "Backline",
   companySlogan: "",
-  businessType: "trades",
+  businessType: "general",
   legalName: "",
   phone: "",
   email: "",
@@ -2211,11 +2211,11 @@ function companySettings() {
 }
 
 function businessTerminology(type = state.companySettings?.businessType) {
-  return BUSINESS_TERMINOLOGY[type] || BUSINESS_TERMINOLOGY.trades;
+  return BUSINESS_TERMINOLOGY[type] || BUSINESS_TERMINOLOGY.general;
 }
 
 function businessAccessTerminology(type = state.companySettings?.businessType) {
-  return BUSINESS_ACCESS_TERMINOLOGY[type] || BUSINESS_ACCESS_TERMINOLOGY.trades;
+  return BUSINESS_ACCESS_TERMINOLOGY[type] || BUSINESS_ACCESS_TERMINOLOGY.general;
 }
 
 function jobBusinessType(job = {}) {
@@ -2225,7 +2225,7 @@ function jobBusinessType(job = {}) {
 }
 
 function businessWorkspaceCards(job = {}) {
-  return BUSINESS_WORKSPACE_CARDS[jobBusinessType(job)] || BUSINESS_WORKSPACE_CARDS.trades;
+  return BUSINESS_WORKSPACE_CARDS[jobBusinessType(job)] || BUSINESS_WORKSPACE_CARDS.general;
 }
 
 function preserveLegacyJobBusinessTypes(businessType = companySettings().businessType) {
@@ -4009,7 +4009,7 @@ function resetAuthCreateAccountState() {
   }
   elements.authGateHeading.textContent = "Pick up where your day left off.";
   elements.authGatePanelHeading.textContent = "Welcome back";
-  elements.authGatePanelDetail.textContent = "Sign in to return to your shop workspace.";
+  elements.authGatePanelDetail.textContent = "Sign in to return to your Backline workspace.";
   elements.authGateFooterPrompt.textContent = "New to Backline?";
   ["firstName", "lastName"].forEach((name) => {
     if (elements.authForm.elements[name]) elements.authForm.elements[name].value = "";
@@ -6566,7 +6566,7 @@ async function removeTeamMember(userId) {
   const member = normalizedTeamMembers().find((item) => item.userId === userId);
   if (!member || member.isCurrentUser || member.role === "owner") return;
   elements.teamRemoveForm.dataset.userId = userId;
-  elements.teamRemoveModalSummary.textContent = `${teamMemberDisplayName(member)} will no longer be able to open this shop workspace.`;
+  elements.teamRemoveModalSummary.textContent = `${teamMemberDisplayName(member)} will no longer be able to open this workspace.`;
   elements.teamRemoveModal.showModal();
 }
 
@@ -7804,7 +7804,7 @@ function suggestedJobTemplateKeyFromForm(form = elements.jobForm) {
 }
 
 function workflowOptions() {
-  return businessWorkflowOptions[companySettings().businessType] || businessWorkflowOptions.trades;
+  return businessWorkflowOptions[companySettings().businessType] || businessWorkflowOptions.general;
 }
 
 function jobTradeOptions() {
@@ -20192,7 +20192,7 @@ function renderSubscriptionGate() {
     elements.subscriptionGateAccountEmail.textContent = String(state.currentUser?.email || "Signed-in Backline account").trim();
   }
 
-  elements.subscriptionGateEyebrow.textContent = pastDue ? "Payment needs attention" : "Backline for your shop";
+  elements.subscriptionGateEyebrow.textContent = pastDue ? "Payment needs attention" : "Backline for your business";
   elements.subscriptionGateTitle.textContent = neverStarted
     ? "Start with the work that is already waiting."
     : owner ? "Your workspace is ready when you are." : "Your workspace is read-only.";
@@ -20336,7 +20336,7 @@ function createMaintenanceJobFromEquipment(sourceJobId, equipmentId) {
     name: sourceJob.name,
     phone: sourceJob.phone,
     address: sourceJob.address,
-    trade: sourceJob.trade || "HVAC",
+    trade: sourceJob.trade || "Other",
     jobType: "maintenance",
     urgency: daysUntilISO(equipment.nextServiceDate) !== null && daysUntilISO(equipment.nextServiceDate) <= 0 ? "urgent" : "normal",
     issue: `Maintenance service for ${equipmentLabel(equipment)}${equipment.location ? ` at ${equipment.location}` : ""}`,
@@ -22597,8 +22597,8 @@ document.addEventListener("click", async (event) => {
       if (signupButton) {
         signupButton.hidden = true;
       }
-      elements.authGateHeading.textContent = "Set up the office your shop deserves.";
-      elements.authGatePanelHeading.textContent = "Create your shop workspace";
+      elements.authGateHeading.textContent = "Set up the office your business deserves.";
+      elements.authGatePanelHeading.textContent = "Create your Backline workspace";
       elements.authGatePanelDetail.textContent = "Set up your secure Backline workspace in a few steps.";
       elements.authGateFooterPrompt.textContent = "Already have a Backline account?";
       elements.authGateStatus.textContent = "Enter your name, then create your secure Backline workspace.";
