@@ -5,7 +5,14 @@ const page = readFileSync("public-site/index.html", "utf8");
 const privacy = readFileSync("public-site/privacy.html", "utf8");
 const terms = readFileSync("public-site/terms.html", "utf8");
 const legalCss = readFileSync("public-site/legal.css", "utf8");
+const robots = readFileSync("public-site/robots.txt", "utf8");
+const sitemap = readFileSync("public-site/sitemap.xml", "utf8");
 
+assert.match(page, /Small Business Job & Operations Management Software/, "The public page should identify Backline's product category for search.");
+assert.match(page, /<meta name="description"/, "The public page should include a search description.");
+assert.match(page, /<link rel="canonical" href="https:\/\/backlineoffice\.com\/">/, "The public page should declare its canonical production URL.");
+assert.match(page, /application\/ld\+json/, "The public page should include structured data.");
+assert.match(page, /"@type": "WebApplication"/, "The public page should describe Backline as a web application.");
 assert.match(page, /mailto:support@backlineoffice\.com/, "The public site should expose the verified support route.");
 assert.match(page, /<h3>Solo<\/h3>/, "Public pricing should use the Solo plan name.");
 assert.match(page, /<h3>Crew<\/h3>/, "Public pricing should use the Crew plan name.");
@@ -25,5 +32,7 @@ assert.match(terms, /Terms of Service/, "Terms page should have a clear heading.
 assert.match(terms, /Trials, billing, and cancellation/, "Terms should address subscription billing.");
 assert.match(terms, /support@backlineoffice\.com/, "Terms should provide a support contact.");
 assert.match(legalCss, /@media \(max-width: 700px\)/, "Legal pages should include a mobile layout.");
+assert.match(robots, /Sitemap: https:\/\/backlineoffice\.com\/sitemap\.xml/, "Robots should advertise the production sitemap.");
+assert.match(sitemap, /https:\/\/backlineoffice\.com\/privacy\.html/, "The sitemap should include the privacy policy.");
 
 console.log("Public site contracts passed.");
