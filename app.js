@@ -2596,6 +2596,20 @@ function friendlyAuthError(error) {
   return error?.message || "Authentication failed. Please try again.";
 }
 
+function isPasswordRecoveryUrl() {
+  const query = new URLSearchParams(window.location.search);
+  const fragment = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+  return query.get("type") === "recovery" || fragment.get("type") === "recovery";
+}
+
+function clearPasswordRecoveryUrl() {
+  const url = new URL(window.location.href);
+  url.searchParams.delete("code");
+  url.searchParams.delete("type");
+  url.hash = "";
+  window.history.replaceState({}, document.title, url.pathname + url.search);
+}
+
 function friendlyApprovalError(error) {
   const message = String(error?.message || "");
   if (isSupabaseNetworkError(error)) {
@@ -3960,12 +3974,16 @@ async function openBillingPortal() {
 function resetAuthCreateAccountState() {
   const nameFields = elements.authForm?.querySelector("[data-name-fields]");
   const usernamePreview = elements.authForm?.querySelector("[data-username-preview]");
+  const emailField = elements.authForm?.querySelector("[data-auth-email-field]");
+  const passwordField = elements.authForm?.querySelector("[data-auth-password-field]");
+  const forgotPasswordButton = elements.authForm?.querySelector("[data-auth-forgot-password]");
   const confirmPasswordField = elements.authForm?.querySelector("[data-confirm-password-field]");
   const signInButton = elements.authForm?.querySelector("[data-auth-signin-button]");
   const backButton = elements.authGate?.querySelector("[data-auth-back-login]");
   const signupButton = elements.authGate?.querySelector("[data-auth-signup-button]");
   elements.authForm?.classList.remove("signup-mode");
   elements.authGate?.classList.remove("auth-create-mode");
+  elements.authGate?.classList.remove("auth-recovery-mode");
   if (nameFields) {
     nameFields.hidden = true;
   }
@@ -3975,6 +3993,9 @@ function resetAuthCreateAccountState() {
   if (confirmPasswordField) {
     confirmPasswordField.hidden = true;
   }
+  if (emailField) emailField.hidden = false;
+  if (passwordField) passwordField.hidden = false;
+  if (forgotPasswordButton) forgotPasswordButton.hidden = false;
   if (signInButton) {
     signInButton.hidden = false;
     signInButton.dataset.authMode = "signin";
@@ -3997,6 +4018,42 @@ function resetAuthCreateAccountState() {
   if (elements.authForm.elements.confirmPassword) {
     elements.authForm.elements.confirmPassword.value = "";
   }
+}
+
+function showPasswordRecoveryForm(message = "Choose a new password for your Backline account.") {
+  const nameFields = elements.authForm?.querySelector("[data-name-fields]");
+  const usernamePreview = elements.authForm?.querySelector("[data-username-preview]");
+  const emailField = elements.authForm?.querySelector("[data-auth-email-field]");
+  const passwordField = elements.authForm?.querySelector("[data-auth-password-field]");
+  const forgotPasswordButton = elements.authForm?.querySelector("[data-auth-forgot-password]");
+  const confirmPasswordField = elements.authForm?.querySelector("[data-confirm-password-field]");
+  const signInButton = elements.authForm?.querySelector("[data-auth-signin-button]");
+  const backButton = elements.authGate?.querySelector("[data-auth-back-login]");
+  const signupButton = elements.authGate?.querySelector("[data-auth-signup-button]");
+  if (!elements.authGate || !elements.authForm) return;
+
+  elements.authForm.classList.remove("signup-mode");
+  elements.authGate.classList.remove("auth-create-mode");
+  elements.authGate.classList.add("auth-recovery-mode");
+  if (nameFields) nameFields.hidden = true;
+  if (usernamePreview) usernamePreview.hidden = true;
+  if (emailField) emailField.hidden = true;
+  if (passwordField) passwordField.hidden = false;
+  if (forgotPasswordButton) forgotPasswordButton.hidden = true;
+  if (confirmPasswordField) confirmPasswordField.hidden = false;
+  if (signInButton) {
+    signInButton.hidden = false;
+    signInButton.dataset.authMode = "recovery";
+    signInButton.textContent = "Save new password";
+  }
+  if (backButton) backButton.hidden = true;
+  if (signupButton) signupButton.hidden = true;
+  elements.authGateHeading.textContent = "Set a new password.";
+  elements.authGatePanelHeading.textContent = "Password recovery";
+  elements.authGatePanelDetail.textContent = "Choose a new password to securely return to Backline.";
+  elements.authGateFooterPrompt.textContent = "Password recovery link confirmed";
+  elements.authGateStatus.textContent = message;
+  elements.authForm.elements.password?.focus();
 }
 
 function setAuthGate(visible, message = "") {
@@ -4147,6 +4204,12 @@ function getSupabaseClient() {
       detectSessionInUrl: true
     }
   });
+  state.supabaseClient.auth.onAuthStateChange((event) => {
+    if (event === "PASSWORD_RECOVERY") {
+      setAuthGate(true);
+      showPasswordRecoveryForm();
+    }
+  });
   return state.supabaseClient;
 }
 
@@ -4207,6 +4270,12 @@ async function setupSecureBackend() {
   resetSecureWorkspaceState();
   state.currentUser = sessionUser;
   updateAuthStatus();
+
+  if (isPasswordRecoveryUrl()) {
+    setAuthGate(true);
+    showPasswordRecoveryForm();
+    return true;
+  }
 
   if (!state.currentUser) {
     if (await showOfflineUnlockGate()) return true;
@@ -22484,6 +22553,29 @@ document.addEventListener("click", async (event) => {
     return;
   }
 
+  if (event.target.closest("[data-auth-forgot-password]")) {
+    const client = getSupabaseClient();
+    const email = String(elements.authForm?.elements.email?.value || "").trim();
+    if (!client) {
+      elements.authGateStatus.textContent = "Supabase is not configured yet.";
+      return;
+    }
+    if (!email) {
+      elements.authGateStatus.textContent = "Enter your email address, then select Forgot password.";
+      elements.authForm?.elements.email?.focus();
+      return;
+    }
+    const button = event.target.closest("[data-auth-forgot-password]");
+    button.disabled = true;
+    elements.authGateStatus.textContent = "Sending password reset email...";
+    const { error } = await client.auth.resetPasswordForEmail(email, { redirectTo: authRedirectTo() });
+    button.disabled = false;
+    elements.authGateStatus.textContent = error
+      ? friendlyAuthError(error)
+      : "If that email has a Backline account, a password reset link is on its way.";
+    return;
+  }
+
   const authButton = event.target.closest("[data-auth-mode]");
   if (authButton && (elements.authForm?.contains(authButton) || authButton.form === elements.authForm)) {
     const nameFields = elements.authForm.querySelector("[data-name-fields]");
@@ -24413,6 +24505,29 @@ document.addEventListener("submit", async (event) => {
     const confirmPassword = String(data.get("confirmPassword") || "");
     if (!client) {
       elements.authGateStatus.textContent = "Supabase is not configured yet.";
+      return;
+    }
+    if (mode === "recovery") {
+      if (password !== confirmPassword) {
+        elements.authGateStatus.textContent = "Passwords do not match. Re-enter the same password.";
+        authForm.elements.confirmPassword?.focus();
+        return;
+      }
+      setAccountSwitching(true, "Saving new password...");
+      const { error } = await client.auth.updateUser({ password });
+      setAccountSwitching(false);
+      if (error) {
+        elements.authGateStatus.textContent = friendlyAuthError(error);
+        return;
+      }
+      clearPasswordRecoveryUrl();
+      await client.auth.signOut({ scope: "local" });
+      state.currentUser = null;
+      resetSecureWorkspaceState();
+      updateAuthStatus();
+      resetAuthCreateAccountState();
+      elements.authGateStatus.textContent = "Password updated. Sign in with your new password.";
+      elements.authForm.elements.email?.focus();
       return;
     }
     if (mode === "signup" && (!firstName || !lastName || !displayName)) {

@@ -12123,6 +12123,30 @@ html[data-theme="dark"] .approval-logo-full {
   }
 }
 
+.auth-forgot-password-button {
+  justify-self: start;
+  margin: -4px 0 2px;
+  padding: 2px 0;
+  border: 0;
+  background: transparent;
+  color: var(--blue-dark);
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.auth-forgot-password-button:hover,
+.auth-forgot-password-button:focus-visible {
+  color: var(--teal-dark);
+}
+
+.auth-forgot-password-button:disabled {
+  cursor: wait;
+  opacity: 0.62;
+}
+
 .creator-nav-icon svg {
   width: 18px;
   height: 18px;

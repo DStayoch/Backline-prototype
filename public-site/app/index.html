@@ -56,14 +56,15 @@
               </label>
             </div>
             <p class="auth-username-note" data-username-preview hidden>Your Backline username will be <strong data-username-preview-value>first.last</strong>.</p>
-            <label>
+            <label data-auth-email-field>
               Email
               <input type="email" name="email" autocomplete="email" placeholder="you@yourshop.com" required>
             </label>
-            <label>
+            <label data-auth-password-field>
               Password
               <input type="password" name="password" autocomplete="current-password" placeholder="Enter your password" required minlength="6">
             </label>
+            <button class="auth-forgot-password-button" type="button" data-auth-forgot-password>Forgot password?</button>
             <label data-confirm-password-field hidden>
               Confirm password
               <input type="password" name="confirmPassword" autocomplete="new-password" placeholder="Re-enter your password" minlength="6">
