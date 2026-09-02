@@ -12,7 +12,7 @@ This checklist is for moving Backline from local prototype to a real beta URL. I
 - [x] Automated test script exists: `npm test`
 - [x] GitHub CI workflow exists: `.github/workflows/ci.yml`
 - [x] GitHub Pages workflow exists: `.github/workflows/pages.yml`
-- [x] App cache tag is declared in `index.html`: `app.js?v=20260617-creator-access`
+- [x] App cache tag is declared in `index.html`
 - [x] Supabase config template exists: `supabase-config.example.js`
 - [x] Local Supabase config template exists: `supabase-config.local.example.js`
 - [x] Production Supabase config template exists: `supabase-config.production.example.js`
@@ -80,6 +80,7 @@ This checklist is for moving Backline from local prototype to a real beta URL. I
 ## Hosting
 
 - [x] GitHub Pages workflow can publish the static app
+- [x] GitHub Pages runs the full test suite before it can publish
 - [ ] Confirm final production host: GitHub Pages, Netlify, Vercel, or another static host
 - [ ] Confirm production URL uses HTTPS
 - [ ] Confirm `supabase-config.js` points to the production Supabase project
@@ -91,6 +92,7 @@ This checklist is for moving Backline from local prototype to a real beta URL. I
 - [ ] Google OAuth provider is enabled in Supabase if Google sign-in is shown
 - [ ] Facebook OAuth provider is enabled in Supabase if Facebook sign-in is shown
 - [ ] `npm run deploy:preflight` passes before pushing a production deploy
+- [ ] `main` branch protection requires the CI `test` check, blocks force pushes, and applies to administrators
 - [ ] Confirm customer approval links use the production URL
 - [ ] Confirm customer portal links use the production URL
 - [ ] Confirm mobile opens the production URL without local-network workarounds

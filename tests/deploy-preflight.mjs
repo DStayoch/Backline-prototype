@@ -36,6 +36,8 @@ assert.match(gitignore, /^_site\/$/m, "Generated Pages output should not be comm
 
 assert.match(pagesWorkflow, /BACKLINE_SUPABASE_URL/, "Pages deploy must read the production Supabase URL from GitHub settings.");
 assert.match(pagesWorkflow, /BACKLINE_SUPABASE_ANON_KEY/, "Pages deploy must read the production Supabase anon key from GitHub settings.");
+assert.match(pagesWorkflow, /test:\s+name: Production test gate[\s\S]*?run: npm test/s, "Pages deploy must run the full test suite before publishing.");
+assert.match(pagesWorkflow, /deploy:\s+needs: test/s, "Pages deployment must depend on the successful production test gate.");
 assert.match(pagesWorkflow, /cat > _site\/supabase-config\.js/, "Pages deploy must generate production supabase-config.js.");
 assert.match(pagesWorkflow, /publicAppUrl: "https:\/\/backlineoffice\.com\/app\/"/, "Pages deploy must set the hosted app URL for auth callbacks.");
 assert.match(pagesWorkflow, /path: _site/, "Pages deploy should upload only the prepared static site.");

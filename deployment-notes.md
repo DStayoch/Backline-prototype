@@ -39,6 +39,19 @@ Production:
 11. Mark the Phone/SMS beta mode: live provider, portal-only replies, or manual logged messages.
 12. Complete one owner/admin/dispatcher/technician/customer walkthrough before inviting a real shop.
 
+## Production Deploy Guard
+
+The GitHub Pages deployment workflow runs `npm test` itself and deploys only when that job succeeds. Keep the separate `CI / test` workflow as the required status check for pull requests.
+
+Before inviting real workspaces, protect `main` in GitHub:
+
+1. Open the repository **Settings** -> **Branches** -> **Add branch protection rule** and set the branch pattern to `main`.
+2. Require a pull request before merging. Require one approval only after there is another reviewer; do not require your own approval while you are the sole maintainer.
+3. Require status checks to pass, select `test` from the **CI** workflow, and require the branch to be up to date before merging.
+4. Include administrators, disable force pushes, and disable branch deletion.
+
+This keeps every normal production change on a reviewed branch and blocks merges that fail the full Backline test suite. GitHub repository settings control the branch rule; it cannot be enabled safely from application code.
+
 ## Do Not Mix
 
 - Do not use the local testing Supabase project for a real shop.
