@@ -35,8 +35,12 @@ assert.match(privacy, /Backline is operated by Derek Stayoch/, "Privacy policy s
 assert.match(privacy, /Supabase/, "Privacy policy should disclose core data infrastructure.");
 assert.match(privacy, /Stripe/, "Privacy policy should disclose billing processing.");
 assert.match(privacy, /support@backlineoffice\.com/, "Privacy policy should provide a support contact.");
+assert.match(privacy, /within 30 days/, "Privacy policy should state the verified deletion-request timeline.");
+assert.match(privacy, /does not sell personal information/, "Privacy policy should state Backline's no-sale commitment.");
 assert.match(terms, /Terms of Service/, "Terms page should have a clear heading.");
-assert.match(terms, /Trials, billing, and cancellation/, "Terms should address subscription billing.");
+assert.match(terms, /Trials, billing, cancellation, and refunds/, "Terms should address subscription billing and refunds.");
+assert.match(terms, /State of Florida/, "Terms should state the chosen governing law.");
+assert.match(terms, /does not provide prorated refunds/, "Terms should state the agreed refund policy.");
 assert.match(terms, /support@backlineoffice\.com/, "Terms should provide a support contact.");
 assert.match(legalCss, /@media \(max-width: 700px\)/, "Legal pages should include a mobile layout.");
 assert.match(robots, /Sitemap: https:\/\/backlineoffice\.com\/sitemap\.xml/, "Robots should advertise the production sitemap.");
