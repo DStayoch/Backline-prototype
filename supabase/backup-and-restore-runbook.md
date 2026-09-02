@@ -12,10 +12,28 @@ Supabase database backups do not include Storage object contents. A complete rec
 
 ## Before the drill
 
-1. In the production Supabase dashboard, open **Database > Backups**. Confirm a recent backup exists. Pro, Team, and Enterprise projects receive daily backups; free projects need a manual database dump kept off-site.
+1. Choose the database backup path for the current plan:
+   - **Pro, Team, or Enterprise:** in the production Supabase dashboard, open **Database > Backups** and confirm a recent backup exists.
+   - **Free:** create the manual public-data dump in the next section. The Free plan does not have project restore points.
 2. In Backline Settings, download a **data backup** and store it in an encrypted folder outside the repository.
 3. Make an encrypted local folder such as `C:\Backline-backups\2026-09-02` that is excluded from cloud sharing unless that storage is approved for customer data.
 4. Get the production project's URL and service-role key from Supabase. The service-role key bypasses RLS: use it only in this local command window, never in Backline source files, GitHub, or browser code.
+
+## Free-plan database backup
+
+The Free plan is appropriate while Backline is being developed, but it needs a manual backup before any meaningful production-data change. This dump protects Backline's `public` workspace data; Supabase's managed `auth` and `storage` schemas are excluded by the CLI, so this is not equivalent to a paid project restore point.
+
+On a machine with an internet connection, use `npx` so you do not need a permanent global install. From Supabase **Connect**, copy the production database connection string into `BACKLINE_DATABASE_URL`. Do not share or commit that password-bearing value.
+
+```powershell
+$env:BACKLINE_BACKUP_DIR = "C:\Backline-backups\2026-09-02"
+$env:BACKLINE_DATABASE_URL = "postgresql://postgres.PROJECT_REF:YOUR_DATABASE_PASSWORD@YOUR_HOST:6543/postgres"
+New-Item -ItemType Directory -Force -Path $env:BACKLINE_BACKUP_DIR
+npx supabase@latest db dump --db-url "$env:BACKLINE_DATABASE_URL" --schema public --file "$env:BACKLINE_BACKUP_DIR\backline-public-schema.sql"
+npx supabase@latest db dump --db-url "$env:BACKLINE_DATABASE_URL" --schema public --data-only --use-copy --file "$env:BACKLINE_BACKUP_DIR\backline-public-data.sql"
+```
+
+Keep both SQL files beside the Storage-object archive. The first time you run `npx`, it downloads the Supabase CLI. If the work network blocks it, wait until you have a normal connection; do not paste the database URL into a website or chat.
 
 ## Create the Storage-object backup
 
@@ -33,7 +51,9 @@ Record the final object count. Confirm the folder has `backline-storage-manifest
 ## Restore drill: use a disposable project
 
 1. Create a new, disposable Supabase project named like `backline-restore-drill-20260902`. Do not put its URL into Backline, Supabase Auth, Stripe, or Cloudflare.
-2. From the production project's **Database > Backups** page, use Supabase's **Restore to a new project** process for a backup captured before the drill. If that option is unavailable on the current plan, follow Supabase's documented CLI/database-backup restore procedure into the disposable project instead.
+2. Restore the database using the path that matches the plan:
+   - **Paid plans:** from the production project's **Database > Backups** page, use Supabase's **Restore to a new project** process for a backup captured before the drill.
+   - **Free plan:** install PostgreSQL client tools on the restore-drill machine, apply the current Backline schema to the disposable project, then load `backline-public-schema.sql` and `backline-public-data.sql` with `psql`. This verifies Backline workspace data, but does not recreate Supabase Auth accounts. Do not use the restore-drill project for real sign-in testing.
 3. In the disposable project, confirm the `job-files` bucket and `public.job_files` metadata rows exist. The file rows can exist even though the actual objects have not been restored yet.
 4. Change the environment values below to the *disposable project's* URL and service-role key. Keep the same local backup directory, then run:
 
