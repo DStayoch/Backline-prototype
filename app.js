@@ -6019,6 +6019,12 @@ function teamRoleConstraintMessage(error) {
   return "Custom role is saved, but Supabase still has the old role constraint. Run supabase-schema-15-custom-roles.sql in the Supabase SQL editor, then try again.";
 }
 
+function teamSeatLimitMessage(error) {
+  const message = String(error?.message || "");
+  if (!/current Backline plan allows .* team members/i.test(message)) return "";
+  return message;
+}
+
 async function refreshTeamData() {
   await loadRemoteTeamData();
   render();
@@ -6063,7 +6069,7 @@ async function createTeamInvite(formData) {
   });
 
   if (error) {
-    setTeamStatus(teamRoleConstraintMessage(error) || error.message || "Invite could not be created.", { title: "Invite failed", type: "danger" });
+    setTeamStatus(teamSeatLimitMessage(error) || teamRoleConstraintMessage(error) || error.message || "Invite could not be created.", { title: "Invite failed", type: "danger" });
     return;
   }
 

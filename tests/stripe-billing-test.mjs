@@ -8,6 +8,7 @@ const app = read("app.js");
 const page = read("index.html");
 const schema = read("supabase-schema-20-billing.sql");
 const accessSchema = read("supabase-schema-21-billing-access.sql");
+const seatLimitSchema = read("supabase-schema-25-subscription-seat-limits.sql");
 const checkout = read("supabase/functions/create-billing-checkout/index.ts");
 const portal = read("supabase/functions/create-billing-portal/index.ts");
 const webhook = read("supabase/functions/stripe-webhook/index.ts");
@@ -24,6 +25,14 @@ assert.match(accessSchema, /backline_workspace_access/i, "The browser needs a re
 assert.match(accessSchema, /before insert or update or delete on public\.jobs/i, "Jobs must be protected by a subscription write trigger.");
 assert.match(accessSchema, /before insert or update or delete on public\.customers/i, "Customers must be protected by a subscription write trigger.");
 assert.match(accessSchema, /public\.is_platform_admin/i, "Founder access must be server controlled.");
+assert.match(seatLimitSchema, /additional_seat_quantity/i, "Billing needs a server-owned quantity for paid Shop seats.");
+assert.match(seatLimitSchema, /backline_subscription_member_limit/i, "Seat capacity must be calculated in the database.");
+assert.match(seatLimitSchema, /when 'solo' then return 1/i, "Solo must have a one-member server limit.");
+assert.match(seatLimitSchema, /when 'crew' then return 5/i, "Crew must have a five-member server limit.");
+assert.match(seatLimitSchema, /when 'shop' then return 10 \+ additional_seats/i, "Shop capacity must include paid additional seats.");
+assert.match(seatLimitSchema, /before insert or update on public\.team_invites/i, "Pending invites must count against seat capacity.");
+assert.match(seatLimitSchema, /before insert or update on public\.organization_members/i, "Membership creation must enforce seat capacity.");
+assert.match(app, /function teamSeatLimitMessage\(/, "The app should explain a server-enforced seat limit.");
 
 assert.match(checkout, /mode: "subscription"/, "Checkout must create subscriptions.");
 assert.match(checkout, /role=eq\.owner/, "Only a workspace owner may start billing checkout.");
