@@ -10421,6 +10421,19 @@ html[data-theme="dark"] .approval-logo-full {
   outline-offset: 2px;
 }
 
+.modal-card-with-close {
+  position: relative;
+}
+
+.modal-card-with-close > .modal-close-button {
+  z-index: 2;
+}
+
+.modal-card-with-close > .inventory-usage-content,
+.modal-card-with-close > .activity-detail-content {
+  padding-top: 62px;
+}
+
 .modal-inline-close {
   width: 36px;
   height: 36px;

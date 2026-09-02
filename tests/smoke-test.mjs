@@ -112,8 +112,8 @@ const modalContracts = [
   ["jobModal", "job"],
   ["actionModal", "action"],
   ["pricebookEditModal", "pricebook-edit"],
-  ["inventoryUsageModal", "inventory-usage", true],
-  ["inventoryOrderDetailModal", "inventory-order-detail", true],
+  ["inventoryUsageModal", "inventory-usage"],
+  ["inventoryOrderDetailModal", "inventory-order-detail"],
   ["inventoryOrderModal", "inventory-order"],
   ["supplierModal", "supplier"],
   ["reorderCopyModal", "reorder-copy"],
@@ -121,10 +121,10 @@ const modalContracts = [
   ["teamRemoveModal", "team-remove"],
   ["importConfirmModal", "import-confirm"],
   ["customRoleModal", "custom-role"],
-  ["activityDetailModal", "activity-detail", true]
+  ["activityDetailModal", "activity-detail"]
 ];
 
-for (const [id, cancelKey, dynamicHeader] of modalContracts) {
+for (const [id, cancelKey] of modalContracts) {
   const match = html.match(new RegExp(`<dialog[^>]*id="${id}"[^>]*>[\\s\\S]*?<\\/dialog>`));
   assert.ok(match, `${id} should be a complete dialog`);
   const modal = match[0];
@@ -136,19 +136,11 @@ for (const [id, cancelKey, dynamicHeader] of modalContracts) {
       : new RegExp(`data-cancel-modal="${cancelKey}"`),
     `${id} should keep a footer close or cancel action`
   );
-  if (dynamicHeader) {
-    assert.match(
-      js,
-      new RegExp(`class="modal-inline-close"[^>]*data-cancel-modal="${cancelKey}"`),
-      `${id} should render a top-right close button with its detail header`
-    );
-  } else {
-    assert.match(
-      modal,
-      new RegExp(`class="modal-close-button"[^>]*data-cancel-modal="${cancelKey}"`),
-      `${id} should have a top-right close button`
-    );
-  }
+  assert.match(
+    modal,
+    new RegExp(`class="modal-close-button"[^>]*data-cancel-modal="${cancelKey}"`),
+    `${id} should have a top-right close button`
+  );
 }
 
 assert.match(html, /<title>Backline<\/title>/);
@@ -211,6 +203,17 @@ assert.match(html, /Sign in instead/);
 assert.match(html, /data-auth-signup-button/);
 assert.match(html, /data-oauth-provider="google"/);
 assert.match(html, /Continue with Google/);
+for (const [modalId, cancelAction] of [
+  ["inventoryUsageModal", "inventory-usage"],
+  ["inventoryOrderDetailModal", "inventory-order-detail"],
+  ["activityDetailModal", "activity-detail"]
+]) {
+  assert.match(
+    html,
+    new RegExp(`id="${modalId}"[\\s\\S]*?modal-card-with-close[\\s\\S]*?data-cancel-modal="${cancelAction}"`),
+    `${modalId} should have a guaranteed top-right close control`
+  );
+}
 assert.match(html, /id="workGrid"/);
 assert.match(html, /id="collapseInboxButton"/);
 assert.match(html, /Hide Inbox/);

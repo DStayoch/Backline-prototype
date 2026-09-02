@@ -9319,7 +9319,6 @@ function renderInventoryUsageModal(key = "") {
         <p>${escapeHtml(rows.length ? `${rows.length} logged use${rows.length === 1 ? "" : "s"} across jobs.` : "No jobs have logged this part yet.")}</p>
       </div>
       <div class="activity-detail-header-actions">
-        <button class="modal-inline-close" type="button" data-cancel-modal="inventory-usage" aria-label="Close inventory usage">&times;</button>
         <span class="pill ${escapeHtml(totals.unbilled ? "estimated" : "paid")}">${escapeHtml(totals.unbilled ? `${totals.unbilled} unbilled` : "All billed")}</span>
       </div>
     </div>
@@ -16354,7 +16353,6 @@ function renderInventoryOrderDetail(purchaseOrderId = "") {
         <p>${escapeHtml(`${order.supplier || "Supplier not set"} - ${inventoryOrderFilterLabel(order.status)}`)}</p>
       </div>
       <div class="activity-detail-header-actions">
-        <button class="modal-inline-close" type="button" data-cancel-modal="inventory-order-detail" aria-label="Close inventory order details">&times;</button>
         <span class="pill ${escapeHtml(order.status === "received" ? "paid" : order.status === "late" ? "urgent" : "booked")}">${escapeHtml(inventoryOrderFilterLabel(order.status))}</span>
       </div>
     </div>
@@ -16925,7 +16923,6 @@ function renderActivityDetail(eventId) {
         <p>${escapeHtml(event.detail || event.job?.issue || "No extra detail recorded")}</p>
       </div>
       <div class="activity-detail-header-actions">
-        <button class="modal-inline-close" type="button" data-cancel-modal="activity-detail" aria-label="Close activity detail">&times;</button>
         <span class="pill ${escapeHtml(event.type)}">${escapeHtml(activityTypeLabel(event.type))}</span>
       </div>
     </div>
