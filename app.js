@@ -5867,7 +5867,7 @@ function exportData() {
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = "backline-data.json";
+  link.download = `backline-data-${new Date().toISOString().slice(0, 10)}.json`;
   link.click();
   URL.revokeObjectURL(url);
 }
@@ -25337,7 +25337,7 @@ document.querySelector("#importInput").addEventListener("change", async (event) 
     state.selectedCustomerId = null;
     save();
     render();
-    showToast("Import complete", "Backline data was imported into this workspace.", "success");
+    showToast("Data import complete", "Backline workspace data was imported. Uploaded files are not included in this backup.", "success");
   } catch (error) {
     showToast("Import failed", error?.message || "Choose a valid Backline JSON export.", "danger");
   } finally {
@@ -25386,7 +25386,7 @@ function registerBacklineServiceWorker() {
   if (window.location.protocol === "file:" || !("serviceWorker" in navigator)) return;
   window.addEventListener("load", () => {
     navigator.serviceWorker
-      .register("./service-worker.js?v=20260901-public-link-seats", { scope: "./" })
+      .register("./service-worker.js?v=20260902-backup-drill", { scope: "./" })
       .catch((error) => console.warn("Backline service worker registration failed.", error));
   });
 }

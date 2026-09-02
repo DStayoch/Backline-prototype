@@ -1,9 +1,11 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 
 const app = readFileSync("app.js", "utf8");
 const schema = readFileSync("supabase-schema-23-launch-hardening.sql", "utf8");
 const fullSchema = readFileSync("supabase-schema.sql", "utf8");
+const backupRunbook = readFileSync("supabase/backup-and-restore-runbook.md", "utf8");
+const packageJson = readFileSync("package.json", "utf8");
 
 assert.match(schema, /Backline schema 23: launch security hardening/);
 assert.match(schema, /create or replace function public\.is_org_field_worker/);
@@ -34,5 +36,14 @@ assert.match(app, /mode: "read_only", status: "inactive"/);
 assert.match(app, /legacy helper as a no-op/);
 assert.doesNotMatch(app, /localStorage\.setItem\(key, JSON\.stringify\(\{\s+organizationId: orgId/s);
 assert.match(fullSchema, /Backline schema 23: launch security hardening/);
+assert.match(app, /backline-data-\$\{new Date\(\)\.toISOString\(\)\.slice\(0, 10\)\}\.json/);
+assert.match(app, /Uploaded files are not included in this backup/);
+assert.match(backupRunbook, /Supabase database backups do not include Storage object contents/);
+assert.match(backupRunbook, /RESTORE_FILES_TO_TEST_PROJECT/);
+assert.match(backupRunbook, /Never test a restore against the production Supabase project/);
+assert.match(packageJson, /"backup:storage": "node tools\/backup-storage-objects\.mjs"/);
+assert.match(packageJson, /"restore:storage": "node tools\/restore-storage-objects\.mjs"/);
+assert.ok(existsSync("tools/backup-storage-objects.mjs"), "Storage backup utility must exist.");
+assert.ok(existsSync("tools/restore-storage-objects.mjs"), "Storage restore utility must exist.");
 
 console.log("Launch hardening test passed.");

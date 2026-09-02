@@ -319,15 +319,15 @@
                   <button class="utility-button" type="button" id="workspaceSettingsButton">Workspace settings</button>
                   <button class="utility-button" type="button" id="offlineAccessButton">Offline access</button>
                   <button class="utility-button" type="button" id="settingsConnectionButton">Test secure connection</button>
-                  <button class="utility-button" type="button" id="settingsExportButton">Download backup</button>
-                  <label class="utility-button file-button" for="importInput">Restore from backup</label>
+                  <button class="utility-button" type="button" id="settingsExportButton">Download data backup</button>
+                  <label class="utility-button file-button" for="importInput">Import data backup</label>
                   <label class="print-select">
                     <span>Schedule print range</span>
                     <div class="backline-picker-field" id="printScheduleRange"></div>
                   </label>
                   <button class="utility-button" type="button" id="settingsPrintButton">Print schedule</button>
                 </div>
-                <p class="settings-note">Local settings stay on this device.</p>
+                <p class="settings-note">Data backups include workspace records, not uploaded file contents. Production recovery uses the backup drill procedure.</p>
               </div>
             </div>
             <button class="primary-button" type="button" id="newJobButton" data-business-term="newWorkItem">New job</button>
@@ -1338,19 +1338,19 @@
       <form class="modal-card delete-modal-card" method="dialog" id="importConfirmForm">
         <div class="modal-header modal-header-with-close">
           <div>
-            <p class="eyebrow">Restore backup</p>
-            <h2>Restore this workspace from backup?</h2>
+            <p class="eyebrow">Import backup data</p>
+            <h2>Import workspace data from this backup?</h2>
             <p id="importConfirmSummary">This export does not identify a secure workspace.</p>
           </div>
           <button class="modal-close-button" type="button" data-cancel-modal="import-confirm" aria-label="Close restore backup confirmation">&times;</button>
         </div>
         <div class="delete-warning">
-          <strong>Review before restoring.</strong>
-          <span>This will replace the current jobs, customers, pricebook, suppliers, settings, and activity data in this workspace.</span>
+          <strong>Review before importing.</strong>
+          <span>This imports workspace data but cannot recreate uploaded files or perform a secure database rollback. Use the production backup drill for full recovery.</span>
         </div>
         <div class="modal-actions">
           <button class="secondary-button" type="button" data-cancel-modal="import-confirm">Cancel</button>
-          <button class="primary-button" type="submit">Restore backup</button>
+          <button class="primary-button" type="submit">Import data</button>
         </div>
       </form>
     </dialog>
@@ -1404,6 +1404,6 @@
       </section>
     </dialog>
 
-    <script src="app.js?v=20260901-public-link-seats"></script>
+    <script src="app.js?v=20260902-backup-drill"></script>
   </body>
 </html>

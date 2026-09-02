@@ -107,9 +107,10 @@ This checklist is for moving Backline from local prototype to a real beta URL. I
 
 - [x] Workspace isolation test exists
 - [x] Security isolation test exists
-- [x] Download backup and restore from backup are present
-- [ ] Create production backup before inviting a real shop
-- [ ] Restore a backup into a non-production test workspace
+- [x] Owner-accessible workspace-data export and import are present, with attachment limitation disclosed
+- [x] Production database and Storage-object backup utilities are documented in `supabase/backup-and-restore-runbook.md`
+- [ ] Create and retain one production database backup and matching Storage-object archive before inviting a real workspace
+- [ ] Complete the documented restore drill in a non-production Supabase project, including opening one restored attachment
 - [ ] Confirm one shop cannot view another shop's customers, jobs, files, roles, or activity
 - [ ] Confirm activity log records lower-role task updates
 - [ ] Confirm deleted jobs archive is owner/admin scoped

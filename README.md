@@ -169,6 +169,8 @@ After approval-flow changes, rerun `supabase-schema-05-approval-rpc.sql` too. Th
 
 Job photos and attachments use the `job-files` Supabase Storage bucket in secure mode. In local prototype mode, uploads are kept as browser object URLs for the current browser session.
 
+The Settings **Download data backup** option exports workspace records but not the underlying private Storage object contents. For production protection and the required disposable-project restore drill, follow `supabase/backup-and-restore-runbook.md`. That procedure includes `npm run backup:storage` and `npm run restore:storage`; both commands require a service-role key only in the local shell environment and must never be placed in browser code, Git, or GitHub secrets visible to the client.
+
 Before using a production URL, add that URL to the Supabase Auth URL configuration so account confirmation and future auth emails return users to the right Backline workspace URL.
 
 For this deployment, use:
