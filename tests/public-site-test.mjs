@@ -7,6 +7,13 @@ const terms = readFileSync("public-site/terms.html", "utf8");
 const legalCss = readFileSync("public-site/legal.css", "utf8");
 const robots = readFileSync("public-site/robots.txt", "utf8");
 const sitemap = readFileSync("public-site/sitemap.xml", "utf8");
+const solutionPages = [
+  "small-business-job-management.html",
+  "service-business-scheduling.html",
+  "customer-portal-and-approvals.html",
+  "field-work-management.html"
+].map((file) => readFileSync(`public-site/solutions/${file}`, "utf8"));
+const solutionsCss = readFileSync("public-site/solutions.css", "utf8");
 
 assert.match(page, /Small Business Job & Operations Management Software/, "The public page should identify Backline's product category for search.");
 assert.match(page, /<meta name="description"/, "The public page should include a search description.");
@@ -34,5 +41,12 @@ assert.match(terms, /support@backlineoffice\.com/, "Terms should provide a suppo
 assert.match(legalCss, /@media \(max-width: 700px\)/, "Legal pages should include a mobile layout.");
 assert.match(robots, /Sitemap: https:\/\/backlineoffice\.com\/sitemap\.xml/, "Robots should advertise the production sitemap.");
 assert.match(sitemap, /https:\/\/backlineoffice\.com\/privacy\.html/, "The sitemap should include the privacy policy.");
+assert.match(page, /solutions\/small-business-job-management\.html/, "The public home page should link to the job-management solution page.");
+assert.equal(solutionPages.length, 4, "The public site should include the planned solution pages.");
+solutionPages.forEach((solutionPage) => {
+  assert.match(solutionPage, /<link rel="canonical" href="https:\/\/backlineoffice\.com\/solutions\//, "Each solution page should declare its production canonical URL.");
+  assert.match(solutionPage, /Start a 14-day trial/, "Each solution page should provide a trial action.");
+});
+assert.match(solutionsCss, /@media \(max-width: 560px\)/, "Solution pages should include a compact mobile layout.");
 
 console.log("Public site contracts passed.");
