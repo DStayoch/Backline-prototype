@@ -866,7 +866,6 @@ let state = {
   userRole: "owner",
   billing: null,
   billingAccess: { mode: "full", status: "" },
-  billingSeatSyncSignature: "",
   supabaseClient: null,
   offlineMode: false,
   offlineSyncPending: false,
@@ -4845,33 +4844,6 @@ async function loadRemoteTeamData() {
     state.teamMembers = [fallbackTeamMember()];
   }
   state.teamInvites = invites || [];
-  void reconcileBillingSeatCount();
-}
-
-async function reconcileBillingSeatCount() {
-  const client = getSupabaseClient();
-  if (
-    !client ||
-    !state.organizationId ||
-    !state.currentUser ||
-    !state.secureMode ||
-    state.offlineMode ||
-    currentRole() !== "owner"
-  ) return;
-
-  const signature = `${state.organizationId}:${state.teamMembers.length}`;
-  if (state.billingSeatSyncSignature === signature) return;
-
-  const { data, error } = await client.functions.invoke("sync-billing-seats", {
-    body: { organizationId: state.organizationId }
-  });
-  if (error || data?.error) {
-    // Retry on the next owner team load without disrupting a local or older
-    // Supabase project that does not yet have the function deployed.
-    console.warn("Backline billing seat reconciliation could not run.", error || data?.error);
-    return;
-  }
-  state.billingSeatSyncSignature = signature;
 }
 
 async function persistRemotePricebookItems() {

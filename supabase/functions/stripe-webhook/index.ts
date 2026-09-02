@@ -99,10 +99,46 @@ function organizationIdFromMetadata(metadata: Stripe.Metadata | null | undefined
   return asString(metadata?.backline_organization_id);
 }
 
+type MappedSubscription = {
+  planKey: "solo" | "crew" | "shop";
+  priceId: string;
+  additionalSeatQuantity: number;
+};
+
+function mapSubscriptionPrices(subscription: Stripe.Subscription): MappedSubscription {
+  const plans: Array<{ planKey: MappedSubscription["planKey"]; priceId: string }> = [
+    { planKey: "solo", priceId: asString(Deno.env.get("STRIPE_BACKLINE_SOLO_PRICE_ID")) },
+    { planKey: "crew", priceId: asString(Deno.env.get("STRIPE_BACKLINE_CREW_PRICE_ID")) },
+    { planKey: "shop", priceId: asString(Deno.env.get("STRIPE_BACKLINE_SHOP_PRICE_ID")) }
+  ];
+  const plan = plans.find(({ priceId }) => priceId && subscription.items.data.some((item) => item.price.id === priceId));
+  if (!plan) {
+    throw new Error("Stripe subscription does not contain a configured Backline plan Price ID.");
+  }
+
+  const additionalUserPriceId = asString(Deno.env.get("STRIPE_BACKLINE_ADDITIONAL_USER_PRICE_ID"));
+  if (plan.planKey === "shop" && !additionalUserPriceId) {
+    throw new Error("Stripe additional-user Price ID is not configured for the Backline Shop plan.");
+  }
+  const additionalSeatQuantity = additionalUserPriceId
+    ? subscription.items.data
+      .filter((item) => item.price.id === additionalUserPriceId)
+      .reduce((total, item) => total + Math.max(0, Number(item.quantity || 0)), 0)
+    : 0;
+
+  return { ...plan, additionalSeatQuantity };
+}
+
+async function organizationIdForSubscription(subscription: Stripe.Subscription) {
+  return organizationIdFromMetadata(subscription.metadata)
+    || (await billingForSubscription(subscription.id))?.organization_id
+    || "";
+}
+
 async function handleSubscription(subscription: Stripe.Subscription, event: Stripe.Event) {
-  const organizationId = organizationIdFromMetadata(subscription.metadata);
+  const organizationId = await organizationIdForSubscription(subscription);
   if (!organizationId) return;
-  const item = subscription.items.data[0];
+  const mapped = mapSubscriptionPrices(subscription);
   const existing = await billingForOrganization(organizationId);
   const shouldStartGracePeriod = subscription.status === "past_due" && existing?.status !== "past_due";
   const accessGraceUntil = subscription.status === "past_due"
@@ -111,8 +147,9 @@ async function handleSubscription(subscription: Stripe.Subscription, event: Stri
   await updateBilling(organizationId, {
     stripe_customer_id: stripeId(subscription.customer),
     stripe_subscription_id: subscription.id,
-    stripe_price_id: item?.price?.id || null,
-    plan_key: asString(subscription.metadata.backline_plan_key) || null,
+    stripe_price_id: mapped.priceId,
+    plan_key: mapped.planKey,
+    additional_seat_quantity: mapped.additionalSeatQuantity,
     status: subscription.status,
     access_grace_until: accessGraceUntil,
     cancel_at_period_end: subscription.cancel_at_period_end,
@@ -128,12 +165,13 @@ async function handleCheckout(session: Stripe.Checkout.Session, event: Stripe.Ev
   // Do not rely on a separate subscription event arriving first. Checkout can
   // establish the plan and current status in one signed webhook delivery.
   const subscription = await stripe.subscriptions.retrieve(subscriptionId);
-  const item = subscription.items.data[0];
+  const mapped = mapSubscriptionPrices(subscription);
   await updateBilling(organizationId, {
     stripe_customer_id: stripeId(session.customer),
     stripe_subscription_id: subscriptionId,
-    stripe_price_id: item?.price?.id || null,
-    plan_key: asString(subscription.metadata.backline_plan_key) || asString(session.metadata?.backline_plan_key) || null,
+    stripe_price_id: mapped.priceId,
+    plan_key: mapped.planKey,
+    additional_seat_quantity: mapped.additionalSeatQuantity,
     status: subscription.status,
     cancel_at_period_end: subscription.cancel_at_period_end,
     current_period_end: asUnixTimestamp(subscription.current_period_end),

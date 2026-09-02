@@ -5,7 +5,7 @@ Backline uses Stripe only to charge each shop for its Backline subscription. It 
 ## Before deploying
 
 1. In Stripe test mode, create four separate products and recurring monthly Prices: `Backline Solo` ($49, one active user), `Backline Crew` ($99, up to five active users), `Backline Shop` ($179, includes ten active users), and `Backline Additional User` ($15 for each user above ten). Record the non-secret Price IDs, such as `price_...`. Backline's checkout function applies a 14-day trial to each new subscription.
-2. In Stripe Dashboard, configure the Customer Portal. Enable the actions you want shop owners to use, such as updating payment methods, viewing invoices, cancelling, and switching plans.
+2. In Stripe Dashboard, configure the Customer Portal. Enable updating payment methods, viewing invoices, cancelling, switching Backline plans, and updating the quantity of the `Backline Additional User` Price. Shop includes ten team members; the additional-user quantity is the number of paid seats above ten.
 3. Leave `STRIPE_TAX_ENABLED` set to `false` until you have confirmed where Backline must collect tax and added an active Stripe Tax registration. Automatic tax without an active registration does not collect tax.
 
 ## Supabase secrets
@@ -38,7 +38,7 @@ sync-billing-seats
 
 Deploy `stripe-webhook` with JWT verification disabled because Stripe authenticates it using the webhook signature. The function verifies that signature before it processes any event.
 
-`sync-billing-seats` keeps the $15 Shop add-on aligned to the active team count. Deploy it with normal JWT verification enabled. Backline runs it when the workspace owner loads the team data, and it only updates Stripe when the paid seat quantity differs.
+Run `supabase-schema-25-subscription-seat-limits.sql` after schema 21, then redeploy `stripe-webhook` and `sync-billing-seats`. The database blocks members and pending invites beyond the paid plan capacity. Stripe Customer Portal, not the browser, changes Shop's additional-user quantity; the signed webhook records that quantity in Backline.
 
 ## Subscription access control
 
@@ -92,8 +92,8 @@ Copy that endpoint's signing secret into `STRIPE_WEBHOOK_SECRET`. The webhook, r
 
 1. Create a test Checkout session for a workspace owner.
 2. Complete it using Stripe's test payment method in Stripe Checkout.
-3. Confirm an `organization_billing` row shows the customer, subscription, Price, and `active` or `trialing` status.
-4. Open the customer portal and test a payment-method update or cancellation.
-5. Confirm the relevant webhook events appear in Stripe and update the same billing row.
+3. Confirm an `organization_billing` row shows the customer, subscription, mapped Price, plan key, additional-seat quantity, and `active` or `trialing` status.
+4. Open the customer portal and test a plan change and, for Shop, an additional-user quantity change.
+5. Confirm the `customer.subscription.updated` webhook updates the same billing row and that Backline applies the new member limit.
 
 Only replace test values with live values after the full flow works in test mode.
