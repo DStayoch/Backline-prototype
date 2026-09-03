@@ -3999,8 +3999,14 @@ function resetAuthCreateAccountState() {
   if (confirmPasswordField) {
     confirmPasswordField.hidden = true;
   }
+  const emailInput = emailField?.querySelector("input");
+  const passwordInput = passwordField?.querySelector("input");
+  const confirmPasswordInput = confirmPasswordField?.querySelector("input");
   if (emailField) emailField.hidden = false;
+  if (emailInput) emailInput.disabled = false;
   if (passwordField) passwordField.hidden = false;
+  if (passwordInput) passwordInput.autocomplete = "current-password";
+  if (confirmPasswordInput) confirmPasswordInput.required = false;
   if (forgotPasswordButton) forgotPasswordButton.hidden = false;
   if (signInButton) {
     signInButton.hidden = false;
@@ -4037,6 +4043,9 @@ function showPasswordRecoveryForm(message = "Choose a new password for your Back
   const backButton = elements.authGate?.querySelector("[data-auth-back-login]");
   const signupButton = elements.authGate?.querySelector("[data-auth-signup-button]");
   if (!elements.authGate || !elements.authForm) return;
+  const emailInput = emailField?.querySelector("input");
+  const passwordInput = passwordField?.querySelector("input");
+  const confirmPasswordInput = confirmPasswordField?.querySelector("input");
 
   elements.authForm.classList.remove("signup-mode");
   elements.authGate.classList.remove("auth-create-mode");
@@ -4044,9 +4053,12 @@ function showPasswordRecoveryForm(message = "Choose a new password for your Back
   if (nameFields) nameFields.hidden = true;
   if (usernamePreview) usernamePreview.hidden = true;
   if (emailField) emailField.hidden = true;
+  if (emailInput) emailInput.disabled = true;
   if (passwordField) passwordField.hidden = false;
+  if (passwordInput) passwordInput.autocomplete = "new-password";
   if (forgotPasswordButton) forgotPasswordButton.hidden = true;
   if (confirmPasswordField) confirmPasswordField.hidden = false;
+  if (confirmPasswordInput) confirmPasswordInput.required = true;
   if (signInButton) {
     signInButton.hidden = false;
     signInButton.dataset.authMode = "recovery";
@@ -24485,7 +24497,7 @@ document.addEventListener("submit", async (event) => {
     event.preventDefault();
     const client = getSupabaseClient();
     const submitter = event.submitter;
-    const mode = submitter?.dataset.authMode || "signin";
+    const mode = submitter?.dataset.authMode || (state.passwordRecoveryActive ? "recovery" : "signin");
     const data = new FormData(authForm);
     const firstName = formatPersonName(data.get("firstName"));
     const lastName = formatPersonName(data.get("lastName"));
@@ -24513,7 +24525,11 @@ document.addEventListener("submit", async (event) => {
       }
       state.passwordRecoveryActive = false;
       clearPasswordRecoveryUrl();
-      await client.auth.signOut({ scope: "local" });
+      try {
+        await client.auth.signOut({ scope: "local" });
+      } catch (signOutError) {
+        console.warn("Backline could not clear the temporary recovery session.", signOutError);
+      }
       state.currentUser = null;
       resetSecureWorkspaceState();
       updateAuthStatus();
@@ -25422,7 +25438,7 @@ function registerBacklineServiceWorker() {
   if (window.location.protocol === "file:" || !("serviceWorker" in navigator)) return;
   window.addEventListener("load", () => {
     navigator.serviceWorker
-      .register("./service-worker.js?v=20260903-password-recovery-state", { scope: "./" })
+      .register("./service-worker.js?v=20260903-password-recovery-form-validation", { scope: "./" })
       .catch((error) => console.warn("Backline service worker registration failed.", error));
   });
 }
