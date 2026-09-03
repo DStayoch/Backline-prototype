@@ -51,7 +51,7 @@ assert.doesNotMatch(app, /writeStoreRecord\(db, SECURE_OFFLINE_SNAPSHOT_STORE/);
 assert.match(app, /Offline - saved to this device; sync pending/);
 assert.match(app, /window\.addEventListener\("online"/);
 
-assert.match(serviceWorker, /const BACKLINE_CACHE = "backline-pwa-20260901-39"/);
+assert.match(serviceWorker, /const BACKLINE_CACHE = "backline-pwa-20260903-40"/);
 assert.match(serviceWorker, /"\.\/manifest\.webmanifest"/);
 assert.match(serviceWorker, /"\.\/assets\/backline-pwa-192\.png"/);
 assert.match(serviceWorker, /"\.\/assets\/backline-pwa-512\.png"/);

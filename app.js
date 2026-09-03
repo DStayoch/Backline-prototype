@@ -947,6 +947,7 @@ const elements = {
   subscriptionGateSupport: document.querySelector("#subscriptionGateSupport"),
   subscriptionGateExport: document.querySelector("#subscriptionGateExport"),
   subscriptionGateSwitchAccount: document.querySelector("#subscriptionGateSwitchAccount"),
+  subscriptionGateForgotPassword: document.querySelector("#subscriptionGateForgotPassword"),
   toastRegion: document.querySelector("#toastRegion"),
   authForm: document.querySelector("#authForm"),
   authGateHeading: document.querySelector("#authGateHeading"),
@@ -25276,6 +25277,27 @@ elements.subscriptionGateSupport?.addEventListener("click", () => {
 });
 
 elements.subscriptionGateExport?.addEventListener("click", exportData);
+
+elements.subscriptionGateForgotPassword?.addEventListener("click", async () => {
+  const client = getSupabaseClient();
+  const email = String(state.currentUser?.email || "").trim();
+  const button = elements.subscriptionGateForgotPassword;
+  if (!client || !email || !button) {
+    showToast("Password reset unavailable", "Switch accounts and use Forgot password from the sign-in screen.", "warning");
+    return;
+  }
+  const initialLabel = button.textContent;
+  button.disabled = true;
+  button.textContent = "Sending reset email...";
+  const { error } = await client.auth.resetPasswordForEmail(email, { redirectTo: authRedirectTo() });
+  button.disabled = false;
+  button.textContent = initialLabel;
+  if (error) {
+    showToast("Password reset unavailable", friendlyAuthError(error), "danger");
+    return;
+  }
+  showToast("Password reset email sent", "Check the inbox for the signed-in Backline account.", "success");
+});
 
 async function signOutOfBackline() {
   setAccountSwitching(true, "Signing out...");

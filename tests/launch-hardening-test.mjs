@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 
 const app = readFileSync("app.js", "utf8");
+const index = readFileSync("index.html", "utf8");
+const styles = readFileSync("styles.css", "utf8");
 const schema = readFileSync("supabase-schema-23-launch-hardening.sql", "utf8");
 const fullSchema = readFileSync("supabase-schema.sql", "utf8");
 const backupRunbook = readFileSync("supabase/backup-and-restore-runbook.md", "utf8");
@@ -37,6 +39,9 @@ assert.match(app, /legacy helper as a no-op/);
 assert.doesNotMatch(app, /localStorage\.setItem\(key, JSON\.stringify\(\{\s+organizationId: orgId/s);
 assert.match(fullSchema, /Backline schema 23: launch security hardening/);
 assert.match(app, /backline-data-\$\{new Date\(\)\.toISOString\(\)\.slice\(0, 10\)\}\.json/);
+assert.match(index, /id="subscriptionGateForgotPassword"/, "The subscription gate should offer password recovery for the signed-in account.");
+assert.match(app, /elements\.subscriptionGateForgotPassword\?\.addEventListener\("click"/, "Subscription password recovery should send a reset email.");
+assert.match(styles, /\.subscription-gate-surface > \.platform-policy-links/, "Subscription policy links should remain padded inside the card.");
 assert.match(app, /Uploaded files are not included in this backup/);
 assert.match(backupRunbook, /Supabase database backups do not include Storage object contents/);
 assert.match(backupRunbook, /RESTORE_FILES_TO_TEST_PROJECT/);
