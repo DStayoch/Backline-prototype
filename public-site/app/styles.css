@@ -8073,11 +8073,12 @@ html[data-theme="dark"] .auth-logo {
   min-height: 20px;
   margin: 0;
   padding: 11px 12px;
-  border: 1px solid color-mix(in srgb, var(--blue) 22%, var(--line));
+  border: 1px solid color-mix(in srgb, var(--blue) 36%, var(--line));
   border-radius: 6px;
-  background: color-mix(in srgb, var(--blue) 5%, var(--surface));
-  color: #49617e;
+  background: color-mix(in srgb, var(--blue) 9%, var(--surface));
+  color: #294d78;
   font-size: 0.82rem;
+  font-weight: 700;
   line-height: 1.45;
   text-align: center;
 }

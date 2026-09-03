@@ -163,7 +163,7 @@ assert.match(css, /\.sidebar \.brand-subtitle/);
 assert.match(css, /html\[data-theme="dark"\] \.brand-mark img/);
 assert.match(css, /content: url\("assets\/backline-icon-dark\.png"\)/);
 assert.match(css, /\.auth-gate-brand-mark/);
-assert.match(html, /<link rel="stylesheet" href="styles\.css\?v=20260903-auth-status-feedback">/);
+assert.match(html, /<link rel="stylesheet" href="styles\.css\?v=20260903-auth-status-action">/);
 assert.match(html, /class="platform-policy-links"/);
 assert.match(html, /https:\/\/backlineoffice\.com\/terms\.html/);
 assert.match(html, /https:\/\/backlineoffice\.com\/privacy\.html/);

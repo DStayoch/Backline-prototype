@@ -12,7 +12,7 @@
     <link rel="icon" type="image/png" href="assets/backline-icon-transparent.png">
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="apple-touch-icon" href="assets/backline-icon-transparent.png">
-  <link rel="stylesheet" href="styles.css?v=20260903-auth-status-feedback">
+  <link rel="stylesheet" href="styles.css?v=20260903-auth-status-action">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.4"></script>
     <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
     <script src="supabase-config.js"></script>
@@ -69,8 +69,8 @@
               Confirm password
               <input type="password" name="confirmPassword" autocomplete="new-password" placeholder="Re-enter your password" minlength="6">
             </label>
-            <button class="primary-button auth-submit-button" type="submit" data-auth-mode="signin" data-auth-signin-button>Sign in to Backline</button>
             <p class="auth-gate-status" id="authGateStatus" role="status" aria-live="polite">Secure database mode is ready when Supabase is configured.</p>
+            <button class="primary-button auth-submit-button" type="submit" data-auth-mode="signin" data-auth-signin-button>Sign in to Backline</button>
           </form>
           <div class="auth-divider"><span>or continue with</span></div>
           <div class="oauth-actions" aria-label="Single sign-on options">
