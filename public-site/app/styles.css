@@ -8072,10 +8072,13 @@ html[data-theme="dark"] .auth-logo {
 .auth-gate-status {
   min-height: 20px;
   margin: 0;
-  padding: 0 28px 20px;
-  color: var(--muted);
-  font-size: 0.76rem;
-  text-align: center;
+  padding: 13px 28px 14px;
+  border-bottom: 1px solid var(--line);
+  background: color-mix(in srgb, var(--blue) 5%, var(--surface));
+  color: #49617e;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  text-align: left;
 }
 
 .auth-surface > .platform-policy-links {
