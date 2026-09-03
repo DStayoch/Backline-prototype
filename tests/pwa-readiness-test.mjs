@@ -35,7 +35,7 @@ assert.deepEqual(pngSize("assets/backline-pwa-192.png"), { width: 192, height: 1
 assert.deepEqual(pngSize("assets/backline-pwa-512.png"), { width: 512, height: 512 });
 
 assert.match(app, /function registerBacklineServiceWorker\(\)/);
-assert.match(app, /navigator\.serviceWorker\s+\.register\("\.\/service-worker\.js\?v=20260902-backup-drill", \{ scope: "\.\/" \}\)/);
+assert.match(app, /navigator\.serviceWorker\s+\.register\("\.\/service-worker\.js\?v=20260903-password-recovery", \{ scope: "\.\/" \}\)/);
 assert.match(app, /#\(dashboard\|schedule\|inbox\|money\|followups\|communications\|jobsdb\|customers\|team\|activity\|insights\|creator\)/);
 assert.match(app, /activateView\(viewMatch\[1\]\)/);
 assert.match(app, /const DATABASE_VERSION = 7/);

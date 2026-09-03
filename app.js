@@ -2600,13 +2600,17 @@ function friendlyAuthError(error) {
 function isPasswordRecoveryUrl() {
   const query = new URLSearchParams(window.location.search);
   const fragment = new URLSearchParams(window.location.hash.replace(/^#/, ""));
-  return query.get("type") === "recovery" || fragment.get("type") === "recovery";
+  return query.get("recovery") === "1"
+    || fragment.get("recovery") === "1"
+    || query.get("type") === "recovery"
+    || fragment.get("type") === "recovery";
 }
 
 function clearPasswordRecoveryUrl() {
   const url = new URL(window.location.href);
   url.searchParams.delete("code");
   url.searchParams.delete("type");
+  url.searchParams.delete("recovery");
   url.hash = "";
   window.history.replaceState({}, document.title, url.pathname + url.search);
 }
@@ -6647,6 +6651,12 @@ function deleteStoreRecord(db, storeName, key) {
 
 function authRedirectTo() {
   return appEntryUrl();
+}
+
+function passwordRecoveryRedirectTo() {
+  const url = new URL(authRedirectTo());
+  url.searchParams.set("recovery", "1");
+  return url.toString();
 }
 
 function warnIfUnsafeProductionCustomerLink(label = "customer-facing link") {
@@ -22546,7 +22556,7 @@ document.addEventListener("click", async (event) => {
     const button = event.target.closest("[data-auth-forgot-password]");
     button.disabled = true;
     elements.authGateStatus.textContent = "Sending password reset email...";
-    const { error } = await client.auth.resetPasswordForEmail(email, { redirectTo: authRedirectTo() });
+    const { error } = await client.auth.resetPasswordForEmail(email, { redirectTo: passwordRecoveryRedirectTo() });
     button.disabled = false;
     elements.authGateStatus.textContent = error
       ? friendlyAuthError(error)
@@ -25289,7 +25299,7 @@ elements.subscriptionGateForgotPassword?.addEventListener("click", async () => {
   const initialLabel = button.textContent;
   button.disabled = true;
   button.textContent = "Sending reset email...";
-  const { error } = await client.auth.resetPasswordForEmail(email, { redirectTo: authRedirectTo() });
+  const { error } = await client.auth.resetPasswordForEmail(email, { redirectTo: passwordRecoveryRedirectTo() });
   button.disabled = false;
   button.textContent = initialLabel;
   if (error) {
@@ -25408,7 +25418,7 @@ function registerBacklineServiceWorker() {
   if (window.location.protocol === "file:" || !("serviceWorker" in navigator)) return;
   window.addEventListener("load", () => {
     navigator.serviceWorker
-      .register("./service-worker.js?v=20260902-backup-drill", { scope: "./" })
+      .register("./service-worker.js?v=20260903-password-recovery", { scope: "./" })
       .catch((error) => console.warn("Backline service worker registration failed.", error));
   });
 }
