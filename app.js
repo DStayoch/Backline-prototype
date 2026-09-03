@@ -867,6 +867,7 @@ let state = {
   billing: null,
   billingAccess: { mode: "full", status: "" },
   supabaseClient: null,
+  passwordRecoveryActive: false,
   offlineMode: false,
   offlineSyncPending: false,
   offlineSyncConflict: null,
@@ -4211,6 +4212,7 @@ function getSupabaseClient() {
   });
   state.supabaseClient.auth.onAuthStateChange((event) => {
     if (event === "PASSWORD_RECOVERY") {
+      state.passwordRecoveryActive = true;
       setAuthGate(true);
       showPasswordRecoveryForm();
     }
@@ -4276,7 +4278,8 @@ async function setupSecureBackend() {
   state.currentUser = sessionUser;
   updateAuthStatus();
 
-  if (isPasswordRecoveryUrl()) {
+  if (state.passwordRecoveryActive || isPasswordRecoveryUrl()) {
+    state.passwordRecoveryActive = true;
     setAuthGate(true);
     showPasswordRecoveryForm();
     return true;
@@ -24508,6 +24511,7 @@ document.addEventListener("submit", async (event) => {
         elements.authGateStatus.textContent = friendlyAuthError(error);
         return;
       }
+      state.passwordRecoveryActive = false;
       clearPasswordRecoveryUrl();
       await client.auth.signOut({ scope: "local" });
       state.currentUser = null;
@@ -25418,7 +25422,7 @@ function registerBacklineServiceWorker() {
   if (window.location.protocol === "file:" || !("serviceWorker" in navigator)) return;
   window.addEventListener("load", () => {
     navigator.serviceWorker
-      .register("./service-worker.js?v=20260903-password-recovery", { scope: "./" })
+      .register("./service-worker.js?v=20260903-password-recovery-state", { scope: "./" })
       .catch((error) => console.warn("Backline service worker registration failed.", error));
   });
 }
