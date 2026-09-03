@@ -867,6 +867,7 @@ let state = {
   billing: null,
   billingAccess: { mode: "full", status: "" },
   supabaseClient: null,
+  passwordRecoveryActive: false,
   offlineMode: false,
   offlineSyncPending: false,
   offlineSyncConflict: null,
@@ -947,6 +948,7 @@ const elements = {
   subscriptionGateSupport: document.querySelector("#subscriptionGateSupport"),
   subscriptionGateExport: document.querySelector("#subscriptionGateExport"),
   subscriptionGateSwitchAccount: document.querySelector("#subscriptionGateSwitchAccount"),
+  subscriptionGateForgotPassword: document.querySelector("#subscriptionGateForgotPassword"),
   toastRegion: document.querySelector("#toastRegion"),
   authForm: document.querySelector("#authForm"),
   authGateHeading: document.querySelector("#authGateHeading"),
@@ -2599,13 +2601,17 @@ function friendlyAuthError(error) {
 function isPasswordRecoveryUrl() {
   const query = new URLSearchParams(window.location.search);
   const fragment = new URLSearchParams(window.location.hash.replace(/^#/, ""));
-  return query.get("type") === "recovery" || fragment.get("type") === "recovery";
+  return query.get("recovery") === "1"
+    || fragment.get("recovery") === "1"
+    || query.get("type") === "recovery"
+    || fragment.get("type") === "recovery";
 }
 
 function clearPasswordRecoveryUrl() {
   const url = new URL(window.location.href);
   url.searchParams.delete("code");
   url.searchParams.delete("type");
+  url.searchParams.delete("recovery");
   url.hash = "";
   window.history.replaceState({}, document.title, url.pathname + url.search);
 }
@@ -4206,6 +4212,7 @@ function getSupabaseClient() {
   });
   state.supabaseClient.auth.onAuthStateChange((event) => {
     if (event === "PASSWORD_RECOVERY") {
+      state.passwordRecoveryActive = true;
       setAuthGate(true);
       showPasswordRecoveryForm();
     }
@@ -4271,7 +4278,8 @@ async function setupSecureBackend() {
   state.currentUser = sessionUser;
   updateAuthStatus();
 
-  if (isPasswordRecoveryUrl()) {
+  if (state.passwordRecoveryActive || isPasswordRecoveryUrl()) {
+    state.passwordRecoveryActive = true;
     setAuthGate(true);
     showPasswordRecoveryForm();
     return true;
@@ -6646,6 +6654,12 @@ function deleteStoreRecord(db, storeName, key) {
 
 function authRedirectTo() {
   return appEntryUrl();
+}
+
+function passwordRecoveryRedirectTo() {
+  const url = new URL(authRedirectTo());
+  url.searchParams.set("recovery", "1");
+  return url.toString();
 }
 
 function warnIfUnsafeProductionCustomerLink(label = "customer-facing link") {
@@ -22545,7 +22559,7 @@ document.addEventListener("click", async (event) => {
     const button = event.target.closest("[data-auth-forgot-password]");
     button.disabled = true;
     elements.authGateStatus.textContent = "Sending password reset email...";
-    const { error } = await client.auth.resetPasswordForEmail(email, { redirectTo: authRedirectTo() });
+    const { error } = await client.auth.resetPasswordForEmail(email, { redirectTo: passwordRecoveryRedirectTo() });
     button.disabled = false;
     elements.authGateStatus.textContent = error
       ? friendlyAuthError(error)
@@ -24497,6 +24511,7 @@ document.addEventListener("submit", async (event) => {
         elements.authGateStatus.textContent = friendlyAuthError(error);
         return;
       }
+      state.passwordRecoveryActive = false;
       clearPasswordRecoveryUrl();
       await client.auth.signOut({ scope: "local" });
       state.currentUser = null;
@@ -25277,6 +25292,27 @@ elements.subscriptionGateSupport?.addEventListener("click", () => {
 
 elements.subscriptionGateExport?.addEventListener("click", exportData);
 
+elements.subscriptionGateForgotPassword?.addEventListener("click", async () => {
+  const client = getSupabaseClient();
+  const email = String(state.currentUser?.email || "").trim();
+  const button = elements.subscriptionGateForgotPassword;
+  if (!client || !email || !button) {
+    showToast("Password reset unavailable", "Switch accounts and use Forgot password from the sign-in screen.", "warning");
+    return;
+  }
+  const initialLabel = button.textContent;
+  button.disabled = true;
+  button.textContent = "Sending reset email...";
+  const { error } = await client.auth.resetPasswordForEmail(email, { redirectTo: passwordRecoveryRedirectTo() });
+  button.disabled = false;
+  button.textContent = initialLabel;
+  if (error) {
+    showToast("Password reset unavailable", friendlyAuthError(error), "danger");
+    return;
+  }
+  showToast("Password reset email sent", "Check the inbox for the signed-in Backline account.", "success");
+});
+
 async function signOutOfBackline() {
   setAccountSwitching(true, "Signing out...");
   const client = getSupabaseClient();
@@ -25386,7 +25422,7 @@ function registerBacklineServiceWorker() {
   if (window.location.protocol === "file:" || !("serviceWorker" in navigator)) return;
   window.addEventListener("load", () => {
     navigator.serviceWorker
-      .register("./service-worker.js?v=20260902-backup-drill", { scope: "./" })
+      .register("./service-worker.js?v=20260903-password-recovery-state", { scope: "./" })
       .catch((error) => console.warn("Backline service worker registration failed.", error));
   });
 }

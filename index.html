@@ -12,7 +12,7 @@
     <link rel="icon" type="image/png" href="assets/backline-icon-transparent.png">
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="apple-touch-icon" href="assets/backline-icon-transparent.png">
-    <link rel="stylesheet" href="styles.css?v=20260901-policy-links">
+  <link rel="stylesheet" href="styles.css?v=20260903-auth-policy-spacing">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.4"></script>
     <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
     <script src="supabase-config.js"></script>
@@ -133,7 +133,10 @@
           <div class="subscription-gate-account">
             <span class="subscription-gate-account-label">Signed in as</span>
             <span class="subscription-gate-account-identity"><strong id="subscriptionGateAccountName">Backline user</strong><small id="subscriptionGateAccountEmail">Checking account...</small></span>
-            <button class="text-button subscription-gate-switch-account" type="button" id="subscriptionGateSwitchAccount">Switch account</button>
+            <div class="subscription-gate-account-actions">
+              <button class="text-button subscription-gate-forgot-password" type="button" id="subscriptionGateForgotPassword">Forgot password?</button>
+              <button class="text-button subscription-gate-switch-account" type="button" id="subscriptionGateSwitchAccount">Switch account</button>
+            </div>
           </div>
           <form class="subscription-gate-plans" id="subscriptionGatePlanForm">
             <label class="subscription-gate-plan-option">
@@ -1404,6 +1407,6 @@
       </section>
     </dialog>
 
-    <script src="app.js?v=20260902-backup-drill"></script>
+    <script src="app.js?v=20260903-password-recovery-state"></script>
   </body>
 </html>
