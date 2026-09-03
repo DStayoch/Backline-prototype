@@ -8078,6 +8078,12 @@ html[data-theme="dark"] .auth-logo {
   text-align: center;
 }
 
+.auth-surface > .platform-policy-links {
+  margin: 0;
+  padding: 0 28px 20px;
+  text-align: center;
+}
+
 .auth-surface .offline-unlock-panel {
   margin: 20px 28px;
 }
@@ -8135,7 +8141,8 @@ html[data-theme="dark"] .auth-logo {
   }
 
   .auth-surface .auth-divider,
-  .auth-gate-status {
+  .auth-gate-status,
+  .auth-surface > .platform-policy-links {
     padding-left: 18px;
     padding-right: 18px;
   }

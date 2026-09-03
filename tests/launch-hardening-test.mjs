@@ -45,6 +45,7 @@ assert.match(app, /function passwordRecoveryRedirectTo\(\)/, "Password-reset lin
 assert.match(app, /query\.get\("recovery"\) === "1"/, "Recovery initialization should take priority over an existing session.");
 assert.match(app, /resetPasswordForEmail\(email, \{ redirectTo: passwordRecoveryRedirectTo\(\) \}\)/, "Password reset requests should return to recovery mode.");
 assert.match(styles, /\.subscription-gate-surface > \.platform-policy-links/, "Subscription policy links should remain padded inside the card.");
+assert.match(styles, /\.auth-surface > \.platform-policy-links/, "Sign-in policy links should remain padded inside the card.");
 assert.match(app, /Uploaded files are not included in this backup/);
 assert.match(backupRunbook, /Supabase database backups do not include Storage object contents/);
 assert.match(backupRunbook, /RESTORE_FILES_TO_TEST_PROJECT/);
