@@ -12,7 +12,7 @@
     <link rel="icon" type="image/png" href="assets/backline-icon-transparent.png">
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="apple-touch-icon" href="assets/backline-icon-transparent.png">
-  <link rel="stylesheet" href="styles.css?v=20260903-auth-policy-spacing">
+  <link rel="stylesheet" href="styles.css?v=20260903-auth-status-placement">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.4"></script>
     <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
     <script src="supabase-config.js"></script>
@@ -44,6 +44,7 @@
             <h2 id="authGatePanelHeading">Welcome back</h2>
             <p id="authGatePanelDetail">Sign in to return to your Backline workspace.</p>
           </div>
+          <p class="auth-gate-status" id="authGateStatus" role="status" aria-live="polite">Secure database mode is ready when Supabase is configured.</p>
           <form class="auth-form" id="authForm">
             <div class="auth-name-fields" data-name-fields hidden>
               <label>
@@ -95,7 +96,6 @@
               </div>
             </form>
           </section>
-          <p class="auth-gate-status" id="authGateStatus">Secure database mode is ready when Supabase is configured.</p>
           <p class="platform-policy-links">By continuing, you agree to the <a href="https://backlineoffice.com/terms.html">Terms of Service</a> and acknowledge the <a href="https://backlineoffice.com/privacy.html">Privacy Policy</a>.</p>
         </section>
       </div>
