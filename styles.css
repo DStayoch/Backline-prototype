@@ -8069,16 +8069,18 @@ html[data-theme="dark"] .auth-logo {
   display: none;
 }
 
-.auth-gate-status {
+.auth-surface .auth-gate-status {
   min-height: 20px;
   margin: 0;
-  padding: 13px 28px 14px;
-  border-bottom: 1px solid var(--line);
-  background: color-mix(in srgb, var(--blue) 5%, var(--surface));
-  color: #49617e;
+  padding: 11px 12px;
+  border: 1px solid color-mix(in srgb, var(--blue) 36%, var(--line));
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--blue) 9%, var(--surface));
+  color: #294d78;
   font-size: 0.82rem;
+  font-weight: 700;
   line-height: 1.45;
-  text-align: left;
+  text-align: center;
 }
 
 .auth-surface > .platform-policy-links {
@@ -8144,7 +8146,6 @@ html[data-theme="dark"] .auth-logo {
   }
 
   .auth-surface .auth-divider,
-  .auth-gate-status,
   .auth-surface > .platform-policy-links {
     padding-left: 18px;
     padding-right: 18px;
