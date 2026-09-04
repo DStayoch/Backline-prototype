@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 const page = readFileSync("public-site/index.html", "utf8");
 const privacy = readFileSync("public-site/privacy.html", "utf8");
 const terms = readFileSync("public-site/terms.html", "utf8");
+const support = readFileSync("public-site/support.html", "utf8");
 const legalCss = readFileSync("public-site/legal.css", "utf8");
 const robots = readFileSync("public-site/robots.txt", "utf8");
 const sitemap = readFileSync("public-site/sitemap.xml", "utf8");
@@ -20,7 +21,7 @@ assert.match(page, /<meta name="description"/, "The public page should include a
 assert.match(page, /<link rel="canonical" href="https:\/\/backlineoffice\.com\/">/, "The public page should declare its canonical production URL.");
 assert.match(page, /application\/ld\+json/, "The public page should include structured data.");
 assert.match(page, /"@type": "WebApplication"/, "The public page should describe Backline as a web application.");
-assert.match(page, /mailto:support@backlineoffice\.com/, "The public site should expose the verified support route.");
+assert.match(page, /href="support\.html"/, "The public site should link to the verified support route.");
 assert.match(page, /<h3>Solo<\/h3>/, "Public pricing should use the Solo plan name.");
 assert.match(page, /<h3>Crew<\/h3>/, "Public pricing should use the Crew plan name.");
 assert.match(page, /<h3>Shop<\/h3>/, "Public pricing should use the Shop plan name.");
@@ -42,6 +43,10 @@ assert.match(terms, /Trials, billing, cancellation, and refunds/, "Terms should 
 assert.match(terms, /State of Florida/, "Terms should state the chosen governing law.");
 assert.match(terms, /does not provide prorated refunds/, "Terms should state the agreed refund policy.");
 assert.match(terms, /support@backlineoffice\.com/, "Terms should provide a support contact.");
+assert.match(support, /Get back to work\./, "The support page should provide a clear support entry point.");
+assert.match(support, /Forgot password\?/, "The support page should document account recovery.");
+assert.match(support, /I paid but my workspace is locked/, "The support page should document the billing-lock process.");
+assert.match(support, /Backline security report/, "The support page should provide a security-report path.");
 assert.match(legalCss, /@media \(max-width: 700px\)/, "Legal pages should include a mobile layout.");
 assert.match(robots, /Sitemap: https:\/\/backlineoffice\.com\/sitemap\.xml/, "Robots should advertise the production sitemap.");
 assert.match(sitemap, /https:\/\/backlineoffice\.com\/privacy\.html/, "The sitemap should include the privacy policy.");
