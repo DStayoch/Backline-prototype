@@ -62,12 +62,22 @@
             </label>
             <label data-auth-password-field>
               Password
-              <input type="password" name="password" autocomplete="current-password" placeholder="Enter your password" required minlength="6">
+              <span class="password-field-control">
+                <input type="password" name="password" autocomplete="current-password" placeholder="Enter your password" required minlength="6">
+                <button class="password-visibility-button" type="button" data-password-visibility="password" aria-label="Show password" aria-pressed="false" title="Show password">
+                  <span aria-hidden="true">&#128065;</span>
+                </button>
+              </span>
             </label>
             <button class="auth-forgot-password-button" type="button" data-auth-forgot-password>Forgot password?</button>
             <label data-confirm-password-field hidden>
               Confirm password
-              <input type="password" name="confirmPassword" autocomplete="new-password" placeholder="Re-enter your password" minlength="6">
+              <span class="password-field-control">
+                <input type="password" name="confirmPassword" autocomplete="new-password" placeholder="Re-enter your password" minlength="6">
+                <button class="password-visibility-button" type="button" data-password-visibility="confirmPassword" aria-label="Show password confirmation" aria-pressed="false" title="Show password confirmation">
+                  <span aria-hidden="true">&#128065;</span>
+                </button>
+              </span>
             </label>
             <p class="auth-gate-status" id="authGateStatus" role="status" aria-live="polite">Secure database mode is ready when Supabase is configured.</p>
             <button class="primary-button auth-submit-button" type="submit" data-auth-mode="signin" data-auth-signin-button>Sign in to Backline</button>

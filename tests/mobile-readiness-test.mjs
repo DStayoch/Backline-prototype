@@ -71,6 +71,7 @@ has(tablet, /#view-inbox\.active \.detail-panel \{[\s\S]*?width: 100%;[\s\S]*?ma
 has(tablet, /#view-inbox\.active \.job-summary-bar \{[\s\S]*?grid-template-columns: repeat\(2, minmax\(0, 1fr\)\);/, "tablet inbox job summary cards should use two clean columns");
 
 has(phone, /html,[\s\S]*?body \{[\s\S]*?overflow-x: hidden;[\s\S]*?overflow-y: auto;/, "phone layout should prevent sideways drift while keeping vertical page scroll");
+has(phone, /\.toast-region \{[\s\S]*?top: 50%;[\s\S]*?transform: translate\(-50%, -50%\);/, "phone toasts should appear at the center of the screen");
 has(phone, /\.workspace \{[\s\S]*?padding: 10px;[\s\S]*?height: auto;[\s\S]*?min-width: 0;[\s\S]*?overflow-x: hidden;[\s\S]*?overflow-y: visible;/, "phone workspace needs compact padding and must not trap vertical scroll");
 has(phone, /\.topbar,[\s\S]*?\.modal-header \{[\s\S]*?flex-direction: column;/, "phone headers should stack instead of squeezing");
 has(phone, /\.onboarding-panel-header \{[\s\S]*?display: grid;[\s\S]*?grid-template-columns: minmax\(0, 1fr\) auto;[\s\S]*?align-items: center;/, "onboarding header should keep its help action compact beside the copy on phones");

@@ -1,25 +1,46 @@
 import Stripe from "npm:stripe@22.4.0";
 
-function backlineAppOrigin() {
+function configuredBacklineOrigins() {
+  const origins = new Set(["https://app.backlineoffice.com", "https://backlineoffice.com"]);
   const appUrl = Deno.env.get("BACKLINE_APP_URL");
-  if (!appUrl) return "*";
-  try {
-    return new URL(appUrl).origin;
-  } catch {
-    return "*";
+  if (appUrl) {
+    try {
+      origins.add(new URL(appUrl).origin);
+    } catch {
+      // Keep the deployed Backline origins available if a secret is malformed.
+    }
   }
+  for (const value of String(Deno.env.get("BACKLINE_ALLOWED_ORIGINS") || "").split(",")) {
+    try {
+      if (value.trim()) origins.add(new URL(value.trim()).origin);
+    } catch {
+      // Ignore malformed optional origins instead of accepting an unsafe value.
+    }
+  }
+  return origins;
 }
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": backlineAppOrigin(),
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS"
-};
+function corsHeaders(request: Request) {
+  const configuredOrigin = String(Deno.env.get("BACKLINE_APP_URL") || "");
+  let fallbackOrigin = "https://backlineoffice.com";
+  try {
+    if (configuredOrigin) fallbackOrigin = new URL(configuredOrigin).origin;
+  } catch {
+    // Keep the canonical Backline origin when the configured URL is malformed.
+  }
+  const requestOrigin = String(request.headers.get("Origin") || "");
+  return {
+    "Access-Control-Allow-Origin": configuredBacklineOrigins().has(requestOrigin) ? requestOrigin : fallbackOrigin,
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    Vary: "Origin"
+  };
+}
 
-function json(body: Record<string, unknown>, status = 200) {
+function json(request: Request, body: Record<string, unknown>, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { ...corsHeaders, "Content-Type": "application/json" }
+    headers: { ...corsHeaders(request), "Content-Type": "application/json" }
   });
 }
 
@@ -58,8 +79,8 @@ async function firstRow<T>(path: string): Promise<T | null> {
 }
 
 Deno.serve(async (request) => {
-  if (request.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
-  if (request.method !== "POST") return json({ error: "Use POST to start a Backline subscription checkout." }, 405);
+  if (request.method === "OPTIONS") return new Response("ok", { headers: corsHeaders(request) });
+  if (request.method !== "POST") return json(request, { error: "Use POST to start a Backline subscription checkout." }, 405);
 
   try {
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
@@ -75,12 +96,12 @@ Deno.serve(async (request) => {
       shop: { priceId: Deno.env.get("STRIPE_BACKLINE_SHOP_PRICE_ID"), memberCap: 10, allowsAdditionalUsers: true }
     };
     const plan = plans[planKey];
-    if (!organizationId || !plan?.priceId) return json({ error: "Choose an available Backline plan before checkout." }, 400);
+    if (!organizationId || !plan?.priceId) return json(request, { error: "Choose an available Backline plan before checkout." }, 400);
 
     const user = await verifiedUser(request);
     type Member = { organization_id: string };
     const member = await firstRow<Member>(`/rest/v1/organization_members?organization_id=eq.${encodeURIComponent(organizationId)}&user_id=eq.${encodeURIComponent(user.id)}&role=eq.owner&select=organization_id&limit=1`);
-    if (!member) return json({ error: "Only the shop owner can manage Backline billing." }, 403);
+    if (!member) return json(request, { error: "Only the shop owner can manage Backline billing." }, 403);
 
     const teamResponse = await supabaseRest(`/rest/v1/organization_members?organization_id=eq.${encodeURIComponent(organizationId)}&select=user_id`);
     if (!teamResponse.ok) throw new Error(await teamResponse.text());
@@ -88,7 +109,7 @@ Deno.serve(async (request) => {
     if (!Array.isArray(teamMembers)) throw new Error("Backline could not verify the active team size.");
     const additionalUserCount = Math.max(0, teamMembers.length - plan.memberCap);
     if (additionalUserCount && !plan.allowsAdditionalUsers) {
-      return json({ error: `This shop has more than ${plan.memberCap} active Backline users. Choose a larger plan before checkout.` }, 400);
+      return json(request, { error: `This shop has more than ${plan.memberCap} active Backline users. Choose a larger plan before checkout.` }, 400);
     }
     const additionalUserPriceId = Deno.env.get("STRIPE_BACKLINE_ADDITIONAL_USER_PRICE_ID");
     if (additionalUserCount && !additionalUserPriceId) {
@@ -98,7 +119,7 @@ Deno.serve(async (request) => {
     type Organization = { id: string; name: string };
     type Billing = { stripe_customer_id: string | null };
     const organization = await firstRow<Organization>(`/rest/v1/organizations?id=eq.${encodeURIComponent(organizationId)}&select=id,name&limit=1`);
-    if (!organization) return json({ error: "This Backline workspace was not found." }, 404);
+    if (!organization) return json(request, { error: "This Backline workspace was not found." }, 404);
     const billing = await firstRow<Billing>(`/rest/v1/organization_billing?organization_id=eq.${encodeURIComponent(organizationId)}&select=stripe_customer_id&limit=1`);
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2026-07-29.dahlia" });
@@ -140,8 +161,8 @@ Deno.serve(async (request) => {
       }
     });
     if (!session.url) throw new Error("Stripe did not return a checkout URL.");
-    return json({ url: session.url });
+    return json(request, { url: session.url });
   } catch (error) {
-    return json({ error: error instanceof Error ? error.message : "Could not start Stripe checkout." }, 500);
+    return json(request, { error: error instanceof Error ? error.message : "Could not start Stripe checkout." }, 500);
   }
 });

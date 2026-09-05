@@ -11012,6 +11012,11 @@ html[data-theme="dark"] .approval-logo-full {
     font-size: 14px;
   }
 
+  .toast-region {
+    top: 50%;
+    transform: translate(-50%, -50%);
+  }
+
   .schedule-grid {
     grid-template-columns: minmax(0, 1fr);
   }
