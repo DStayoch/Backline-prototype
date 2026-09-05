@@ -22556,6 +22556,19 @@ document.addEventListener("click", async (event) => {
     return;
   }
 
+  const passwordVisibilityButton = event.target.closest("[data-password-visibility]");
+  if (passwordVisibilityButton && elements.authForm?.contains(passwordVisibilityButton)) {
+    const fieldName = passwordVisibilityButton.dataset.passwordVisibility;
+    const input = elements.authForm.elements[fieldName];
+    if (!input) return;
+    const isVisible = input.type === "text";
+    input.type = isVisible ? "password" : "text";
+    passwordVisibilityButton.setAttribute("aria-pressed", String(!isVisible));
+    passwordVisibilityButton.setAttribute("aria-label", isVisible ? "Show password" : "Hide password");
+    passwordVisibilityButton.setAttribute("title", isVisible ? "Show password" : "Hide password");
+    return;
+  }
+
   if (event.target.closest("[data-auth-forgot-password]")) {
     const client = getSupabaseClient();
     const email = String(elements.authForm?.elements.email?.value || "").trim();

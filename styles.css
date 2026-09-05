@@ -8017,6 +8017,41 @@ html[data-theme="dark"] .auth-logo {
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--blue) 13%, transparent);
 }
 
+.password-field-control {
+  position: relative;
+  display: block;
+}
+
+.auth-surface .auth-form .password-field-control input {
+  width: 100%;
+  padding-right: 48px;
+}
+
+.password-visibility-button {
+  position: absolute;
+  top: 50%;
+  right: 7px;
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  transform: translateY(-50%);
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.password-visibility-button:hover,
+.password-visibility-button:focus-visible {
+  background: color-mix(in srgb, var(--blue) 10%, transparent);
+  color: var(--blue-dark);
+  outline: none;
+}
+
 .auth-submit-button {
   min-height: 48px;
   margin-top: 2px;
