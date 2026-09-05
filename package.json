@@ -8,6 +8,6 @@
     "deploy:preflight": "node tests/deploy-preflight.mjs",
     "backup:storage": "node tools/backup-storage-objects.mjs",
     "restore:storage": "node tools/restore-storage-objects.mjs",
-    "test": "node --check app.js && node --check service-worker.js && node tests/smoke-test.mjs && node tests/debug-sweep.mjs && node tests/role-workflow-test.mjs && node tests/security-isolation-test.mjs && node tests/launch-hardening-test.mjs && node tests/public-link-guardrails-test.mjs && node tests/customer-facing-flow-test.mjs && node tests/demo-workflow-test.mjs && node tests/real-shop-workflow-test.mjs && node tests/mobile-readiness-test.mjs && node tests/deploy-preflight.mjs && node tests/pages-artifact-test.mjs && node tests/pwa-readiness-test.mjs && node tests/beta-seed-test.mjs && node tests/stripe-billing-test.mjs && node tests/public-site-test.mjs"
+    "test": "node --check app.js && node --check service-worker.js && node tests/smoke-test.mjs && node tests/debug-sweep.mjs && node tests/role-workflow-test.mjs && node tests/security-isolation-test.mjs && node tests/launch-hardening-test.mjs && node tests/public-link-guardrails-test.mjs && node tests/customer-facing-flow-test.mjs && node tests/demo-workflow-test.mjs && node tests/real-shop-workflow-test.mjs && node tests/mobile-readiness-test.mjs && node tests/deploy-preflight.mjs && node tests/pages-artifact-test.mjs && node tests/deployment-parity-test.mjs && node tests/pwa-readiness-test.mjs && node tests/beta-seed-test.mjs && node tests/stripe-billing-test.mjs && node tests/public-site-test.mjs"
   }
 }
