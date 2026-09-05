@@ -25451,7 +25451,7 @@ function registerBacklineServiceWorker() {
   if (window.location.protocol === "file:" || !("serviceWorker" in navigator)) return;
   window.addEventListener("load", () => {
     navigator.serviceWorker
-      .register("./service-worker.js?v=20260903-password-recovery-form-validation", { scope: "./" })
+      .register("./service-worker.js?v=20260905-mobile-billing", { scope: "./" })
       .catch((error) => console.warn("Backline service worker registration failed.", error));
   });
 }
