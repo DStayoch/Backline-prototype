@@ -95,6 +95,16 @@ async function updateBilling(organizationId: string, patch: BillingPatch, eventC
   if (!response.ok) throw new Error(await response.text());
 }
 
+// Newer Stripe API versions report the billing period on each subscription
+// item instead of the subscription; older payloads still use the top level.
+function subscriptionPeriodEnd(subscription: Stripe.Subscription) {
+  const legacy = (subscription as Stripe.Subscription & { current_period_end?: number }).current_period_end;
+  const itemEnds = subscription.items.data
+    .map((item) => (item as typeof item & { current_period_end?: number }).current_period_end)
+    .filter((value): value is number => typeof value === "number");
+  return asUnixTimestamp(itemEnds.length ? Math.min(...itemEnds) : legacy);
+}
+
 function organizationIdFromMetadata(metadata: Stripe.Metadata | null | undefined) {
   return asString(metadata?.backline_organization_id);
 }
@@ -153,7 +163,7 @@ async function handleSubscription(subscription: Stripe.Subscription, event: Stri
     status: subscription.status,
     access_grace_until: accessGraceUntil,
     cancel_at_period_end: subscription.cancel_at_period_end,
-    current_period_end: asUnixTimestamp(subscription.current_period_end),
+    current_period_end: subscriptionPeriodEnd(subscription),
     trial_end: asUnixTimestamp(subscription.trial_end)
   }, event.created);
 }
@@ -174,7 +184,7 @@ async function handleCheckout(session: Stripe.Checkout.Session, event: Stripe.Ev
     additional_seat_quantity: mapped.additionalSeatQuantity,
     status: subscription.status,
     cancel_at_period_end: subscription.cancel_at_period_end,
-    current_period_end: asUnixTimestamp(subscription.current_period_end),
+    current_period_end: subscriptionPeriodEnd(subscription),
     trial_end: asUnixTimestamp(subscription.trial_end)
   }, event.created);
 }

@@ -12792,7 +12792,7 @@ function renderChecklist(job) {
       ${checklist.map(([key, label]) => `
         <button class="check-item ${job.fieldChecklist[key] ? "done" : ""}" type="button" data-action="check-${key}" ${can(`check-${key}`) ? "" : "disabled"}>
           <span>${job.fieldChecklist[key] ? "Done" : "Open"}</span>
-          <strong>${label}</strong>
+          <strong>${escapeHtml(label)}</strong>
         </button>
       `).join("")}
     </div>
