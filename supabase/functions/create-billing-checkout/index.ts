@@ -117,13 +117,28 @@ Deno.serve(async (request) => {
     }
 
     type Organization = { id: string; name: string };
-    type Billing = { stripe_customer_id: string | null };
+    type Billing = { stripe_customer_id: string | null; stripe_subscription_id: string | null; status: string | null };
     const organization = await firstRow<Organization>(`/rest/v1/organizations?id=eq.${encodeURIComponent(organizationId)}&select=id,name&limit=1`);
     if (!organization) return json(request, { error: "This Backline workspace was not found." }, 404);
-    const billing = await firstRow<Billing>(`/rest/v1/organization_billing?organization_id=eq.${encodeURIComponent(organizationId)}&select=stripe_customer_id&limit=1`);
+    const billing = await firstRow<Billing>(`/rest/v1/organization_billing?organization_id=eq.${encodeURIComponent(organizationId)}&select=stripe_customer_id,stripe_subscription_id,status&limit=1`);
+    const alreadySubscribedMessage = "This shop already has a Backline subscription. Use Manage billing to change plans.";
+    const liveStatuses = ["trialing", "active", "past_due", "unpaid", "paused"];
+    if (liveStatuses.includes(String(billing?.status || ""))) {
+      return json(request, { error: alreadySubscribedMessage }, 409);
+    }
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2026-07-29.dahlia" });
     let customerId = billing?.stripe_customer_id || "";
+    // The trial is only for a shop's first subscription. Stripe is checked too,
+    // because the webhook that records a new subscription can lag behind checkout.
+    let trialEligible = !billing?.stripe_subscription_id;
+    if (customerId) {
+      const existing = await stripe.subscriptions.list({ customer: customerId, status: "all", limit: 100 });
+      if (existing.data.some((subscription) => liveStatuses.includes(subscription.status))) {
+        return json(request, { error: alreadySubscribedMessage }, 409);
+      }
+      if (existing.data.some((subscription) => subscription.status !== "incomplete_expired")) trialEligible = false;
+    }
     if (!customerId) {
       const customer = await stripe.customers.create({
         email: String(user.email || "") || undefined,
@@ -156,7 +171,7 @@ Deno.serve(async (request) => {
       cancel_url: `${appUrl}?billing=canceled`,
       metadata: { backline_organization_id: organizationId, backline_plan_key: planKey, backline_member_cap: String(plan.memberCap), backline_additional_user_count: String(additionalUserCount) },
       subscription_data: {
-        trial_period_days: 14,
+        ...(trialEligible ? { trial_period_days: 14 } : {}),
         metadata: { backline_organization_id: organizationId, backline_plan_key: planKey, backline_member_cap: String(plan.memberCap), backline_additional_user_count: String(additionalUserCount) }
       }
     });

@@ -170,7 +170,7 @@ assert.match(html, /https:\/\/backlineoffice\.com\/privacy\.html/);
 assert.match(html, /@supabase\/supabase-js@2\.112\.4/);
 assert.match(html, /jspdf@2\.5\.1/);
 assert.match(html, /<script src="supabase-config\.js"><\/script>/);
-assert.match(html, /<script src="app\.js\?v=20260905-password-visibility"><\/script>/);
+assert.match(html, /<script src="app\.js\?v=20260924-launch-audit"><\/script>/);
 assert.match(js, /Secure database saved\. Go to Settings to set up offline access\./);
 assert.match(html, /id="topbarGreeting"/);
 assert.match(html, /id="topbarInsight"/);
