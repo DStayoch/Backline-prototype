@@ -11,7 +11,7 @@ This checklist is for moving Backline from local prototype to a real beta URL. I
 - [x] Start script exists: `npm start`
 - [x] Automated test script exists: `npm test`
 - [x] GitHub CI workflow exists: `.github/workflows/ci.yml`
-- [x] GitHub Pages workflow exists: `.github/workflows/pages.yml`
+- [x] Cloudflare build exists: `npm run cloudflare:build` (`tools/build-public-site.mjs`)
 - [x] App cache tag is declared in `index.html`
 - [x] Supabase config template exists: `supabase-config.example.js`
 - [x] Local Supabase config template exists: `supabase-config.local.example.js`
@@ -79,9 +79,10 @@ This checklist is for moving Backline from local prototype to a real beta URL. I
 
 ## Hosting
 
-- [x] GitHub Pages workflow can publish the static app
-- [x] GitHub Pages runs the full test suite before it can publish
-- [ ] Confirm final production host: GitHub Pages, Netlify, Vercel, or another static host
+- [x] Cloudflare Workers Builds publishes the marketing site and app
+- [x] Cloudflare build runs the full test suite before it can publish
+- [x] Final production host: Cloudflare, app at `https://backlineoffice.com/app/`
+- [ ] GitHub Pages unpublished and `app.backlineoffice.com` redirects to `/app/` (see `deployment-notes.md`)
 - [ ] Confirm production URL uses HTTPS
 - [ ] Confirm `supabase-config.js` points to the production Supabase project
 - [ ] Confirm production deployment does not include local/dev Supabase values

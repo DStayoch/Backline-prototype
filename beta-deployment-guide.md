@@ -20,15 +20,15 @@ Use this when moving Backline from local testing to a hosted beta URL.
   - optional `INVITE_REPLY_TO_EMAIL`
 - Verify a real sending domain in Resend before sending invites to non-test recipients.
 
-## 2. Configure GitHub Pages
+## 2. Configure Cloudflare
 
-In GitHub repository settings:
+In Cloudflare **Workers & Pages** -> `backline-public-site` -> **Settings** -> **Build**:
 
-- Set Pages source to GitHub Actions.
-- Add repository variable `BACKLINE_SUPABASE_URL`.
-- Add repository secret `BACKLINE_SUPABASE_ANON_KEY`.
+- Build command: `npm run cloudflare:build`
+- Add build variable `BACKLINE_SUPABASE_URL`.
+- Add build variable `BACKLINE_SUPABASE_ANON_KEY`.
 
-The Pages workflow generates `supabase-config.js` inside `_site` during deploy. Do not commit a production `supabase-config.js`.
+The build generates `public-site/app/supabase-config.js` during deploy. Do not commit a production `supabase-config.js`.
 
 ## 3. Preflight Before Push
 
@@ -48,8 +48,8 @@ Confirm:
 
 ## 4. Deploy
 
-- Push to `main`, or run the GitHub Pages workflow manually.
-- Open the deployed Pages URL.
+- Push to `main`; Cloudflare Workers Builds deploys it.
+- Open `https://backlineoffice.com/app/`.
 - Sign in as the production owner account.
 - Open Settings and run **Test secure connection**.
 - Open Foundry and confirm production readiness status.

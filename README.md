@@ -114,6 +114,7 @@ Backline can use Supabase Auth + Postgres + Row Level Security.
    - `supabase-schema-23-launch-hardening.sql`
    - `supabase-schema-24-public-link-guardrails.sql`
    - `supabase-schema-25-subscription-seat-limits.sql`
+   - `supabase-schema-26-single-owned-workspace.sql`
 4. Copy the right config template to `supabase-config.js`:
    - Local testing: start from `supabase-config.local.example.js`
    - Production beta: start from `supabase-config.production.example.js`
@@ -132,7 +133,7 @@ If sign-in says the credentials are invalid, use **Create account** first. Supab
 
 Team access uses the `organization_members.role` field. Built-in roles are `owner`, `admin`, `dispatcher`, and `tech`; owner-defined custom role slugs are also supported after `supabase-schema-15-custom-roles.sql` removes the original role check constraints.
 
-Creator/platform access is separate from shop roles. Run `supabase-schema-19-platform-admins.sql`, then manually add trusted Backline operator accounts to `platform_admins` from the Supabase SQL editor. Follow it with schemas 20 through 25 for billing access, guarded job/customer sync, field-assignment enforcement, ownership protection, reusable-portal abuse protection, and plan seat limits. Shop owners and custom roles cannot grant creator access from the app.
+Creator/platform access is separate from shop roles. Run `supabase-schema-19-platform-admins.sql`, then manually add trusted Backline operator accounts to `platform_admins` from the Supabase SQL editor. Follow it with schemas 20 through 26 for billing access, guarded job/customer sync, field-assignment enforcement, ownership protection, reusable-portal abuse protection, plan seat limits, and one owned workspace per account. Shop owners and custom roles cannot grant creator access from the app.
 
 Team invites use `team_invites` plus the `accept_team_invite()` RPC from `supabase-schema-07-team-management.sql`. Invite someone by email in Backline, then have them create/sign in with that same email so the invite can attach them to the shop.
 
@@ -188,19 +189,21 @@ In Supabase, open **Authentication** -> **URL Configuration**:
 
 Backline also supports Google and Facebook sign-in through Supabase OAuth. Enable each provider in **Authentication** -> **Providers**, add the provider credentials from Google/Facebook, and use the Supabase callback URL shown in that provider panel when configuring Google/Facebook.
 
-## GitHub Pages
+## Hosting (Cloudflare)
 
-This repo includes a GitHub Pages workflow. After pushing to GitHub:
+Cloudflare hosts everything from the `backline-public-site` Worker (`wrangler.jsonc`): the marketing site at `https://backlineoffice.com/` and the app at `https://backlineoffice.com/app/`. Cloudflare Workers Builds deploys automatically on every push to `main`.
 
-1. Open the repository on GitHub.
-2. Go to `Settings` -> `Secrets and variables` -> `Actions`.
-3. Add a repository variable named `BACKLINE_SUPABASE_URL` with the production Supabase project URL.
-4. Add a repository secret named `BACKLINE_SUPABASE_ANON_KEY` with the production Supabase publishable/anon key.
-5. Go to `Settings` -> `Pages`.
-6. Set `Build and deployment` source to `GitHub Actions`.
-7. Push to `main`.
+`public-site/app/` is generated, not committed. `npm run cloudflare:build` runs the full test suite, then `tools/build-public-site.mjs` copies the root app files into `public-site/app/` and writes `supabase-config.js` from two build variables. In the Cloudflare dashboard, open **Workers & Pages** -> `backline-public-site` -> **Settings** -> **Build**:
 
-The `Deploy GitHub Pages` workflow builds a clean `_site` folder, generates `supabase-config.js` from those GitHub settings, and publishes only the static app files. Your local `supabase-config.js` is ignored so local testing does not leak into production.
+- Build command: `npm run cloudflare:build`
+- Deploy command: `npx wrangler deploy`
+- Build variables: `BACKLINE_SUPABASE_URL` (production project URL) and `BACKLINE_SUPABASE_ANON_KEY` (publishable/anon key, never a secret key)
+
+The build fails if either variable is missing, so a deploy can never ship without a Supabase config. Your local `supabase-config.js` is ignored so local testing does not leak into production.
+
+Security headers live in `public-site/_headers`. The app cannot be framed by other sites. The full Content Security Policy for `/app/*` currently runs in report-only mode; once a production session shows no CSP warnings in the browser console, rename that header to `Content-Security-Policy`.
+
+`app.backlineoffice.com` (the old GitHub Pages address) should permanently redirect to `https://backlineoffice.com/app/` through a Cloudflare Redirect Rule; see `deployment-notes.md`.
 
 Before pushing a production deploy, run:
 

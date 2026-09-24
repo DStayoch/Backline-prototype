@@ -8,7 +8,7 @@ Use this after creating the production Supabase project and before inviting a re
 
 - Create a fresh Supabase project for production beta.
 - Do not reuse the local/dev Supabase project.
-- Save the project URL and publishable/anon key for GitHub Pages:
+- Save the project URL and publishable/anon key for the Cloudflare build variables:
   - `BACKLINE_SUPABASE_URL`
   - `BACKLINE_SUPABASE_ANON_KEY`
 
@@ -129,9 +129,9 @@ In GitHub:
 
 - Set repository variable `BACKLINE_SUPABASE_URL`.
 - Set repository secret `BACKLINE_SUPABASE_ANON_KEY`.
-- Deploy GitHub Pages from Actions.
+- Push to `main` so Cloudflare Workers Builds deploys the site and app.
 
-Backline generates `supabase-config.js` during the Pages workflow. Do not commit production `supabase-config.js`.
+Backline generates `supabase-config.js` during the Cloudflare build. Do not commit production `supabase-config.js`.
 
 ## 9. Post-Setup Checks
 
