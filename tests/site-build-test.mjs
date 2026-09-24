@@ -1,38 +1,43 @@
 import assert from "node:assert/strict";
-import { cp, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { spawnSync } from "node:child_process";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 
-const rootFiles = ["index.html", "backline-home.html", "styles.css", "field-polish.css", "app.js", "manifest.webmanifest", "service-worker.js"];
+// Runs the real Cloudflare build script (tools/build-public-site.mjs) into a
+// temp folder with fake production values and checks what would be deployed.
+const rootFiles = ["index.html", "styles.css", "field-polish.css", "app.js", "manifest.webmanifest", "service-worker.js"];
 const fakeProductionUrl = "https://production-example.supabase.co";
 const fakeProductionAnonKey = "production-anon-key-placeholder";
 const fakePublicAppUrl = "https://backlineoffice.com/app/";
 
-const siteDir = await mkdtemp(join(tmpdir(), "backline-pages-artifact-"));
+const tempRoot = await mkdtemp(join(tmpdir(), "backline-site-build-"));
+const siteDir = join(tempRoot, "app");
+
+function runBuild(env) {
+  return spawnSync(process.execPath, ["tools/build-public-site.mjs"], {
+    env: { ...process.env, BACKLINE_APP_OUT_DIR: siteDir, ...env },
+    encoding: "utf8"
+  });
+}
 
 try {
-  for (const file of rootFiles) {
-    await cp(file, join(siteDir, file));
-  }
-  await cp("assets", join(siteDir, "assets"), { recursive: true });
-  await writeFile(join(siteDir, "supabase-config.js"), `window.BACKLINE_SUPABASE_CONFIG = {
-  environment: "production",
-  url: "${fakeProductionUrl}",
-  anonKey: "${fakeProductionAnonKey}",
-  publicAppUrl: "${fakePublicAppUrl}"
-};
-(function () {
-  if (document.querySelector('link[href^="field-polish.css"]')) return;
-  var polish = document.createElement("link");
-  polish.rel = "stylesheet";
-  polish.href = "field-polish.css?v=20260624-flat-meta-labels";
-  document.head.appendChild(polish);
-})();
-`);
+  const missing = runBuild({ BACKLINE_SUPABASE_URL: "", BACKLINE_SUPABASE_ANON_KEY: "" });
+  assert.notEqual(missing.status, 0, "The site build must fail when Supabase build variables are missing.");
+  const secretKey = runBuild({ BACKLINE_SUPABASE_URL: fakeProductionUrl, BACKLINE_SUPABASE_ANON_KEY: "sb_secret_example" });
+  assert.notEqual(secretKey.status, 0, "The site build must refuse a secret Supabase key.");
+
+  const build = runBuild({ BACKLINE_SUPABASE_URL: fakeProductionUrl, BACKLINE_SUPABASE_ANON_KEY: fakeProductionAnonKey });
+  assert.equal(build.status, 0, `The site build should succeed: ${build.stderr}`);
 
   for (const file of [...rootFiles, "supabase-config.js"]) {
-    assert.ok(existsSync(join(siteDir, file)), `Pages artifact should include ${file}.`);
+    assert.ok(existsSync(join(siteDir, file)), `Site build should include ${file}.`);
+  }
+  for (const file of rootFiles) {
+    const source = (await readFile(file, "utf8")).replace(/\r\n/g, "\n");
+    const built = (await readFile(join(siteDir, file), "utf8")).replace(/\r\n/g, "\n");
+    assert.equal(built, source, `Built ${file} must match the tested root ${file}.`);
   }
 
   for (const asset of [
@@ -43,7 +48,7 @@ try {
     "assets/backline-wordmark-dark.png",
     "assets/backline-full-logo-transparent.png"
   ]) {
-    assert.ok(existsSync(join(siteDir, asset)), `Pages artifact should include ${asset}.`);
+    assert.ok(existsSync(join(siteDir, asset)), `Site build should include ${asset}.`);
   }
 
   for (const excluded of [
@@ -55,7 +60,7 @@ try {
     "tests",
     ".github"
   ]) {
-    assert.equal(existsSync(join(siteDir, excluded)), false, `Pages artifact should not include ${excluded}.`);
+    assert.equal(existsSync(join(siteDir, excluded)), false, `Site build should not include ${excluded}.`);
   }
 
   const index = await readFile(join(siteDir, "index.html"), "utf8");
@@ -64,11 +69,11 @@ try {
   const manifest = await readFile(join(siteDir, "manifest.webmanifest"), "utf8");
   const serviceWorker = await readFile(join(siteDir, "service-worker.js"), "utf8");
 
-  assert.match(index, /<script src="supabase-config\.js"><\/script>/, "Artifact index should load generated Supabase config.");
-  assert.match(index, /<script src="app\.js\?v=/, "Artifact index should load the cache-tagged app bundle.");
-  assert.match(index, /<link rel="manifest" href="manifest\.webmanifest">/, "Artifact index should expose the PWA manifest.");
-  assert.match(index, /<meta name="theme-color" content="#162234">/, "Artifact index should set the install theme color.");
-  assert.match(index, /assets\/backline-icon-transparent\.png/, "Artifact index should reference included favicon asset.");
+  assert.match(index, /<script src="supabase-config\.js"><\/script>/, "Built index should load generated Supabase config.");
+  assert.match(index, /<script src="app\.js\?v=/, "Built index should load the cache-tagged app bundle.");
+  assert.match(index, /<link rel="manifest" href="manifest\.webmanifest">/, "Built index should expose the PWA manifest.");
+  assert.match(index, /<meta name="theme-color" content="#162234">/, "Built index should set the install theme color.");
+  assert.match(index, /assets\/backline-icon-transparent\.png/, "Built index should reference included favicon asset.");
   assert.match(manifest, /"display":\s*"standalone"/, "PWA manifest should open Backline as a standalone app.");
   assert.match(manifest, /assets\/backline-pwa-192\.png/, "PWA manifest should include the 192px icon.");
   assert.match(manifest, /assets\/backline-pwa-512\.png/, "PWA manifest should include the 512px icon.");
@@ -82,7 +87,7 @@ try {
   assert.doesNotMatch(config, /YOUR-PRODUCTION-PROJECT|YOUR-PROJECT|uwgklcnwjsmmwndoqdam|sb_publishable_/i, "Generated config should not contain placeholders or development values.");
   assert.match(app, /warnIfUnsafeProductionCustomerLink/, "Artifact app should include production customer-link safety warning.");
 } finally {
-  await rm(siteDir, { recursive: true, force: true });
+  await rm(tempRoot, { recursive: true, force: true });
 }
 
-console.log("Pages artifact dry-run passed.");
+console.log("Site build test passed.");

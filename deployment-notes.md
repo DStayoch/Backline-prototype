@@ -30,7 +30,7 @@ Production:
 2. Create a fresh production Supabase project.
 3. Follow `supabase-production-setup.md`, then run `supabase-schema.sql` in production or run the split schema files through `supabase-schema-22-secure-sync.sql`.
 4. Configure `supabase-config.js` for production.
-5. For GitHub Pages, set repository variable `BACKLINE_SUPABASE_URL` and repository secret `BACKLINE_SUPABASE_ANON_KEY`.
+5. In Cloudflare Workers Builds for `backline-public-site`, set build variables `BACKLINE_SUPABASE_URL` and `BACKLINE_SUPABASE_ANON_KEY`, and build command `npm run cloudflare:build`.
 6. Run `npm run deploy:preflight`.
 7. Deploy the static app to the production host.
 8. Set Supabase Auth site URL and redirect URLs to the production host.
@@ -41,7 +41,17 @@ Production:
 
 ## Production Deploy Guard
 
-The GitHub Pages deployment workflow runs `npm test` itself and deploys only when that job succeeds. Keep the separate `CI / test` workflow as the required status check for pull requests.
+Cloudflare hosts production (`https://backlineoffice.com/` and `/app/`). Its build command, `npm run cloudflare:build`, runs `npm test` first, so a failing suite stops the deploy. Keep the separate `CI / test` workflow as the required status check for pull requests.
+
+### Retiring GitHub Pages (one-time)
+
+The app used to also be served by GitHub Pages at `app.backlineoffice.com`. To keep a single live copy:
+
+1. GitHub repository **Settings** -> **Pages**: unpublish the site / set the source to none.
+2. Cloudflare **DNS** for `backlineoffice.com`: change the `app` record to proxied (orange cloud) so Cloudflare answers for it. It can point at `backlineoffice.com`.
+3. Cloudflare **Rules** -> **Redirect Rules**: when hostname equals `app.backlineoffice.com`, redirect with a 301 to `concat("https://backlineoffice.com/app", http.request.uri.path)` and preserve the query string.
+
+Browsers keep `#approval-token=...` fragments across redirects, so any old links on `app.backlineoffice.com` keep working. People who installed the app from `app.backlineoffice.com` sign in once more at `/app/` and can reinstall from there.
 
 Before inviting real workspaces, protect `main` in GitHub:
 

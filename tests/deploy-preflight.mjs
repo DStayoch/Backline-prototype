@@ -1,9 +1,12 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
+import { existsSync } from "node:fs";
 
 const [
   gitignore,
-  pagesWorkflow,
+  siteBuildScript,
+  wranglerConfig,
+  siteHeaders,
   readme,
   launchChecklist,
   betaDeploymentGuide,
@@ -12,12 +15,14 @@ const [
   productionConfigExample,
   genericConfigExample,
   packageJson,
-  pagesArtifactTest,
+  siteBuildTest,
   css,
   fieldPolish
 ] = await Promise.all([
   readFile(".gitignore", "utf8"),
-  readFile(".github/workflows/pages.yml", "utf8"),
+  readFile("tools/build-public-site.mjs", "utf8"),
+  readFile("wrangler.jsonc", "utf8"),
+  readFile("public-site/_headers", "utf8"),
   readFile("README.md", "utf8"),
   readFile("production-launch-checklist.md", "utf8"),
   readFile("beta-deployment-guide.md", "utf8"),
@@ -26,24 +31,23 @@ const [
   readFile("supabase-config.production.example.js", "utf8"),
   readFile("supabase-config.example.js", "utf8"),
   readFile("package.json", "utf8"),
-  readFile("tests/pages-artifact-test.mjs", "utf8"),
+  readFile("tests/site-build-test.mjs", "utf8"),
   readFile("styles.css", "utf8"),
   readFile("field-polish.css", "utf8")
 ]);
 
 assert.match(gitignore, /^supabase-config\.js$/m, "Local Supabase config must stay ignored.");
-assert.match(gitignore, /^_site\/$/m, "Generated Pages output should not be committed.");
+assert.match(gitignore, /^public-site\/app\/$/m, "The generated Cloudflare app copy should not be committed.");
+assert.equal(existsSync(".github/workflows/pages.yml"), false, "Cloudflare is the only production host; GitHub Pages must stay retired.");
 
-assert.match(pagesWorkflow, /BACKLINE_SUPABASE_URL/, "Pages deploy must read the production Supabase URL from GitHub settings.");
-assert.match(pagesWorkflow, /BACKLINE_SUPABASE_ANON_KEY/, "Pages deploy must read the production Supabase anon key from GitHub settings.");
-assert.match(pagesWorkflow, /test:\s+name: Production test gate[\s\S]*?run: npm test/s, "Pages deploy must run the full test suite before publishing.");
-assert.match(pagesWorkflow, /deploy:\s+needs: test/s, "Pages deployment must depend on the successful production test gate.");
-assert.match(pagesWorkflow, /cat > _site\/supabase-config\.js/, "Pages deploy must generate production supabase-config.js.");
-assert.match(pagesWorkflow, /publicAppUrl: "https:\/\/backlineoffice\.com\/app\/"/, "Pages deploy must set the hosted app URL for auth callbacks.");
-assert.match(pagesWorkflow, /path: _site/, "Pages deploy should upload only the prepared static site.");
-assert.match(pagesWorkflow, /cp index\.html backline-home\.html styles\.css field-polish\.css app\.js manifest\.webmanifest service-worker\.js _site\//, "Pages deploy should copy core app, home page, polish, and PWA files into _site.");
-assert.match(pagesWorkflow, /cp -R assets _site\/assets/, "Pages deploy should include visual assets.");
-assert.doesNotMatch(pagesWorkflow, /path: \./, "Pages deploy should not upload the whole repository.");
+assert.match(siteBuildScript, /BACKLINE_SUPABASE_URL/, "Cloudflare build must read the production Supabase URL from build variables.");
+assert.match(siteBuildScript, /BACKLINE_SUPABASE_ANON_KEY/, "Cloudflare build must read the production Supabase anon key from build variables.");
+assert.match(siteBuildScript, /const publicAppUrl = "https:\/\/backlineoffice\.com\/app\/"/, "Cloudflare build must set the hosted app URL for auth callbacks.");
+assert.match(packageJson, /"cloudflare:build":\s*"[^"]*npm test && npm run build:site"/, "Cloudflare build must run the full test suite before building the site.");
+assert.match(wranglerConfig, /"directory":\s*"\.\/public-site"/, "Cloudflare should upload only the public site folder.");
+assert.match(siteHeaders, /X-Frame-Options: DENY/, "The site must refuse to be framed.");
+assert.match(siteHeaders, /frame-ancestors 'none'/, "The site CSP must block framing.");
+assert.match(siteHeaders, /\/app\/\*\r?\n\s+Content-Security-Policy(-Report-Only)?: default-src 'self'/, "The app must ship a content security policy.");
 assert.match(fieldPolish, /html\[data-theme="dark"\],\s*body\.dark\s*\{/, "Polish overrides must follow the app's html[data-theme=dark] selector.");
 assert.match(fieldPolish, /--scan-card-bg:\s*#111e2f/, "Dark polish cards should use a dark surface.");
 assert.match(fieldPolish, /\.customer-card > span:first-child\s*\{[\s\S]*?display:\s*grid;[\s\S]*?gap:\s*6px;/, "Customer card contact info should stay stacked with readable spacing.");
@@ -97,11 +101,11 @@ assert.match(supabaseProductionSetup, /https:\/\/backlineoffice\.com\/app\//, "S
 assert.match(supabaseProductionSetup, /Enable Google And Facebook OAuth/, "Supabase setup helper should document OAuth provider setup.");
 assert.match(readme, /Google and Facebook sign-in through Supabase OAuth/, "README should document OAuth provider setup.");
 assert.match(packageJson, /"deploy:preflight":\s*"node tests\/deploy-preflight\.mjs"/, "package.json should expose the deploy preflight check.");
-assert.match(packageJson, /node tests\/pages-artifact-test\.mjs/, "package.json test script should include the Pages artifact dry-run.");
-assert.match(pagesArtifactTest, /"supabase-config\.local\.example\.js"/, "Pages artifact test should exclude local Supabase config.");
-assert.match(pagesArtifactTest, /"supabase-config\.production\.example\.js"/, "Pages artifact test should exclude production config template.");
-assert.match(pagesArtifactTest, /"tests"/, "Pages artifact test should exclude repo test files.");
-assert.match(pagesArtifactTest, /Generated config should not contain placeholders or development values/, "Pages artifact test should reject placeholder/dev config values.");
-assert.match(pagesArtifactTest, /warnIfUnsafeProductionCustomerLink/, "Pages artifact test should require production customer-link safety.");
+assert.match(packageJson, /node tests\/site-build-test\.mjs/, "package.json test script should include the site build test.");
+assert.match(siteBuildTest, /"supabase-config\.local\.example\.js"/, "Site build test should exclude local Supabase config.");
+assert.match(siteBuildTest, /"supabase-config\.production\.example\.js"/, "Site build test should exclude production config template.");
+assert.match(siteBuildTest, /"tests"/, "Site build test should exclude repo test files.");
+assert.match(siteBuildTest, /Generated config should not contain placeholders or development values/, "Site build test should reject placeholder/dev config values.");
+assert.match(siteBuildTest, /warnIfUnsafeProductionCustomerLink/, "Site build test should require production customer-link safety.");
 
 console.log("Deploy preflight passed.");

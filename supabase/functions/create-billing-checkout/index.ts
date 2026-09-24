@@ -132,6 +132,19 @@ Deno.serve(async (request) => {
     // The trial is only for a shop's first subscription. Stripe is checked too,
     // because the webhook that records a new subscription can lag behind checkout.
     let trialEligible = !billing?.stripe_subscription_id;
+    if (trialEligible) {
+      // Trials are per person: an owner who already subscribed in any other
+      // workspace does not get a second trial here.
+      const ownedResponse = await supabaseRest(`/rest/v1/organization_members?user_id=eq.${encodeURIComponent(user.id)}&role=eq.owner&select=organization_id`);
+      if (!ownedResponse.ok) throw new Error(await ownedResponse.text());
+      const ownedIds = (await ownedResponse.json() as Array<{ organization_id: string }>)
+        .map((row) => row.organization_id)
+        .filter((id) => id !== organizationId);
+      if (ownedIds.length) {
+        const priorSubscription = await firstRow<{ organization_id: string }>(`/rest/v1/organization_billing?organization_id=in.(${ownedIds.map(encodeURIComponent).join(",")})&stripe_subscription_id=not.is.null&select=organization_id&limit=1`);
+        if (priorSubscription) trialEligible = false;
+      }
+    }
     if (customerId) {
       const existing = await stripe.subscriptions.list({ customer: customerId, status: "all", limit: 100 });
       if (existing.data.some((subscription) => liveStatuses.includes(subscription.status))) {

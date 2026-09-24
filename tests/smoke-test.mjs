@@ -16,9 +16,8 @@ const requiredFiles = [
   "beta-walkthrough.md",
   "beta-deployment-guide.md",
   "supabase-production-setup.md",
-  ".github/workflows/pages.yml",
   "tests/deploy-preflight.mjs",
-  "tests/pages-artifact-test.mjs",
+  "tests/site-build-test.mjs", "tools/build-public-site.mjs", "public-site/_headers",
   "supabase-schema.sql",
   "supabase-schema-01-tables.sql",
   "supabase-schema-02-function.sql",
@@ -2227,7 +2226,7 @@ assert.match(bat, /server\.js/);
 assert.match(pkg, /"start": "node server\.js"/);
 assert.match(pkg, /node tests\/role-workflow-test\.mjs/);
 assert.match(pkg, /node tests\/real-shop-workflow-test\.mjs/);
-assert.match(pkg, /node tests\/pages-artifact-test\.mjs/);
+assert.match(pkg, /node tests\/site-build-test\.mjs/);
 assert.match(roleWorkflowTest, /Field lead - no estimates/);
 assert.match(roleWorkflowTest, /assert\.equal\(can\(savedSettings, assignedRole, "estimate"\), false\)/);
 assert.match(roleWorkflowTest, /visibleActionButtons\(savedSettings, assignedRole\)\.includes\("estimate"\), false/);
