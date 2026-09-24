@@ -47,7 +47,7 @@ assert.match(packageJson, /"cloudflare:build":\s*"[^"]*npm test && npm run build
 assert.match(wranglerConfig, /"directory":\s*"\.\/public-site"/, "Cloudflare should upload only the public site folder.");
 assert.match(siteHeaders, /X-Frame-Options: DENY/, "The site must refuse to be framed.");
 assert.match(siteHeaders, /frame-ancestors 'none'/, "The site CSP must block framing.");
-assert.match(siteHeaders, /\/app\/\*\n\s+Content-Security-Policy(-Report-Only)?: default-src 'self'/, "The app must ship a content security policy.");
+assert.match(siteHeaders, /\/app\/\*\r?\n\s+Content-Security-Policy(-Report-Only)?: default-src 'self'/, "The app must ship a content security policy.");
 assert.match(fieldPolish, /html\[data-theme="dark"\],\s*body\.dark\s*\{/, "Polish overrides must follow the app's html[data-theme=dark] selector.");
 assert.match(fieldPolish, /--scan-card-bg:\s*#111e2f/, "Dark polish cards should use a dark surface.");
 assert.match(fieldPolish, /\.customer-card > span:first-child\s*\{[\s\S]*?display:\s*grid;[\s\S]*?gap:\s*6px;/, "Customer card contact info should stay stacked with readable spacing.");
