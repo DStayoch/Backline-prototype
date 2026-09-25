@@ -47,7 +47,8 @@ h1 { max-width: 680px; margin-bottom: 12px; font-size: clamp(38px, 5vw, 56px); l
 footer { padding: 28px 0; background: #081827; color: #9ab2ca; font-size: 13px; }
 footer .shell { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 18px; }
 footer img { width: 150px; max-width: 100%; height: auto; display: block; }
-.footer-links { display: flex; min-width: 0; flex-wrap: wrap; justify-content: flex-end; gap: 12px 18px; }
+.footer-links { display: flex; min-width: 0; flex-wrap: wrap; justify-content: flex-end; gap: 4px 18px; }
+.footer-links a { display: inline-block; padding: 8px 0; }
 footer a { color: #d9e8f7; font-weight: 780; }
 
 @media (max-width: 700px) {

@@ -11034,9 +11034,18 @@ function topbarDataPoint() {
   return "No urgent items right now. Your shop is up to date.";
 }
 
+// Phones and tablets stack the job detail below the job list, so a tapped job
+// would open off-screen. Scroll it into view so the tap visibly does something.
+function revealJobDetailOnSmallScreens() {
+  if (!window.matchMedia("(max-width: 980px)").matches) return;
+  requestAnimationFrame(() => elements.jobDetail?.scrollIntoView({ block: "start" }));
+}
+
 function renderTopbar() {
   if (elements.topbarGreeting) {
-    elements.topbarGreeting.textContent = `Welcome back, ${displayFirstName()}.`;
+    const firstName = displayFirstName();
+    // Without a real name, "Welcome back, there." reads like a bug; drop the name instead.
+    elements.topbarGreeting.textContent = firstName === "there" ? "Welcome back." : `Welcome back, ${firstName}.`;
   }
   if (elements.topbarInsight) {
     elements.topbarInsight.textContent = topbarDataPoint();
@@ -23871,6 +23880,7 @@ document.addEventListener("click", async (event) => {
     state.selectedJobId = jobButton.dataset.jobId;
     document.querySelector('[data-view="inbox"]').click();
     render();
+    revealJobDetailOnSmallScreens();
     return;
   }
 

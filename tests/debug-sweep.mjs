@@ -1473,7 +1473,7 @@ assert.match(js, /email\.split\("@"\)\[0\]/);
 assert.match(js, /function displayFirstName\(/);
 assert.match(js, /function topbarDataPoint\(/);
 assert.match(js, /function renderTopbar\(/);
-assert.match(js, /Welcome back, \$\{displayFirstName\(\)\}\./);
+assert.match(js, /firstName === "there" \? "Welcome back\." : `Welcome back, \$\{firstName\}\.`/);
 assert.match(js, /renderTopbar\(\);/);
 assert.match(js, /function usernameFromIdentity\(/);
 assert.match(js, /function displayPersonName\(/);
