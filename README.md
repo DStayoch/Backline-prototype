@@ -115,6 +115,7 @@ Backline can use Supabase Auth + Postgres + Row Level Security.
    - `supabase-schema-24-public-link-guardrails.sql`
    - `supabase-schema-25-subscription-seat-limits.sql`
    - `supabase-schema-26-single-owned-workspace.sql`
+   - `supabase-schema-27-customer-safe-company-settings.sql`
 4. Copy the right config template to `supabase-config.js`:
    - Local testing: start from `supabase-config.local.example.js`
    - Production beta: start from `supabase-config.production.example.js`
@@ -133,7 +134,7 @@ If sign-in says the credentials are invalid, use **Create account** first. Supab
 
 Team access uses the `organization_members.role` field. Built-in roles are `owner`, `admin`, `dispatcher`, and `tech`; owner-defined custom role slugs are also supported after `supabase-schema-15-custom-roles.sql` removes the original role check constraints.
 
-Creator/platform access is separate from shop roles. Run `supabase-schema-19-platform-admins.sql`, then manually add trusted Backline operator accounts to `platform_admins` from the Supabase SQL editor. Follow it with schemas 20 through 26 for billing access, guarded job/customer sync, field-assignment enforcement, ownership protection, reusable-portal abuse protection, plan seat limits, and one owned workspace per account. Shop owners and custom roles cannot grant creator access from the app.
+Creator/platform access is separate from shop roles. Run `supabase-schema-19-platform-admins.sql`, then manually add trusted Backline operator accounts to `platform_admins` from the Supabase SQL editor. Follow it with schemas 20 through 27 for billing access, guarded job/customer sync, field-assignment enforcement, ownership protection, reusable-portal abuse protection, plan seat limits, one owned workspace per account, and customer links that only expose customer-facing shop settings. Shop owners and custom roles cannot grant creator access from the app.
 
 Team invites use `team_invites` plus the `accept_team_invite()` RPC from `supabase-schema-07-team-management.sql`. Invite someone by email in Backline, then have them create/sign in with that same email so the invite can attach them to the shop.
 
