@@ -624,6 +624,8 @@ const defaultCompanySettings = {
   termsUrl: "",
   servicePolicyText: "",
   reviewLink: "",
+  defaultPaymentLink: "",
+  paymentInstructions: "",
   templateSettings: {},
   betaReadiness: {},
   productionReadiness: {},
@@ -2195,6 +2197,8 @@ function normalizeCompanySettings(settings = {}) {
     termsUrl: String(settings.termsUrl || "").trim(),
     servicePolicyText: String(settings.servicePolicyText || "").trim(),
     reviewLink: String(settings.reviewLink || "").trim(),
+    defaultPaymentLink: normalizePaymentLink(settings.defaultPaymentLink),
+    paymentInstructions: String(settings.paymentInstructions || "").trim().slice(0, 600),
     templateSettings: normalizeWorkspaceTemplateSettings(settings.templateSettings || {}),
     betaReadiness: normalizeBetaReadiness(settings.betaReadiness || {}),
     productionReadiness: normalizeProductionReadiness(settings.productionReadiness || {}),
@@ -2817,7 +2821,8 @@ function invoicePdfLines(job) {
     ["Paid amount", formatMoney(invoice.paidAmount)],
     ["Balance due", formatMoney(invoiceBalance(job))],
     ["Payment method", paymentMethodLabel(invoice.paymentMethod)],
-    ["Payment link", invoice.paymentLink || "Not provided"],
+    ["Payment link", invoicePaymentLink(job, company) || "Not provided"],
+    ["Other ways to pay", company.paymentInstructions || "Contact the office"],
     ["Payment terms", company.invoiceTerms],
     ["Deposit policy", company.defaultDepositWording],
     ["Customer support", company.receiptSupportLine || customerFacingSupportLine(company)],
@@ -5531,6 +5536,8 @@ function companySettingsDraftFromForm(form = elements.companySettingsForm) {
     invoiceTerms: data.get("invoiceTerms"),
     defaultDepositPercent: data.get("defaultDepositPercent"),
     reviewLink: data.get("reviewLink"),
+    defaultPaymentLink: data.get("defaultPaymentLink"),
+    paymentInstructions: data.get("paymentInstructions"),
     approvalDisclaimerText: data.get("approvalDisclaimerText"),
     pdfFooter: data.get("pdfFooter"),
     customerFooterText: data.get("customerFooterText"),
@@ -5552,6 +5559,7 @@ function workspaceSetupItems(settings = companySettings()) {
     { label: "Invoice terms", complete: Boolean(normalized.invoiceTerms) },
     { label: "Default deposit", complete: Number.isFinite(Number(normalized.defaultDepositPercent)) },
     { label: "Review link", complete: Boolean(normalized.reviewLink) },
+    { label: "Payment options", complete: Boolean(normalized.defaultPaymentLink || normalized.paymentInstructions) },
     { label: "Support contact", complete: Boolean(normalized.supportPhone || normalized.phone) && Boolean(normalized.supportEmail || normalized.email) },
     { label: "Customer footer", complete: Boolean(normalized.customerFooterText || normalized.pdfFooter) },
     { label: "First team invite", complete: hasTeamSetup }
@@ -5777,6 +5785,8 @@ function companySettingsFromForm(form) {
     termsUrl: data.get("termsUrl"),
     servicePolicyText: data.get("servicePolicyText"),
     reviewLink: data.get("reviewLink"),
+    defaultPaymentLink: data.get("defaultPaymentLink"),
+    paymentInstructions: data.get("paymentInstructions"),
     templateSettings: templateSettingsFromForm(form)
   });
 }
@@ -8224,8 +8234,8 @@ function normalizePaymentLink(value = "") {
   }
 }
 
-function invoicePaymentLink(job = {}) {
-  return normalizePaymentLink(invoiceRecord(job).paymentLink);
+function invoicePaymentLink(job = {}, company = companySettings()) {
+  return normalizePaymentLink(invoiceRecord(job).paymentLink) || normalizePaymentLink(company?.defaultPaymentLink);
 }
 
 function paymentRequests(job = {}) {
@@ -12445,7 +12455,7 @@ function renderInvoicePanel(job) {
         <div class="invoice-summary-card ${paymentLink ? "ready" : ""}">
           <span>Payment link</span>
           <strong>${paymentLink ? "Ready" : "Not set"}</strong>
-          <small>${escapeHtml(paymentLink || "Paste Stripe, Square, PayPal, Venmo Business, or another hosted payment URL")}</small>
+          <small>${escapeHtml(paymentLink || "Add your payment link in Settings under How customers pay you, or paste one on this invoice")}</small>
         </div>
       </div>
       ${renderBillingReview(job)}
@@ -13642,12 +13652,16 @@ function renderCustomerPortalNextStep(job = {}, settings = null) {
   `;
 }
 
-function renderCustomerPortalPaymentRequest(job = {}) {
+function renderCustomerPortalPaymentRequest(job = {}, company = companySettings()) {
   ensureJobDefaults(job);
   const invoice = invoiceRecord(job);
   const request = activePaymentRequest(job);
   const balance = invoiceBalance(job);
-  const paymentLink = invoicePaymentLink(job);
+  const paymentLink = invoicePaymentLink(job, company);
+  const instructions = String(company?.paymentInstructions || "").trim();
+  // When the shop has told customers how to pay, the "report a payment" form is
+  // a secondary path; keep it one tap away instead of leading with it.
+  const hasPaymentOptions = Boolean(paymentLink || instructions);
   if (!request && (!invoice.amount || balance <= 0)) return "";
   const requestedAmount = request?.amount || balance;
   const dueDate = request?.dueDate || addDaysISO(7);
@@ -13673,9 +13687,16 @@ function renderCustomerPortalPaymentRequest(job = {}) {
             <strong>${escapeHtml(formatMoney(requestedAmount))} requested</strong>
             <small>Pay through the shop's hosted payment page. Backline does not store card or bank details.</small>
           </div>
-          <a class="primary-button portal-payment-link-button" href="${escapeHtml(paymentLink)}" target="_blank" rel="noopener noreferrer">Pay invoice</a>
+          <a class="primary-button portal-payment-link-button" href="${escapeHtml(paymentLink)}" target="_blank" rel="noopener noreferrer">Pay ${escapeHtml(formatMoney(requestedAmount))}</a>
         </div>
       ` : ""}
+      ${instructions ? `
+        <div class="portal-payment-instructions">
+          <span>${paymentLink ? "Other ways to pay" : "How to pay"}</span>
+          <p>${escapeHtml(instructions)}</p>
+        </div>
+      ` : ""}
+      ${hasPaymentOptions ? `<details class="portal-paid-details"><summary>Already paid? Let the office know</summary>` : ""}
       <form class="portal-payment-form" id="customerPortalPaymentForm" data-portal-job-id="${escapeHtml(job.id)}" data-portal-token="${escapeHtml(ensureJobPortalToken(job))}">
         <label>
           Amount paid or planned
@@ -13699,8 +13720,9 @@ function renderCustomerPortalPaymentRequest(job = {}) {
           Message for the office
           <textarea name="note" rows="3" placeholder="Tell the office anything they should know before recording this payment."></textarea>
         </label>
-        <button class="${paymentLink ? "secondary-button" : "primary-button"}" type="submit">${paymentLink ? "Send payment note" : "Send payment details"}</button>
+        <button class="${hasPaymentOptions ? "secondary-button" : "primary-button"}" type="submit">${hasPaymentOptions ? "Send payment note" : "Send payment details"}</button>
       </form>
+      ${hasPaymentOptions ? "</details>" : ""}
     </section>
   `;
 }
@@ -14174,7 +14196,7 @@ function renderCustomerPortalPage(jobOrId, options = {}) {
 
       ${renderCustomerPortalNextStep(job, company)}
 
-      ${renderCustomerPortalPaymentRequest(job)}
+      ${renderCustomerPortalPaymentRequest(job, company)}
 
       ${renderCustomerPortalTimeline(job)}
 
@@ -21605,7 +21627,7 @@ function actionModalConfig(action, job) {
           { value: "financing", label: "Financing" },
           { value: "other", label: "Other" }
         ] }),
-        inputField({ label: "Payment link", name: "paymentLink", type: "url", value: actionDraft.paymentLink ?? (invoice.paymentLink || ""), placeholder: "Stripe, Square, PayPal, Venmo Business, or other hosted payment URL", wide: true }),
+        inputField({ label: "Payment link", name: "paymentLink", type: "text", attrs: 'inputmode="url" autocomplete="url" spellcheck="false"', value: actionDraft.paymentLink ?? (invoice.paymentLink || ""), placeholder: companySettings().defaultPaymentLink ? "Leave blank to use your default payment link from Settings" : "Stripe, Square, PayPal, Venmo Business, or other hosted payment URL", wide: true }),
         inputField({ label: "Invoice note", name: "note", value: actionDraft.note ?? (invoice.note || ""), placeholder: "Payment terms, deposit notes, or billing context", wide: true })
       ]
     },

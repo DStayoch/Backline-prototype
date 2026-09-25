@@ -12,7 +12,7 @@
     <link rel="icon" type="image/png" href="assets/backline-icon-transparent.png">
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="apple-touch-icon" href="assets/backline-icon-transparent.png">
-  <link rel="stylesheet" href="styles.css?v=20260925-visual-polish">
+  <link rel="stylesheet" href="styles.css?v=20260925-payment-options">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.4"></script>
     <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
     <script src="supabase-config.js"></script>
@@ -855,6 +855,18 @@
             Invoice payment terms
             <textarea name="invoiceTerms" rows="3"></textarea>
           </label>
+          <div class="wide settings-subheading">
+            <strong>How customers pay you</strong>
+            <span>Shown on every invoice and in the customer portal. Use the payment tools you already have; Backline never holds the money.</span>
+          </div>
+          <label class="wide">
+            Online payment link
+            <input name="defaultPaymentLink" type="text" inputmode="url" autocomplete="url" spellcheck="false" placeholder="Your Square, PayPal, Stripe, or Venmo Business payment page">
+          </label>
+          <label class="wide">
+            Other ways to pay
+            <textarea name="paymentInstructions" rows="3" maxlength="600" placeholder="Zelle: pay@yourshop.com&#10;Checks payable to Your Shop LLC"></textarea>
+          </label>
           <label class="wide">
             Deposit wording
             <textarea name="defaultDepositWording" rows="2"></textarea>
@@ -1417,6 +1429,6 @@
       </section>
     </dialog>
 
-    <script src="app.js?v=20260925-visual-polish"></script>
+    <script src="app.js?v=20260925-payment-options"></script>
   </body>
 </html>

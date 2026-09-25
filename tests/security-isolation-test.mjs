@@ -10,6 +10,21 @@ const schema16 = readFileSync("supabase-schema-16-security-hardening.sql", "utf8
 const schema17 = readFileSync("supabase-schema-17-public-token-hardening.sql", "utf8");
 const schema22 = readFileSync("supabase-schema-22-secure-sync.sql", "utf8");
 const fullSchema = readFileSync("supabase-schema.sql", "utf8");
+const schema27 = readFileSync("supabase-schema-27-customer-safe-company-settings.sql", "utf8");
+
+// Public customer links must only receive customer-facing shop settings.
+for (const sql of [schema27, fullSchema]) {
+  assert.match(sql, /function public\.backline_customer_company_settings\(settings jsonb\)/);
+  assert.match(sql, /function public\.get_approval_by_token[\s\S]*?public\.backline_customer_company_settings\(coalesce\(o\.payload->'companySettings'/);
+  assert.match(sql, /function public\.get_customer_portal_by_token[\s\S]*?public\.backline_customer_company_settings\(coalesce\(o\.payload->'companySettings'/);
+}
+const allowlist = schema27.match(/array\[([\s\S]*?)\]\);/)[1];
+for (const internalKey of ["defaultLaborCostRate", "targetMarginPercent", "customRoles", "roleOverrides", "templateSettings", "productionReadiness", "betaReadiness", "supabaseProductionSetup", "foundryTestResults", "foundrySnapshots"]) {
+  assert.doesNotMatch(allowlist, new RegExp(`'${internalKey}'`), `${internalKey} must never reach public customer links`);
+}
+for (const customerKey of ["companyName", "phone", "invoiceTerms", "defaultPaymentLink", "paymentInstructions"]) {
+  assert.match(allowlist, new RegExp(`'${customerKey}'`), `${customerKey} is needed on customer pages`);
+}
 
 function assertOrgScopedSelect(table, label = table) {
   assert.match(
