@@ -49,11 +49,15 @@ assert.match(app, /renderApprovalPage\(submittedJob, \{ token, publicMode: true,
 
 assert.match(app, /function customerPortalMessages\(job = \{\}\)[\s\S]*?filter\(isCustomerPortalMessage\)/);
 assert.match(app, /function allCustomerPortalMessages\(job = \{\}\)[\s\S]*?filter\(isCustomerPortalMessage\)/);
-assert.match(app, /function invoicePaymentLink\(job = \{\}\)/);
-assert.match(app, /const paymentLink = invoicePaymentLink\(job\)/);
+assert.match(app, /function invoicePaymentLink\(job = \{\}, company = companySettings\(\)\)[\s\S]*?normalizePaymentLink\(company\?\.defaultPaymentLink\)/);
+assert.match(app, /const paymentLink = invoicePaymentLink\(job, company\)/);
 assert.match(app, /href="\$\{escapeHtml\(paymentLink\)\}" target="_blank" rel="noopener noreferrer"/);
-assert.match(app, /Pay invoice/);
+assert.match(app, />Pay \$\{escapeHtml\(formatMoney\(requestedAmount\)\)\}<\/a>/);
 assert.match(app, /Backline does not store card or bank details/);
+assert.match(app, /defaultPaymentLink: normalizePaymentLink\(settings\.defaultPaymentLink\)/, "Shops set one default payment link in Settings");
+assert.match(app, /renderCustomerPortalPaymentRequest\(job, company\)/, "The portal uses the shop's settings, not the viewer's");
+assert.match(app, /Already paid\? Let the office know/, "The report-a-payment form stays available behind a toggle");
+assert.match(app, /\["Other ways to pay", company\.paymentInstructions/, "Invoices list the shop's other payment methods");
 assert.match(app, /function customerFacingMessageAuthor\(message = \{\}, company = companySettings\(\)\)/);
 assert.match(app, /customerFacingTechnicianName\(normalized\.createdBy\)/);
 assert.match(app, /escapeHtml\(customerFacingMessageAuthor\(message, company\)\)/);
