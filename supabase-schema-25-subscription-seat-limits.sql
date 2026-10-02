@@ -42,68 +42,94 @@ begin
 end;
 $$;
 
-create or replace function public.enforce_backline_team_seat_capacity()
+-- Each table has its own trigger function. One function shared between
+-- team_invites and organization_members fails with `record "new" has no field
+-- "user_id"` on invites, because plpgsql resolves every column in an
+-- expression even when an earlier condition is false.
+
+create or replace function public.enforce_backline_invite_seat_capacity()
 returns trigger
 language plpgsql
 security definer
 set search_path = public
 as $$
 declare
-  target_org uuid;
   member_count integer;
   pending_invite_count integer;
   member_limit integer;
 begin
   if coalesce(auth.role(), '') = 'service_role' then
-    if tg_op = 'DELETE' then return old; end if;
     return new;
   end if;
 
-  if tg_table_name = 'team_invites' then
-    if tg_op = 'DELETE' or new.status <> 'pending' then
-      if tg_op = 'DELETE' then return old; end if;
+  -- Only a newly pending invite takes a seat.
+  if new.status <> 'pending' then
+    return new;
+  end if;
+  if tg_op = 'UPDATE' then
+    if old.status = 'pending' and old.organization_id = new.organization_id then
       return new;
     end if;
-    if tg_op = 'UPDATE' and old.status = 'pending' and old.organization_id = new.organization_id then
+  end if;
+
+  member_limit := public.backline_subscription_member_limit(new.organization_id);
+  select count(*) into member_count
+  from public.organization_members
+  where organization_id = new.organization_id;
+  select count(*) into pending_invite_count
+  from public.team_invites
+  where organization_id = new.organization_id and status = 'pending';
+
+  if member_count + pending_invite_count >= member_limit then
+    raise exception 'Your current Backline plan allows % team members. Remove a pending invite or update billing before inviting another person.', member_limit
+      using errcode = '23514';
+  end if;
+
+  return new;
+end;
+$$;
+
+create or replace function public.enforce_backline_member_seat_capacity()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  member_count integer;
+  member_limit integer;
+begin
+  if coalesce(auth.role(), '') = 'service_role' then
+    return new;
+  end if;
+
+  if tg_op = 'UPDATE' then
+    if old.organization_id = new.organization_id then
       return new;
     end if;
-    target_org := new.organization_id;
-  else
-    if tg_op = 'DELETE' then return old; end if;
-    if tg_op = 'UPDATE' and old.organization_id = new.organization_id then return new; end if;
-    target_org := new.organization_id;
   end if;
 
   -- The owner membership is created before a subscription exists. Schema 21
   -- already allows that one creation; every additional seat requires billing.
-  if tg_table_name = 'organization_members'
-    and new.role = 'owner'
+  if new.role = 'owner'
     and new.user_id = auth.uid()
     and exists (
       select 1 from public.organizations organization
-      where organization.id = target_org and organization.owner_id = auth.uid()
+      where organization.id = new.organization_id and organization.owner_id = auth.uid()
     )
     and not exists (
       select 1 from public.organization_members member
-      where member.organization_id = target_org
+      where member.organization_id = new.organization_id
     ) then
     return new;
   end if;
 
-  member_limit := public.backline_subscription_member_limit(target_org);
+  member_limit := public.backline_subscription_member_limit(new.organization_id);
   select count(*) into member_count
   from public.organization_members
-  where organization_id = target_org;
+  where organization_id = new.organization_id;
 
-  if tg_table_name = 'team_invites' then
-    select count(*) into pending_invite_count
-    from public.team_invites
-    where organization_id = target_org and status = 'pending';
-    if member_count + pending_invite_count >= member_limit then
-      raise exception 'Your current Backline plan allows % team members. Remove a pending invite or update billing before inviting another person.', member_limit
-        using errcode = '23514';
-    end if;
-  elsif member_count >= member_limit then
+  if member_count >= member_limit then
     raise exception 'Your current Backline plan allows % team members. Update billing before adding another person.', member_limit
       using errcode = '23514';
   end if;
@@ -115,12 +141,19 @@ $$;
 drop trigger if exists backline_team_invite_capacity_guard on public.team_invites;
 create trigger backline_team_invite_capacity_guard
 before insert or update on public.team_invites
-for each row execute function public.enforce_backline_team_seat_capacity();
+for each row execute function public.enforce_backline_invite_seat_capacity();
 
 drop trigger if exists backline_member_capacity_guard on public.organization_members;
 create trigger backline_member_capacity_guard
 before insert or update on public.organization_members
-for each row execute function public.enforce_backline_team_seat_capacity();
+for each row execute function public.enforce_backline_member_seat_capacity();
+
+-- Remove the original shared function, which broke team invites.
+drop function if exists public.enforce_backline_team_seat_capacity();
+
+revoke all on function public.enforce_backline_invite_seat_capacity() from public, anon, authenticated;
+revoke all on function public.enforce_backline_member_seat_capacity() from public, anon, authenticated;
+revoke execute on function public.backline_subscription_member_limit(uuid) from public, anon;
 
 grant execute on function public.backline_subscription_member_limit(uuid) to authenticated;
 

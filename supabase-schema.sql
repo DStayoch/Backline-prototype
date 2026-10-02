@@ -2581,68 +2581,94 @@ begin
 end;
 $$;
 
-create or replace function public.enforce_backline_team_seat_capacity()
+-- Each table has its own trigger function. One function shared between
+-- team_invites and organization_members fails with `record "new" has no field
+-- "user_id"` on invites, because plpgsql resolves every column in an
+-- expression even when an earlier condition is false.
+
+create or replace function public.enforce_backline_invite_seat_capacity()
 returns trigger
 language plpgsql
 security definer
 set search_path = public
 as $$
 declare
-  target_org uuid;
   member_count integer;
   pending_invite_count integer;
   member_limit integer;
 begin
   if coalesce(auth.role(), '') = 'service_role' then
-    if tg_op = 'DELETE' then return old; end if;
     return new;
   end if;
 
-  if tg_table_name = 'team_invites' then
-    if tg_op = 'DELETE' or new.status <> 'pending' then
-      if tg_op = 'DELETE' then return old; end if;
+  -- Only a newly pending invite takes a seat.
+  if new.status <> 'pending' then
+    return new;
+  end if;
+  if tg_op = 'UPDATE' then
+    if old.status = 'pending' and old.organization_id = new.organization_id then
       return new;
     end if;
-    if tg_op = 'UPDATE' and old.status = 'pending' and old.organization_id = new.organization_id then
+  end if;
+
+  member_limit := public.backline_subscription_member_limit(new.organization_id);
+  select count(*) into member_count
+  from public.organization_members
+  where organization_id = new.organization_id;
+  select count(*) into pending_invite_count
+  from public.team_invites
+  where organization_id = new.organization_id and status = 'pending';
+
+  if member_count + pending_invite_count >= member_limit then
+    raise exception 'Your current Backline plan allows % team members. Remove a pending invite or update billing before inviting another person.', member_limit
+      using errcode = '23514';
+  end if;
+
+  return new;
+end;
+$$;
+
+create or replace function public.enforce_backline_member_seat_capacity()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  member_count integer;
+  member_limit integer;
+begin
+  if coalesce(auth.role(), '') = 'service_role' then
+    return new;
+  end if;
+
+  if tg_op = 'UPDATE' then
+    if old.organization_id = new.organization_id then
       return new;
     end if;
-    target_org := new.organization_id;
-  else
-    if tg_op = 'DELETE' then return old; end if;
-    if tg_op = 'UPDATE' and old.organization_id = new.organization_id then return new; end if;
-    target_org := new.organization_id;
   end if;
 
   -- The owner membership is created before a subscription exists. Schema 21
   -- already allows that one creation; every additional seat requires billing.
-  if tg_table_name = 'organization_members'
-    and new.role = 'owner'
+  if new.role = 'owner'
     and new.user_id = auth.uid()
     and exists (
       select 1 from public.organizations organization
-      where organization.id = target_org and organization.owner_id = auth.uid()
+      where organization.id = new.organization_id and organization.owner_id = auth.uid()
     )
     and not exists (
       select 1 from public.organization_members member
-      where member.organization_id = target_org
+      where member.organization_id = new.organization_id
     ) then
     return new;
   end if;
 
-  member_limit := public.backline_subscription_member_limit(target_org);
+  member_limit := public.backline_subscription_member_limit(new.organization_id);
   select count(*) into member_count
   from public.organization_members
-  where organization_id = target_org;
+  where organization_id = new.organization_id;
 
-  if tg_table_name = 'team_invites' then
-    select count(*) into pending_invite_count
-    from public.team_invites
-    where organization_id = target_org and status = 'pending';
-    if member_count + pending_invite_count >= member_limit then
-      raise exception 'Your current Backline plan allows % team members. Remove a pending invite or update billing before inviting another person.', member_limit
-        using errcode = '23514';
-    end if;
-  elsif member_count >= member_limit then
+  if member_count >= member_limit then
     raise exception 'Your current Backline plan allows % team members. Update billing before adding another person.', member_limit
       using errcode = '23514';
   end if;
@@ -2654,12 +2680,19 @@ $$;
 drop trigger if exists backline_team_invite_capacity_guard on public.team_invites;
 create trigger backline_team_invite_capacity_guard
 before insert or update on public.team_invites
-for each row execute function public.enforce_backline_team_seat_capacity();
+for each row execute function public.enforce_backline_invite_seat_capacity();
 
 drop trigger if exists backline_member_capacity_guard on public.organization_members;
 create trigger backline_member_capacity_guard
 before insert or update on public.organization_members
-for each row execute function public.enforce_backline_team_seat_capacity();
+for each row execute function public.enforce_backline_member_seat_capacity();
+
+-- Remove the original shared function, which broke team invites.
+drop function if exists public.enforce_backline_team_seat_capacity();
+
+revoke all on function public.enforce_backline_invite_seat_capacity() from public, anon, authenticated;
+revoke all on function public.enforce_backline_member_seat_capacity() from public, anon, authenticated;
+revoke execute on function public.backline_subscription_member_limit(uuid) from public, anon;
 
 grant execute on function public.backline_subscription_member_limit(uuid) to authenticated;
 
@@ -2672,6 +2705,10 @@ notify pgrst, 'reload schema';
 -- workspace to restart the 14-day trial. Platform admins are exempt, and
 -- accounts that already own several workspaces keep them; only new ones are
 -- blocked. Being invited into other shops as a non-owner is unaffected.
+--
+-- Safe to re-run. Each table has its own trigger function: a function shared
+-- between tables fails with `record "new" has no field ...` as soon as it
+-- reads a column the other table does not have.
 
 do $$
 begin
@@ -2681,39 +2718,63 @@ begin
   end if;
 end $$;
 
-create or replace function public.enforce_single_owned_workspace()
+-- Only workspaces with an owner membership count, so a signup that failed
+-- halfway (workspace row, no membership) never locks the account out.
+create or replace function public.backline_user_owns_workspace(target_user uuid, except_org uuid default null)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1
+    from public.organization_members member
+    where member.user_id = target_user
+      and member.role = 'owner'
+      and (except_org is null or member.organization_id <> except_org)
+  );
+$$;
+
+create or replace function public.enforce_single_owned_workspace_on_organization()
 returns trigger
 language plpgsql
 security definer
 set search_path = public
 as $$
-declare
-  owner_user uuid;
 begin
   if coalesce(auth.role(), '') = 'service_role' or coalesce(public.is_platform_admin(), false) then
     return new;
   end if;
 
-  if tg_table_name = 'organizations' then
-    owner_user := new.owner_id;
-  elsif new.role = 'owner' then
-    owner_user := new.user_id;
-  else
+  -- Serialize concurrent signups for the same account.
+  perform pg_advisory_xact_lock(hashtextextended('backline-owned-workspace:' || new.owner_id::text, 0));
+
+  if public.backline_user_owns_workspace(new.owner_id) then
+    raise exception 'Each Backline account can own one workspace. Contact Backline support if you need another.'
+      using errcode = '23514';
+  end if;
+
+  return new;
+end;
+$$;
+
+create or replace function public.enforce_single_owned_workspace_on_membership()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if new.role <> 'owner'
+    or coalesce(auth.role(), '') = 'service_role'
+    or coalesce(public.is_platform_admin(), false) then
     return new;
   end if;
 
-  -- Serialize concurrent bootstraps for the same account.
-  perform pg_advisory_xact_lock(hashtextextended('backline-owned-workspace:' || owner_user::text, 0));
+  perform pg_advisory_xact_lock(hashtextextended('backline-owned-workspace:' || new.user_id::text, 0));
 
-  -- Only workspaces with an owner membership count, so a bootstrap that failed
-  -- halfway (workspace row, no membership) never locks the account out.
-  if exists (
-    select 1
-    from public.organization_members member
-    where member.user_id = owner_user
-      and member.role = 'owner'
-      and (tg_table_name = 'organizations' or member.organization_id <> new.organization_id)
-  ) then
+  if public.backline_user_owns_workspace(new.user_id, new.organization_id) then
     raise exception 'Each Backline account can own one workspace. Contact Backline support if you need another.'
       using errcode = '23514';
   end if;
@@ -2725,14 +2786,19 @@ $$;
 drop trigger if exists backline_single_owned_workspace_guard on public.organizations;
 create trigger backline_single_owned_workspace_guard
 before insert on public.organizations
-for each row execute function public.enforce_single_owned_workspace();
+for each row execute function public.enforce_single_owned_workspace_on_organization();
 
 drop trigger if exists backline_single_owned_workspace_guard on public.organization_members;
 create trigger backline_single_owned_workspace_guard
 before insert on public.organization_members
-for each row execute function public.enforce_single_owned_workspace();
+for each row execute function public.enforce_single_owned_workspace_on_membership();
 
-revoke all on function public.enforce_single_owned_workspace() from public;
+-- Remove the original shared function, which broke workspace creation.
+drop function if exists public.enforce_single_owned_workspace();
+
+revoke all on function public.backline_user_owns_workspace(uuid, uuid) from public, anon, authenticated;
+revoke all on function public.enforce_single_owned_workspace_on_organization() from public, anon, authenticated;
+revoke all on function public.enforce_single_owned_workspace_on_membership() from public, anon, authenticated;
 
 notify pgrst, 'reload schema';
 
