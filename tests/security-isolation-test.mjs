@@ -138,4 +138,23 @@ assert.match(fullSchema, /join public\.organizations o on o\.id = j\.organizatio
 assert.match(fullSchema, /where organization_id = target_org_id\s+and id = target_job_id/);
 assert.match(fullSchema, /where organization_id = target_org_id\s+and token = input_token/);
 
+// A plpgsql trigger function shared between tables fails at runtime with
+// `record "new" has no field ...` when it reads a column one table lacks. That
+// broke signup (schema 26) and team invites (schema 25). Only functions that
+// read columns present on every attached table may be shared.
+const sharedTriggerFunctionsAllowed = new Set(["enforce_backline_billing_write"]);
+const triggerTables = new Map();
+for (const [, table, fn] of fullSchema.replace(/\r/g, "").matchAll(/create trigger \w+\s+(?:before|after)[^;]*? on public\.(\w+)\s+for each row execute function public\.(\w+)\(\)/g)) {
+  if (!triggerTables.has(fn)) triggerTables.set(fn, new Set());
+  triggerTables.get(fn).add(table);
+}
+assert.ok(triggerTables.size >= 8, "The trigger scan should find the schema's triggers");
+for (const [fn, tables] of triggerTables) {
+  if (sharedTriggerFunctionsAllowed.has(fn)) continue;
+  assert.equal(tables.size, 1, `Trigger function ${fn} is attached to ${[...tables].join(", ")}; give each table its own function`);
+}
+for (const retired of ["enforce_backline_team_seat_capacity", "enforce_single_owned_workspace"]) {
+  assert.doesNotMatch(fullSchema, new RegExp(`execute function public\\.${retired}\\(\\)`), `${retired} must stay retired`);
+}
+
 console.log("Security isolation test passed.");
