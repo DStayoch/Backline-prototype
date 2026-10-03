@@ -81,6 +81,10 @@ assert.match(setup, /billing-incident-runbook/i, "Billing setup must point to th
 assert.match(incidentRunbook, /Check subscription/i, "The incident process must give owners a self-service refresh step.");
 assert.match(incidentRunbook, /workspace_access_overrides/i, "The incident process must document the controlled support override.");
 assert.match(page, /id="subscriptionGateSupport"/, "Read-only owners need a billing-support action.");
+assert.match(app, /function billingStatusStartsNewCheckout\(status\) \{\s+return \["", "inactive", "canceled", "incomplete_expired"\]\.includes/, "Ended subscriptions must be able to start a new checkout; Stripe's portal cannot create one.");
+assert.match(app, /if \(billingStatusStartsNewCheckout\(state\.billingAccess\?\.status \|\| state\.billing\?\.status\)\) \{\s+const planKey = selectedSubscriptionGatePlan\(\);/, "The gate button must start checkout for ended subscriptions, not open the portal.");
+assert.match(app, /elements\.subscriptionGateTrialBadge\.hidden = !\(owner && neverStarted\);/, "Only never-subscribed workspaces are promised a trial.");
+assert.match(app, /copyTextToClipboard\(`To: support@backlineoffice\.com/, "The support action must work without a mail app.");
 assert.match(app, /support@backlineoffice\.com/, "Billing support must reach the monitored Backline support address.");
 assert.match(page, /id="billingPlanModal"/, "Owners need a dedicated billing plan dialog.");
 assert.match(page, /\$49<span>\/mo<\/span>/, "Solo pricing must be shown in the product.");

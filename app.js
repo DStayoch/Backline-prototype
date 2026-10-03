@@ -20184,6 +20184,13 @@ function isSubscriptionReadOnly() {
   return state.secureMode && !state.offlineMode && state.billingAccess?.mode === "read_only";
 }
 
+// A workspace with no subscription, or one that has fully ended, starts a new
+// checkout. Stripe's billing portal cannot create a subscription, so sending
+// an ended subscription there leaves the owner with no way back.
+function billingStatusStartsNewCheckout(status) {
+  return ["", "inactive", "canceled", "incomplete_expired"].includes(String(status || ""));
+}
+
 function selectedSubscriptionGatePlan() {
   return elements.subscriptionGatePlanForm?.querySelector('input[name="subscriptionGatePlan"]:checked')?.value || "";
 }
@@ -20200,7 +20207,10 @@ function renderSubscriptionGatePlanSummary() {
       : `For up to ${plan.memberCap} active Backline users.`;
   elements.subscriptionGatePlanSummary.textContent = memberDetail;
   elements.subscriptionGatePlanPrice.textContent = `$${plan.price}/month`;
-  elements.subscriptionGatePrimary.textContent = `Start ${plan.label} trial`;
+  const status = String(state.billingAccess?.status || state.billing?.status || "inactive");
+  elements.subscriptionGatePrimary.textContent = ["", "inactive"].includes(status)
+    ? `Start ${plan.label} trial`
+    : `Subscribe to ${plan.label}`;
 }
 
 function renderSubscriptionGate() {
@@ -20214,9 +20224,12 @@ function renderSubscriptionGate() {
   const owner = currentRole() === "owner";
   const neverStarted = ["", "inactive"].includes(status);
   const pastDue = status === "past_due";
-  const canStartTrial = owner && neverStarted;
+  const ended = !neverStarted && billingStatusStartsNewCheckout(status);
+  const canStartTrial = owner && (neverStarted || ended);
   const detail = neverStarted
     ? "Choose the plan that fits your team. Your 14-day trial opens every core Backline workflow."
+    : ended
+      ? "Your subscription has ended. Your records are still here; choose a plan to reopen the workspace."
     : pastDue
       ? "The payment grace period has ended. Update billing to restore full workspace access."
       : "This workspace is read-only because its Backline subscription is not active.";
@@ -20238,10 +20251,10 @@ function renderSubscriptionGate() {
 
   elements.subscriptionGatePlanForm.hidden = !canStartTrial;
   elements.subscriptionGateRecommendation.hidden = !canStartTrial;
-  elements.subscriptionGateTrialBadge.hidden = !canStartTrial;
-  elements.subscriptionGateStatus.hidden = canStartTrial;
+  elements.subscriptionGateTrialBadge.hidden = !(owner && neverStarted);
+  elements.subscriptionGateStatus.hidden = canStartTrial && neverStarted;
   elements.subscriptionGatePrimary.hidden = !owner;
-  elements.subscriptionGateSupport.hidden = canStartTrial;
+  elements.subscriptionGateSupport.hidden = neverStarted;
   elements.subscriptionGateExport.hidden = !owner;
 
   if (canStartTrial) {
@@ -20257,8 +20270,9 @@ function renderSubscriptionGate() {
       const recommendedInput = elements.subscriptionGatePlanForm.querySelector(`input[value="${recommended}"]`);
       recommendedInput.checked = !recommendedInput.disabled;
     }
-    elements.subscriptionGatePanelTitle.textContent = "Pick a plan for your team";
+    elements.subscriptionGatePanelTitle.textContent = ended ? "Choose a plan to reopen your workspace" : "Pick a plan for your team";
     elements.subscriptionGatePanelDetail.textContent = "You can change plans from Backline Settings anytime.";
+    elements.subscriptionGateStatus.textContent = `Subscription status: ${billingStatusLabel(status)}.`;
     elements.subscriptionGateCheckoutNote.textContent = "Secure checkout is handled by Stripe. You can manage or cancel your subscription from Backline Settings.";
     renderSubscriptionGatePlanSummary();
     return;
@@ -25301,7 +25315,7 @@ elements.billingPlanForm?.addEventListener("submit", async (event) => {
 elements.subscriptionGatePrimary?.addEventListener("click", async () => {
   const previousText = elements.subscriptionGatePrimary.textContent;
   try {
-    if (["", "inactive"].includes(String(state.billingAccess?.status || state.billing?.status || ""))) {
+    if (billingStatusStartsNewCheckout(state.billingAccess?.status || state.billing?.status)) {
       const planKey = selectedSubscriptionGatePlan();
       if (!planKey) throw new Error("Choose a Backline plan before continuing.");
       elements.subscriptionGatePrimary.disabled = true;
@@ -25348,6 +25362,16 @@ elements.subscriptionGateSupport?.addEventListener("click", () => {
     `Workspace ID: ${workspace || "not available"}`,
     "Stripe receipt or subscription ID:"
   ].join("\n");
+  copyTextToClipboard(`To: support@backlineoffice.com\nSubject: ${subject}\n\n${body}`).then((copied) => {
+    showToast(
+      "Email support@backlineoffice.com",
+      copied
+        ? "Your account details are copied. Paste them into an email to support@backlineoffice.com and add your Stripe receipt."
+        : `Send your signed-in email (${email || "not available"}) and Stripe receipt to support@backlineoffice.com.`,
+      "info",
+      { timeout: 12000 }
+    );
+  });
   window.location.href = `mailto:support@backlineoffice.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 });
 

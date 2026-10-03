@@ -7640,7 +7640,7 @@ html[data-theme="dark"] .auth-logo {
 }
 
 .subscription-gate-status {
-  margin: 0 28px 20px;
+  margin: 20px 28px;
   padding: 12px;
   border: 1px solid var(--line);
   border-radius: 8px;
