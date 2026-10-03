@@ -1,0 +1,49 @@
+name: Supabase keep-alive
+
+# Supabase pauses free-plan projects after about a week without activity,
+# which takes the live app offline. This runs one harmless database query a
+# day so the project stays awake. Remove it after upgrading to the Pro plan.
+#
+# If the query fails (project paused, deleted, or unreachable), the job fails
+# and GitHub emails the repository owner, so this doubles as a daily
+# "is the database up" check.
+#
+# Note: GitHub disables scheduled workflows after 60 days with no commits to
+# the repository and emails a warning first. Re-enable it from the Actions tab.
+
+on:
+  schedule:
+    - cron: "17 9 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Query the database
+        env:
+          SUPABASE_URL: ${{ vars.BACKLINE_SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.BACKLINE_SUPABASE_ANON_KEY }}
+        run: |
+          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_ANON_KEY" ]; then
+            echo "::error::Set the BACKLINE_SUPABASE_URL repository variable and the BACKLINE_SUPABASE_ANON_KEY repository secret."
+            exit 1
+          fi
+          # A public portal lookup with a token that never exists: it runs a
+          # real query, reads no customer data, and returns an empty list.
+          status=$(curl -sS -o response.txt -w "%{http_code}" --retry 3 --retry-delay 10 --max-time 30 \
+            -X POST "$SUPABASE_URL/rest/v1/rpc/get_customer_portal_by_token" \
+            -H "apikey: $SUPABASE_ANON_KEY" \
+            -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
+            -H "Content-Type: application/json" \
+            -d '{"input_token":"backline-keepalive-ping-000000000000"}') || status="unreachable"
+          echo "Supabase responded: HTTP $status"
+          if [ "$status" != "200" ]; then
+            echo "::error::Supabase did not respond normally (HTTP $status). The project may be paused: open the Supabase dashboard and restore it."
+            cat response.txt 2>/dev/null || true
+            exit 1
+          fi
