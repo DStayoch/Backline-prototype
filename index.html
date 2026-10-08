@@ -12,7 +12,7 @@
     <link rel="icon" type="image/png" href="assets/backline-icon-transparent.png">
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="apple-touch-icon" href="assets/backline-icon-transparent.png">
-  <link rel="stylesheet" href="styles.css?v=20261002-resubscribe">
+  <link rel="stylesheet" href="styles.css?v=20261007-customer-email">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.4"></script>
     <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
     <script src="supabase-config.js"></script>
@@ -1045,6 +1045,11 @@
             <input name="phone" required autocomplete="tel" inputmode="numeric" maxlength="13" placeholder="(555)123-4567" data-phone-input>
           </label>
           <label class="wide">
+            Email (optional)
+            <input name="email" type="email" autocomplete="email" placeholder="customer@example.com">
+          </label>
+          <p class="wide customer-match-hint" id="jobCustomerMatchHint" role="status" hidden></p>
+          <label class="wide">
             Service address
             <input name="address" required autocomplete="street-address">
           </label>
@@ -1429,6 +1434,6 @@
       </section>
     </dialog>
 
-    <script src="app.js?v=20261002-resubscribe"></script>
+    <script src="app.js?v=20261007-customer-email"></script>
   </body>
 </html>
