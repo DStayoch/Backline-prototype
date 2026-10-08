@@ -61,6 +61,10 @@ assert.match(app, /function customersWithPhone\(phone\)/, "The form finds every 
 assert.match(app, /name="customerChoice" value="\$\{NEW_CUSTOMER_CHOICE\}"/, "People who share a phone number can be separate customers");
 assert.match(app, /if \(customerChoice === NEW_CUSTOMER_CHOICE && sharedPhoneCustomers\.length\) \{\s+job\.customerId = separateCustomerIdForPhone\(job\.phone\);/, "Choosing a separate customer gives the work item its own customer ID");
 assert.match(app, /if \(box\.dataset\.matchKey === key\) return;/, "Typing in other fields must not reset the customer choice");
+assert.match(app, /functions\.invoke\("send-customer-email", \{\s+body: \{ organizationId: state\.organizationId, jobId, kind, \.\.\.\(message \? \{ message \} : \{\}\) \}/, "The app names the job and kind only; the server picks the recipient and link");
+assert.match(app, /"portal-email": "portal",\s+"approval-email": "approval"/, "Email actions use the permission of what they send");
+assert.match(app, /const checked = Object\.keys\(draft\)\.length \? draft\.emailCustomer === "on" : true;/, "An unticked email box must stay unticked when the form redraws");
+assert.match(app, /await waitForSecureSave\(\);/, "Pending saves land before the server reads the job");
 assert.match(app, /defaultPaymentLink: normalizePaymentLink\(settings\.defaultPaymentLink\)/, "Shops set one default payment link in Settings");
 assert.match(app, /renderCustomerPortalPaymentRequest\(job, company\)/, "The portal uses the shop's settings, not the viewer's");
 assert.match(app, /Already paid\? Let the office know/, "The report-a-payment form stays available behind a toggle");
