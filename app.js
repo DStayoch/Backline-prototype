@@ -2753,7 +2753,7 @@ function approvalPdfLines(job, company = companySettings()) {
     ["Service address", job.address],
     ["Service type", `${job.trade} / ${jobTypeLabel(job)}`],
     ["Scheduled service", scheduleText(job)],
-    ["Technician", customerFacingTechnicianName(job.technician)],
+    [customerFacingAssigneeLabel(job), customerFacingTechnicianName(job.technician)],
     ["Requested work", job.issue],
     ["Estimate package", estimate.packageName],
     ["Estimate expires", estimate.expiresAt ? new Date(`${estimate.expiresAt}T12:00:00`).toLocaleDateString() : "Not set"],
@@ -2810,7 +2810,7 @@ function invoicePdfLines(job) {
     ["Service address", job.address],
     ["Trade", `${job.trade} / ${jobTypeLabel(job)}`],
     ["Scheduled", scheduleText(job)],
-    ["Technician", customerFacingTechnicianName(job.technician)],
+    [customerFacingAssigneeLabel(job), customerFacingTechnicianName(job.technician)],
     ["Invoice number", invoice.number],
     ["Invoice status", invoiceStatusLabel(invoice.status)],
     ["Service description", job.issue],
@@ -3297,12 +3297,48 @@ function technicianDisplayName(value) {
   return technician === "To Be Determined" ? technician : displayPersonName(technician);
 }
 
+// What a customer sees for the person handling their job: just the first
+// name. The label beside it ("Technician", "Assigned to") says the role, so
+// the name does not repeat it.
 function customerFacingTechnicianName(value) {
   const technician = normalizeTechnician(value);
-  if (technician === "To Be Determined") return technician;
+  if (technician === "To Be Determined") return "To be assigned";
   const first = displayFirstName(technician);
-  const label = businessTerminology().assignee;
-  return first === "there" ? label : `${label} ${first}`;
+  return first === "there" ? `Your ${businessTerminology().assignee.toLowerCase()}` : first;
+}
+
+// Trade shops say "Technician". Other businesses use "Team member"
+// internally, which reads oddly to a customer, so they see "Assigned to".
+function customerFacingAssigneeLabel(job = {}) {
+  const label = businessTerminology(jobBusinessType(job)).assignee;
+  return label === "Team member" ? "Assigned to" : label;
+}
+
+// "annual_maintenance" -> "Annual Maintenance"
+function customerFacingJobType(job = {}) {
+  if (!job.jobType || job.jobType === "tbd") return "";
+  return String(job.jobType).replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+// The on-site contact only matters to a customer when it is someone else
+// (a tenant, a manager). Their own name there is noise.
+function customerFacingSiteContact(job = {}) {
+  const contact = String(job.siteContact || "").trim();
+  return contact && normalizeSearchText(contact) !== normalizeSearchText(job.name) ? contact : "";
+}
+
+// The visit details shown on the customer portal and the approval page.
+function customerVisitDetailRows(job, { includeSchedule = false, office = "" } = {}) {
+  const terms = businessTerminology(jobBusinessType(job));
+  const siteContact = customerFacingSiteContact(job);
+  const jobType = customerFacingJobType(job);
+  return [
+    includeSchedule ? `<div><span>Scheduled</span><strong>${escapeHtml(scheduleText(job))}</strong></div>` : "",
+    `<div><span>${escapeHtml(customerFacingAssigneeLabel(job))}</span><strong>${escapeHtml(customerFacingTechnicianName(job.technician))}</strong></div>`,
+    siteContact ? `<div><span>On-site contact</span><strong class="truncate-value" title="${escapeHtml(siteContact)}">${escapeHtml(siteContact)}</strong></div>` : "",
+    office,
+    jobType ? `<div><span>${escapeHtml(terms.workItemType)}</span><strong>${escapeHtml(jobType)}</strong></div>` : ""
+  ].filter(Boolean).join("\n          ");
 }
 
 function internalActorDisplayName(value) {
@@ -3421,6 +3457,7 @@ function can(action) {
   if (state.secureMode && !state.offlineMode && state.billingAccess?.mode === "read_only" && action !== "exportData") {
     return false;
   }
+  if (action === "edit-details") return ["owner", "admin"].includes(currentRole());
   if (action === "manageTeam") return canManageTeamRole();
   const role = roleDefinition(currentRole()) || rolePermissions.owner;
   if (action === "createJob") return Boolean(role.createJob);
@@ -7917,6 +7954,13 @@ function workflowOptions() {
 
 function jobTradeOptions() {
   return workflowOptions().categories.map((value) => ({ value, label: value }));
+}
+
+// A saved job may hold a value the current business type no longer lists;
+// keep it selectable so opening the form never changes it silently.
+function optionsIncluding(options, value) {
+  if (!value || options.some((option) => option.value === value)) return options;
+  return [{ value, label: String(value).replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase()) }, ...options];
 }
 
 function jobTypeOptions() {
@@ -12742,6 +12786,7 @@ function renderJobActions() {
     { action: "invoice", label: "Invoice", tone: "", group: "Billing" },
     { action: "paid", label: "Mark paid", tone: "", group: "Billing" },
     { action: "parts", label: workspaceCards.parts.actionLabel, tone: "", group: "Field" },
+    { action: "edit-details", label: `Edit ${terms.workItem} details`, tone: "", group: "Admin" },
     { action: "delete", label: "Delete", tone: "danger", group: "Admin" }
   ].filter(Boolean)
     .filter(({ action }) => action === "note" ? canAddInternalNote() : can(action))
@@ -14318,10 +14363,7 @@ function renderCustomerPortalPage(jobOrId, options = {}) {
       <section class="approval-card portal-card">
         <h2>Visit details</h2>
         <div class="approval-meta-grid">
-          <div><span>Technician</span><strong>${escapeHtml(customerFacingTechnicianName(job.technician))}</strong></div>
-          <div><span>Site contact</span><strong>${escapeHtml(job.siteContact || job.name)}</strong></div>
-          <div><span>Office</span><strong>${escapeHtml(company.companyName)}</strong><small>${escapeHtml(officeContact)}</small></div>
-          <div><span>Job type</span><strong>${escapeHtml(jobTypeLabel(job))}</strong></div>
+          ${customerVisitDetailRows(job, { office: `<div><span>Office</span><strong>${escapeHtml(company.companyName)}</strong><small>${escapeHtml(officeContact)}</small></div>` })}
         </div>
       </section>
 
@@ -14490,10 +14532,7 @@ function renderApprovalPage(jobOrId, options = {}) {
       <section class="approval-card">
         <h2>Visit Details</h2>
         <div class="approval-meta-grid">
-          <div><span>Scheduled</span><strong>${escapeHtml(scheduleText(job))}</strong></div>
-          <div><span>Technician</span><strong>${escapeHtml(customerFacingTechnicianName(job.technician))}</strong></div>
-          <div><span>Site contact</span><strong class="truncate-value" title="${escapeHtml(job.siteContact || job.name)}">${escapeHtml(job.siteContact || job.name)}</strong></div>
-          <div><span>Job type</span><strong>${escapeHtml(jobTypeLabel(job))}</strong></div>
+          ${customerVisitDetailRows(job, { includeSchedule: true })}
         </div>
       </section>
 
@@ -15265,7 +15304,7 @@ function renderDetail() {
 
       <div class="meta-grid ${isFieldScopedRole() ? "tech-meta-grid" : ""}">
         <div class="meta">
-          <span>Trade</span>
+          <span>${escapeHtml(businessTerminology(jobBusinessType(job)).workCategory)}</span>
           <strong>${escapeHtml(job.trade)} / ${escapeHtml(jobTypeLabel(job))}</strong>
         </div>
         <div class="meta">
@@ -15278,14 +15317,14 @@ function renderDetail() {
         </div>
         ${isFieldScopedRole() ? "" : `
           <div class="meta ${can("book") ? "editable-meta" : ""}">
-            <span>Technician</span>
+            <span>${escapeHtml(businessTerminology(jobBusinessType(job)).assignee)}</span>
             ${can("book")
               ? technicianPicker(job)
               : `<strong>${escapeHtml(technicianDisplayName(job.technician))}</strong>`}
           </div>
         `}
         <div class="meta">
-          <span>Site contact</span>
+          <span>${escapeHtml(businessTerminology(jobBusinessType(job)).contactLabel)}</span>
           <strong class="truncate-value" title="${escapeHtml(job.siteContact || "Not set")}">${escapeHtml(job.siteContact || "Not set")}</strong>
         </div>
         <div class="meta">
@@ -21912,6 +21951,17 @@ function actionModalConfig(action, job) {
         inputField({ label: "Unit cost", name: "cost", type: "number", value: actionDraft.cost ?? "", placeholder: "Optional" })
       ]
     },
+    "edit-details": {
+      eyebrow: terms.workItemCapital,
+      title: `Edit ${terms.workItem} details`,
+      subtitle: "Correct how this is categorized and who to meet on site. Customers see the type on their job page.",
+      submit: "Save details",
+      fields: [
+        inputField({ label: terms.workCategory, name: "trade", value: actionDraft.trade ?? job.trade, options: optionsIncluding(jobTradeOptions(), job.trade) }),
+        inputField({ label: terms.workItemType, name: "jobType", value: actionDraft.jobType ?? job.jobType, options: optionsIncluding(jobTypeOptions(), job.jobType) }),
+        inputField({ label: terms.contactLabel, name: "siteContact", value: actionDraft.siteContact ?? (job.siteContact || ""), placeholder: terms.contactPlaceholder, wide: true })
+      ]
+    },
     "portal-update": {
       eyebrow: "Portal",
       title: "Send portal update",
@@ -22323,6 +22373,19 @@ function applyActionForm(action, data) {
       job.parts.push(loggedPart);
       updateInventoryUsage(loggedPart, { job });
       addJobMessage(job, { direction: "note", body: `Parts logged: ${qty} x ${name} from ${source}${cost ? ` at ${formatMoney(cost)} each` : ""}${!enteredCost && inventoryMatch?.defaultCost ? " using inventory default cost" : ""}.` });
+    }
+
+    if (action === "edit-details") {
+      const before = `${job.trade} / ${jobTypeLabel(job)}`;
+      job.trade = String(data.get("trade") || job.trade).trim() || job.trade;
+      job.jobType = String(data.get("jobType") || job.jobType).trim() || job.jobType;
+      job.siteContact = String(data.get("siteContact") || "").trim();
+      const after = `${job.trade} / ${jobTypeLabel(job)}`;
+      addJobMessage(job, {
+        direction: "note",
+        body: before === after ? "Work details updated." : `Work details changed from ${before} to ${after}.`,
+        createdBy: accountDisplayName()
+      });
     }
 
     if (action === "portal-update") {
@@ -24191,7 +24254,7 @@ document.addEventListener("click", async (event) => {
   if (!action) return;
   if (action === "note" ? !canAddInternalNote() : !canOrRecord(action, "job action")) return;
 
-  if (["note", "book", "estimate", "invoice", "paid", "payment-request", "change", "parts", "portal-update", "complete", "check-diagnosis"].includes(action)) {
+  if (["note", "book", "estimate", "invoice", "paid", "payment-request", "change", "parts", "portal-update", "complete", "check-diagnosis", "edit-details"].includes(action)) {
     openActionModal(action);
     return;
   }
