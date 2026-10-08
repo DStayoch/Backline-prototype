@@ -169,4 +169,11 @@ assert.match(scopedSync, /from public\.customers\s+where organization_id = input
 assert.doesNotMatch(scopedSync, /Customer belongs to a different workspace/, "Saving a customer must not reveal that another shop has the same phone number");
 assert.doesNotMatch(scopedSync, /where id = input_id/, "No customer lookup or update may use the ID alone");
 
+// Schema 28 runs from the SQL Editor, where the subscription write guard is
+// enforced. Its repair step must pause the guard, and must switch it back on.
+assert.match(schema28, /alter table public\.%I disable trigger backline_subscription_write_guard/, "Schema 28 must be able to repair links in read-only workspaces");
+assert.match(schema28, /alter table public\.%I enable trigger backline_subscription_write_guard/, "Schema 28 must re-enable the write guard");
+assert.ok(schema28.indexOf("disable trigger backline_subscription_write_guard") < schema28.indexOf("enable trigger backline_subscription_write_guard"), "The guard is paused before it is restored");
+assert.equal((schema28.match(/^do \$\$/gm) || []).length, 1, "Schema 28's table changes stay in one all-or-nothing block");
+
 console.log("Security isolation test passed.");
