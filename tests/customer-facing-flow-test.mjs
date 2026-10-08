@@ -65,6 +65,11 @@ assert.match(app, /functions\.invoke\("send-customer-email", \{\s+body: \{ organ
 assert.match(app, /"portal-email": "portal",\s+"approval-email": "approval"/, "Email actions use the permission of what they send");
 assert.match(app, /const checked = Object\.keys\(draft\)\.length \? draft\.emailCustomer === "on" : true;/, "An unticked email box must stay unticked when the form redraws");
 assert.match(app, /await waitForSecureSave\(\);/, "Pending saves land before the server reads the job");
+assert.match(app, /return String\(profile \? profile\.email : job\.email \|\| ""\)\.trim\(\);/, "The customer profile holds the email that gets used");
+const saveProfile = app.slice(app.indexOf("function saveCustomerProfile("), app.indexOf("function openCustomerAction("));
+assert.match(saveProfile, /syncCustomersFromJobs\(\);[\s\S]*?edited\._remoteRevision = customer\._remoteRevision;[\s\S]*?edited\._remoteFingerprint = customer\._remoteFingerprint;/, "Editing a customer must keep the record's stored version, or the save is refused as a conflict");
+assert.doesNotMatch(saveProfile, /state\.customers = buildCustomersFromJobs\(state\.jobs\)/, "Rebuilding the customer list directly drops the stored versions");
+assert.match(saveProfile, /email: updated\.email,/, "An email cleared on the profile must stay cleared");
 assert.match(app, /defaultPaymentLink: normalizePaymentLink\(settings\.defaultPaymentLink\)/, "Shops set one default payment link in Settings");
 assert.match(app, /renderCustomerPortalPaymentRequest\(job, company\)/, "The portal uses the shop's settings, not the viewer's");
 assert.match(app, /Already paid\? Let the office know/, "The report-a-payment form stays available behind a toggle");

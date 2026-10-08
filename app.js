@@ -5266,7 +5266,6 @@ function customerFromJob(job) {
     id: customerId,
     name: job.name,
     phone: job.phone,
-    email: job.email || "",
     address: job.address,
     siteContact: job.siteContact || "",
     lastJobId: job.id,
@@ -5288,6 +5287,8 @@ function mergeCustomerRecords(calculated, stored = {}) {
   return normalizeCustomerRecord({
     ...saved,
     ...base,
+    // The email lives on the profile only (base, built from work items, has
+    // none), so a cleared email stays cleared.
     email: saved.email || base.email,
     customerType: saved.customerType || base.customerType,
     tags: saved.tags.length ? saved.tags : base.tags,
@@ -5317,7 +5318,6 @@ function buildCustomersFromJobs(jobs, storedCustomers = state.customers) {
 
     existing.name = next.name || existing.name;
     existing.phone = next.phone || existing.phone;
-    existing.email = existing.email || next.email;
     existing.address = next.address || existing.address;
     existing.siteContact = next.siteContact || existing.siteContact;
     existing.lastJobId = next.lastJobId;
@@ -6725,11 +6725,12 @@ const CUSTOMER_EMAIL_LABELS = {
   "payment-request": "Payment request"
 };
 
-// The email for a job's customer: the one typed on the job, otherwise the one
-// on their customer profile.
+// The email for a job's customer comes from their customer profile, which is
+// where it can be corrected or removed. A job with no customer record falls
+// back to the email typed when it was created.
 function jobCustomerEmail(job = {}) {
   const profile = state.customers.find((customer) => customer.id === job.customerId);
-  return String(job.email || profile?.email || "").trim();
+  return String(profile ? profile.email : job.email || "").trim();
 }
 
 // Customer email is sent by a Supabase Edge Function, so it needs the secure workspace.
@@ -20019,9 +20020,27 @@ function saveCustomerProfile(customerId, data) {
     notes: data.get("notes"),
     updatedAt: new Date().toISOString()
   });
-  state.customers = buildCustomersFromJobs(state.jobs).map((customer) => customer.id === customerId
-    ? mergeCustomerRecords(customer, updated)
-    : customer);
+  // Refresh the list first: this keeps each record's stored version and
+  // fingerprint. Rebuilding without them made the next save claim version 0,
+  // and the database refused it as a conflict.
+  syncCustomersFromJobs();
+  state.customers = state.customers.map((customer) => {
+    if (customer.id !== customerId) return customer;
+    const edited = {
+      ...mergeCustomerRecords(customer, updated),
+      // What the form says is final, including a field that was cleared.
+      email: updated.email,
+      customerType: updated.customerType,
+      preferredContact: updated.preferredContact,
+      accountFlag: updated.accountFlag,
+      tags: updated.tags,
+      notes: updated.notes,
+      updatedAt: updated.updatedAt
+    };
+    if (customer._remoteRevision) edited._remoteRevision = customer._remoteRevision;
+    if (customer._remoteFingerprint) edited._remoteFingerprint = customer._remoteFingerprint;
+    return edited;
+  });
   state.selectedCustomerId = customerId;
   state.customerProfileNotice = {
     customerId,
@@ -20474,6 +20493,11 @@ function createJob(formData) {
 
   state.jobs.unshift(job);
   state.selectedJobId = job.id;
+  if (job.email && !existingCustomer) {
+    syncCustomersFromJobs();
+    const createdCustomer = state.customers.find((customer) => customer.id === job.customerId);
+    if (createdCustomer) createdCustomer.email = job.email;
+  }
   recordActivity({
     type: "created",
     label: "Job created",

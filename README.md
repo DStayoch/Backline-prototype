@@ -168,7 +168,7 @@ Backline can also email a shop's customers. Deploy `supabase/functions/send-cust
 supabase functions deploy send-customer-email
 ```
 
-It sends four fixed templates for a job: the customer's portal link, a portal update, an approval link, and a payment request. The browser only names the job and the kind of email. The function reads the recipient (the email on the job, otherwise the one on the customer profile), the links, and the amounts from the database, checks the sender's role, job access, and subscription as that user, and refuses updates that contain links. It allows 100 customer emails per workspace per day and 6 per job per hour, counted from `customer_email_log`.
+It sends four fixed templates for a job: the customer's portal link, a portal update, an approval link, and a payment request. The browser only names the job and the kind of email. The function reads the recipient (the email on the customer's profile; a job with no customer record falls back to the email typed on the job), the links, and the amounts from the database, checks the sender's role, job access, and subscription as that user, and refuses updates that contain links. It allows 100 customer emails per workspace per day and 6 per job per hour, counted from `customer_email_log`.
 
 It uses `RESEND_API_KEY`, `BACKLINE_APP_URL`, and the address from `INVITE_FROM_EMAIL`. Set `CUSTOMER_FROM_EMAIL` to send customer email from a different address on the verified domain. Emails are sent as "Shop Name via Backline", and replies go to the shop's support email.
 

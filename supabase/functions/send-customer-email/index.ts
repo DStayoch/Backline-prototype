@@ -261,12 +261,13 @@ Deno.serve(async (request) => {
     if (!jobRow) return jsonResponse({ error: "That job was not found. Save it and try again." }, 404);
     const payload = (jobRow.payload && typeof jobRow.payload === "object" ? jobRow.payload : {}) as Record<string, unknown>;
 
-    // Recipient: the email on this job, otherwise the one on its customer record.
-    let recipient = String(payload.email || "").trim();
-    if (!recipient && jobRow.customer_id) {
-      const customer = await firstRow(`customers?organization_id=eq.${org}&id=eq.${encodeURIComponent(String(jobRow.customer_id))}&select=email&limit=1`);
-      recipient = String(customer?.email || "").trim();
-    }
+    // Recipient: the email on the customer's profile, which is where a shop
+    // corrects or removes it. Only a job with no customer record falls back
+    // to the email typed when the job was created.
+    const customer = jobRow.customer_id
+      ? await firstRow(`customers?organization_id=eq.${org}&id=eq.${encodeURIComponent(String(jobRow.customer_id))}&select=email&limit=1`)
+      : null;
+    const recipient = String(customer ? customer.email || "" : payload.email || "").trim();
     if (!isEmailAddress(recipient)) {
       return jsonResponse({ error: "Add an email address for this customer before emailing them." }, 400);
     }
