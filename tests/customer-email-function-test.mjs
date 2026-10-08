@@ -21,8 +21,9 @@ function world(overrides = {}) {
   const w = {
     user: { id: USER, email: "owner@shop.test" },
     permissions: { org_has_permission: true, can_access_job: true, has_backline_full_access: true },
-    job: { id: "job-1", customer_id: "8135550101", payload: { id: "job-1", name: "Maya Rivera", email: "maya@example.com", portalToken: "portal-0123456789abcdef0123", paymentRequests: [{ status: "requested", amount: 225, dueDate: "2026-10-14", createdAt: "2026-10-07T10:00:00Z" }] } },
-    customerEmail: "profile@example.com",
+    job: { id: "job-1", customer_id: "8135550101", payload: { id: "job-1", name: "Maya Rivera", email: "old-address@example.com", portalToken: "portal-0123456789abcdef0123", paymentRequests: [{ status: "requested", amount: 225, dueDate: "2026-10-14", createdAt: "2026-10-07T10:00:00Z" }] } },
+    hasCustomerRecord: true,
+    customerEmail: "maya@example.com",
     approvalLink: { token: "approvaltoken123", expires_at: null },
     organization: { name: "Junk in Our Trunk", payload: { companySettings: { companyName: "Junk in Our Trunk", supportEmail: "office@junk.test", phone: "(813)555-0199" } } },
     sentToday: 0, sentThisHour: 0, resendStatus: 200,
@@ -42,7 +43,7 @@ function world(overrides = {}) {
     if (u === "https://api.resend.com/emails") { if (options.headers.Authorization !== "Bearer re_test") return json({ message: "bad resend key" }, 500); w.sent = JSON.parse(options.body); return json(w.resendStatus === 200 ? { id: "email_123" } : { message: "rejected" }, w.resendStatus); }
     if (options.headers?.apikey !== "service-key") return json({ message: "expected service role" }, 500);
     if (u.includes("/rest/v1/jobs?")) return json(w.job && u.includes(`organization_id=eq.${ORG}`) ? [w.job] : []);
-    if (u.includes("/rest/v1/customers?")) return json(w.customerEmail ? [{ email: w.customerEmail }] : []);
+    if (u.includes("/rest/v1/customers?")) return json(w.hasCustomerRecord ? [{ email: w.customerEmail || null }] : []);
     if (u.includes("/rest/v1/approval_links?")) return json(w.approvalLink ? [w.approvalLink] : []);
     if (u.includes("/rest/v1/organizations?")) return json([w.organization]);
     if (u.includes("/rest/v1/customer_email_log") && method === "HEAD") return new Response(null, { status: 200, headers: { "content-range": `0-0/${u.includes("job_id=eq.") ? w.sentThisHour : w.sentToday}` } });
@@ -68,7 +69,7 @@ const quiet = console.error; console.error = () => {};
 let w = world();
 let r = await send(w, req());
 check("portal link email is sent", r.status === 200 && r.body.sent === true && r.body.to === "maya@example.com", JSON.stringify(r.body));
-check("it goes to the email on the job, from the shop's name on Backline's address", w.sent.to[0] === "maya@example.com" && w.sent.from === "Junk in Our Trunk via Backline <invite@backlineoffice.com>", w.sent.from);
+check("it goes to the email on the customer's profile, from the shop's name on Backline's address", w.sent.to[0] === "maya@example.com" && w.sent.from === "Junk in Our Trunk via Backline <invite@backlineoffice.com>", w.sent.from);
 check("replies go to the shop", w.sent.reply_to === "office@junk.test");
 check("the link is built by the server from the job's own portal token", w.sent.text.includes("https://backlineoffice.com/app/#portal=portal-0123456789abcdef0123") && w.sent.html.includes('href="https://backlineoffice.com/app/#portal=portal-0123456789abcdef0123"'));
 check("the send is logged for the limits", w.logged?.organization_id === ORG && w.logged.job_id === "job-1" && w.logged.kind === "portal-link" && w.logged.recipient === "maya@example.com" && w.logged.sent_by === USER, JSON.stringify(w.logged));
@@ -80,9 +81,12 @@ w = world(); r = await send(w, req({ kind: "approval-request" }));
 check("approval request links to the latest approval link", r.status === 200 && w.sent.text.includes("#approval-token=approvaltoken123") && !w.sent.text.includes("#portal="), w.sent?.subject);
 w = world(); r = await send(w, req({ kind: "payment-request" }));
 check("payment request states the amount and due date from the job", r.status === 200 && w.sent.text.includes("$225.00") && w.sent.text.includes("Wednesday, October 14"), w.sent?.text.split("\n")[2]);
-w = world({ job: { id: "job-1", customer_id: "8135550101", payload: { name: "Maya", portalToken: "portal-0123456789abcdef0123" } } });
+check("an outdated email on the job is ignored when the profile has one", !JSON.stringify(w.sent).includes("old-address@example.com"));
+w = world({ customerEmail: "" }); r = await send(w, req());
+check("an email removed from the profile is not replaced by the job's old one", r.status === 400 && /Add an email address/.test(r.body.error) && w.sent === null, r.body?.error);
+w = world({ hasCustomerRecord: false, job: { id: "job-1", customer_id: null, payload: { name: "Maya", email: "typed-on-job@example.com", portalToken: "portal-0123456789abcdef0123" } } });
 r = await send(w, req());
-check("falls back to the customer profile email when the job has none", r.status === 200 && w.sent.to[0] === "profile@example.com");
+check("a job with no customer record uses the email typed on the job", r.status === 200 && w.sent.to[0] === "typed-on-job@example.com");
 
 w = world(); r = await send(w, req({ to: "victim@elsewhere.test", recipient: "victim@elsewhere.test", email: "victim@elsewhere.test", url: "https://evil.test", actionUrl: "https://evil.test" }));
 check("cannot choose the recipient or the link", r.status === 200 && w.sent.to.length === 1 && w.sent.to[0] === "maya@example.com" && !JSON.stringify(w.sent).includes("evil.test") && !JSON.stringify(w.sent).includes("victim"));
@@ -118,7 +122,7 @@ w = world({ sentThisHour: 6 }); r = await send(w, req());
 check("per-job hourly limit stops the send", r.status === 429 && w.sent === null);
 w = world({ customerEmail: "", job: { id: "job-1", customer_id: "8135550101", payload: { name: "Maya", portalToken: "portal-0123456789abcdef0123" } } }); r = await send(w, req());
 check("no email on file gives a clear message", r.status === 400 && /Add an email address/.test(r.body.error) && w.sent === null);
-w = world(); w.job.payload.email = "not-an-email"; w.customerEmail = ""; r = await send(w, req());
+w = world({ customerEmail: "not-an-email" }); r = await send(w, req());
 check("a malformed stored email is refused", r.status === 400 && w.sent === null);
 w = world(); w.job.payload.portalToken = "short"; r = await send(w, req());
 check("a job without a valid portal token is refused", r.status === 409 && w.sent === null);
