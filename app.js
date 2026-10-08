@@ -19901,6 +19901,13 @@ function openCustomerJobModal(customerId) {
   elements.jobForm.elements.phone.value = customer.phone || "";
   elements.jobForm.elements.address.value = customer.address || "";
   elements.jobForm.elements.siteContact.value = customer.siteContact || customer.name || "";
+  if (elements.jobForm.elements.email) elements.jobForm.elements.email.value = customer.email || "";
+  const customerMatchBox = document.querySelector("#jobCustomerMatch");
+  if (customerMatchBox) {
+    customerMatchBox.dataset.preselect = customer.id;
+    customerMatchBox.dataset.matchKey = "";
+  }
+  updateJobCustomerMatchHint();
   renderNewJobPickers();
   renderJobTemplatePicker(suggestedJobTemplateKeyFromForm(elements.jobForm));
   elements.jobModal.showModal();
@@ -20338,8 +20345,20 @@ function createJob(formData) {
     createdAt: now.toISOString(),
     messages: []
   };
-  job.customerId = customerIdFromPhone(job.phone, job.id);
-  const existingCustomer = state.customers.find((customer) => customer.id === job.customerId) || null;
+  // A phone number usually identifies one customer, but people share numbers.
+  // The form offers the customers already using this number, or a separate one.
+  const sharedPhoneCustomers = customersWithPhone(job.phone);
+  const customerChoice = String(formData.get("customerChoice") || "");
+  let existingCustomer = null;
+  if (customerChoice === NEW_CUSTOMER_CHOICE && sharedPhoneCustomers.length) {
+    job.customerId = separateCustomerIdForPhone(job.phone);
+  } else {
+    existingCustomer = sharedPhoneCustomers.find((customer) => customer.id === customerChoice)
+      || sharedPhoneCustomers.find((customer) => customer.id === customerIdFromPhone(job.phone))
+      || sharedPhoneCustomers[0]
+      || null;
+    job.customerId = existingCustomer ? existingCustomer.id : customerIdFromPhone(job.phone, job.id);
+  }
   if (existingCustomer && job.email) existingCustomer.email = job.email;
   const appliedTemplate = applyJobTemplate(job, { forceMetadata: true });
   recordAssignmentUpdate(job);
@@ -20381,18 +20400,58 @@ function createJob(formData) {
   }
 }
 
-// While a new work item is being typed, show whether its phone number already
-// belongs to a customer, since customers are matched by phone number.
+const NEW_CUSTOMER_CHOICE = "__new";
+
+// Every customer in this workspace who uses the given phone number.
+function customersWithPhone(phone) {
+  const digits = phoneDigits(phone);
+  if (digits.length < 10) return [];
+  return state.customers.filter((customer) => phoneDigits(customer.phone) === digits || customer.id === digits);
+}
+
+// The first customer on a number keeps the plain phone-number ID; anyone who
+// shares it gets the number plus a short suffix.
+function separateCustomerIdForPhone(phone) {
+  return `${phoneDigits(phone)}-${createId().replace(/[^a-zA-Z0-9]/g, "").slice(0, 8)}`;
+}
+
+// While a new work item is being typed, show who already uses its phone
+// number and let the shop pick: add to one of them, or a separate customer.
 function updateJobCustomerMatchHint() {
-  const hint = document.querySelector("#jobCustomerMatchHint");
-  if (!hint || !elements.jobForm) return;
-  const phone = elements.jobForm.elements.phone?.value || "";
-  const digits = phone.replace(/\D/g, "");
-  const match = digits.length >= 10 ? state.customers.find((customer) => customer.id === customerIdFromPhone(phone)) : null;
-  hint.hidden = !match;
-  if (!match) return;
-  const jobs = Number(match.jobCount) || 0;
-  hint.textContent = `This number belongs to ${match.name}${match.email ? ` (${match.email})` : ""}. The work item will be added to their record${jobs ? `, which has ${jobs} work item${jobs === 1 ? "" : "s"}` : ""}.`;
+  const box = document.querySelector("#jobCustomerMatch");
+  if (!box || !elements.jobForm) return;
+  const matches = customersWithPhone(elements.jobForm.elements.phone?.value || "");
+  const key = matches.map((customer) => customer.id).join("|");
+  box.hidden = !matches.length;
+  // Only rebuild when the set of matching customers changes, so typing in
+  // other fields does not reset the choice.
+  if (box.dataset.matchKey === key) return;
+  box.dataset.matchKey = key;
+  if (!matches.length) {
+    box.innerHTML = "";
+    return;
+  }
+  const typedName = normalizeSearchText(elements.jobForm.elements.name?.value || "");
+  const preferred = matches.find((customer) => customer.id === box.dataset.preselect)
+    || matches.find((customer) => normalizeSearchText(customer.name) === typedName)
+    || matches[0];
+  box.innerHTML = `
+    <legend>This number is already on file</legend>
+    ${matches.map((customer) => {
+      const jobs = Number(customer.jobCount) || 0;
+      const detail = [customer.email, `${jobs} work item${jobs === 1 ? "" : "s"}`].filter(Boolean).join(" - ");
+      return `
+        <label class="customer-match-option">
+          <input type="radio" name="customerChoice" value="${escapeHtml(customer.id)}" ${customer.id === preferred.id ? "checked" : ""}>
+          <span><strong>Add to ${escapeHtml(customer.name)}'s record</strong><small>${escapeHtml(detail)}</small></span>
+        </label>
+      `;
+    }).join("")}
+    <label class="customer-match-option">
+      <input type="radio" name="customerChoice" value="${NEW_CUSTOMER_CHOICE}">
+      <span><strong>Create a separate customer with this number</strong><small>For a different person who shares the phone, like a family member or tenant.</small></span>
+    </label>
+  `;
 }
 
 function createMaintenanceJobFromEquipment(sourceJobId, equipmentId) {
@@ -24156,7 +24215,11 @@ elements.jobForm.addEventListener("submit", (event) => {
 elements.jobForm.addEventListener("input", updateJobCustomerMatchHint);
 // reset() fires before the fields clear, so re-check on the next tick.
 elements.jobForm.addEventListener("reset", () => setTimeout(updateJobCustomerMatchHint));
-elements.jobModal.addEventListener("close", () => setTimeout(updateJobCustomerMatchHint));
+elements.jobModal.addEventListener("close", () => {
+  const box = document.querySelector("#jobCustomerMatch");
+  if (box) delete box.dataset.preselect;
+  setTimeout(updateJobCustomerMatchHint);
+});
 
 elements.pricebookForm?.addEventListener("submit", (event) => {
   event.preventDefault();
