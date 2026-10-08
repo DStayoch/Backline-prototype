@@ -152,4 +152,10 @@ has(app, /data-portal-view-file/, "customer portal file viewing should remain av
 has(app, /data-portal-download-file/, "customer portal file downloading should remain available");
 has(app, /data-signature-pad/, "approval page should keep the signature pad");
 
+// Dropdown menus must choose their direction from the room available. A
+// fixed direction cut the list off near the edge of a dialog.
+assert.match(app, /if \(shouldOpen\) placeBacklinePickerMenu\(picker, menu\);/, "dropdowns are placed when they open");
+assert.match(app, /const direction = room\[preferred\] >= needed \|\| room\[preferred\] >= room\[other\] \? preferred : other;/, "dropdowns open toward the side with room");
+assert.match(css, /\.backline-picker-menu \{[\s\S]*?overflow-y: auto;/, "a dropdown that cannot fit scrolls instead of being cut off");
+
 console.log("Mobile readiness contracts passed");
