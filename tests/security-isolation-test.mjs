@@ -176,4 +176,13 @@ assert.match(schema28, /alter table public\.%I enable trigger backline_subscript
 assert.ok(schema28.indexOf("disable trigger backline_subscription_write_guard") < schema28.indexOf("enable trigger backline_subscription_write_guard"), "The guard is paused before it is restored");
 assert.equal((schema28.match(/^do \$\$/gm) || []).length, 1, "Schema 28's table changes stay in one all-or-nothing block");
 
+// The customer email log is written only by the Edge Function. If clients
+// could write or delete it, they could reset their own sending limits.
+const schema29 = readFileSync("supabase-schema-29-customer-email-log.sql", "utf8");
+for (const sql of [schema29, fullSchema]) {
+  assert.match(sql, /alter table public\.customer_email_log enable row level security;/);
+  assert.match(sql, /revoke all on public\.customer_email_log from anon, authenticated;\s+grant select on public\.customer_email_log to authenticated;/);
+}
+assert.doesNotMatch(schema29, /on public\.customer_email_log\s+for (insert|update|delete|all)/i, "Clients must not be able to write the customer email log");
+
 console.log("Security isolation test passed.");

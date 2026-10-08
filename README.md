@@ -117,6 +117,7 @@ Backline can use Supabase Auth + Postgres + Row Level Security.
    - `supabase-schema-26-single-owned-workspace.sql`
    - `supabase-schema-27-customer-safe-company-settings.sql`
    - `supabase-schema-28-shop-scoped-customers.sql`
+   - `supabase-schema-29-customer-email-log.sql`
 4. Copy the right config template to `supabase-config.js`:
    - Local testing: start from `supabase-config.local.example.js`
    - Production beta: start from `supabase-config.production.example.js`
@@ -135,7 +136,7 @@ If sign-in says the credentials are invalid, use **Create account** first. Supab
 
 Team access uses the `organization_members.role` field. Built-in roles are `owner`, `admin`, `dispatcher`, and `tech`; owner-defined custom role slugs are also supported after `supabase-schema-15-custom-roles.sql` removes the original role check constraints.
 
-Creator/platform access is separate from shop roles. Run `supabase-schema-19-platform-admins.sql`, then manually add trusted Backline operator accounts to `platform_admins` from the Supabase SQL editor. Follow it with schemas 20 through 28 for billing access, guarded job/customer sync, field-assignment enforcement, ownership protection, reusable-portal abuse protection, plan seat limits, one owned workspace per account, customer links that only expose customer-facing shop settings, and customer records that are unique per shop rather than across Backline. Shop owners and custom roles cannot grant creator access from the app.
+Creator/platform access is separate from shop roles. Run `supabase-schema-19-platform-admins.sql`, then manually add trusted Backline operator accounts to `platform_admins` from the Supabase SQL editor. Follow it with schemas 20 through 29 for billing access, guarded job/customer sync, field-assignment enforcement, ownership protection, reusable-portal abuse protection, plan seat limits, one owned workspace per account, customer links that only expose customer-facing shop settings, customer records that are unique per shop rather than across Backline, and the customer email log. Shop owners and custom roles cannot grant creator access from the app.
 
 Team invites use `team_invites` plus the `accept_team_invite()` RPC from `supabase-schema-07-team-management.sql`. Invite someone by email in Backline, then have them create/sign in with that same email so the invite can attach them to the shop.
 
@@ -160,6 +161,16 @@ With the Supabase CLI, the deploy flow is:
 supabase secrets set RESEND_API_KEY=your_resend_api_key INVITE_FROM_EMAIL="Backline <invite@yourdomain.com>"
 supabase functions deploy send-team-invite
 ```
+
+Backline can also email a shop's customers. Deploy `supabase/functions/send-customer-email` after running `supabase-schema-29-customer-email-log.sql`:
+
+```bash
+supabase functions deploy send-customer-email
+```
+
+It sends four fixed templates for a job: the customer's portal link, a portal update, an approval link, and a payment request. The browser only names the job and the kind of email. The function reads the recipient (the email on the job, otherwise the one on the customer profile), the links, and the amounts from the database, checks the sender's role, job access, and subscription as that user, and refuses updates that contain links. It allows 100 customer emails per workspace per day and 6 per job per hour, counted from `customer_email_log`.
+
+It uses `RESEND_API_KEY`, `BACKLINE_APP_URL`, and the address from `INVITE_FROM_EMAIL`. Set `CUSTOMER_FROM_EMAIL` to send customer email from a different address on the verified domain. Emails are sent as "Shop Name via Backline", and replies go to the shop's support email.
 
 For production invite emails, verify a real sending domain in Resend and use an address from that domain for `INVITE_FROM_EMAIL`. Resend test mode only sends to the verified account email.
 
