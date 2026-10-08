@@ -157,4 +157,16 @@ for (const retired of ["enforce_backline_team_seat_capacity", "enforce_single_ow
   assert.doesNotMatch(fullSchema, new RegExp(`execute function public\\.${retired}\\(\\)`), `${retired} must stay retired`);
 }
 
+// Customers are identified per workspace. A single-column key made one phone
+// number usable by only one shop across all of Backline.
+const schema28 = readFileSync("supabase-schema-28-shop-scoped-customers.sql", "utf8");
+for (const sql of [schema28, fullSchema]) {
+  assert.match(sql, /add constraint customers_pkey primary key \(organization_id, id\)/, "Customers must be keyed per workspace");
+  assert.match(sql, /foreign key \(organization_id, customer_id\)\s+references public\.customers \(organization_id, id\)/, "Jobs and files may only link to a customer in their own workspace");
+}
+const scopedSync = schema28.slice(schema28.indexOf("create or replace function public.sync_customer_if_revision"));
+assert.match(scopedSync, /from public\.customers\s+where organization_id = input_org and id = input_id/, "Customer lookups must be scoped to the workspace");
+assert.doesNotMatch(scopedSync, /Customer belongs to a different workspace/, "Saving a customer must not reveal that another shop has the same phone number");
+assert.doesNotMatch(scopedSync, /where id = input_id/, "No customer lookup or update may use the ID alone");
+
 console.log("Security isolation test passed.");

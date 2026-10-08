@@ -5259,6 +5259,7 @@ function customerFromJob(job) {
     id: customerId,
     name: job.name,
     phone: job.phone,
+    email: job.email || "",
     address: job.address,
     siteContact: job.siteContact || "",
     lastJobId: job.id,
@@ -5309,6 +5310,7 @@ function buildCustomersFromJobs(jobs, storedCustomers = state.customers) {
 
     existing.name = next.name || existing.name;
     existing.phone = next.phone || existing.phone;
+    existing.email = existing.email || next.email;
     existing.address = next.address || existing.address;
     existing.siteContact = next.siteContact || existing.siteContact;
     existing.lastJobId = next.lastJobId;
@@ -20300,6 +20302,7 @@ function createJob(formData) {
     businessType: companySettings().businessType,
     name: formData.get("name").trim(),
     phone: formatPhoneNumber(formData.get("phone")),
+    email: String(formData.get("email") || "").trim(),
     address: formData.get("address").trim(),
     trade: formData.get("trade"),
     jobType: formData.get("jobType"),
@@ -20336,6 +20339,8 @@ function createJob(formData) {
     messages: []
   };
   job.customerId = customerIdFromPhone(job.phone, job.id);
+  const existingCustomer = state.customers.find((customer) => customer.id === job.customerId) || null;
+  if (existingCustomer && job.email) existingCustomer.email = job.email;
   const appliedTemplate = applyJobTemplate(job, { forceMetadata: true });
   recordAssignmentUpdate(job);
 
@@ -20366,6 +20371,28 @@ function createJob(formData) {
   });
   save();
   render();
+  if (existingCustomer && normalizeSearchText(existingCustomer.name) !== normalizeSearchText(job.name)) {
+    showToast(
+      "Added to an existing customer",
+      `${job.phone} already belongs to ${existingCustomer.name}, so this work item was added to their record.`,
+      "info",
+      { timeout: 9000 }
+    );
+  }
+}
+
+// While a new work item is being typed, show whether its phone number already
+// belongs to a customer, since customers are matched by phone number.
+function updateJobCustomerMatchHint() {
+  const hint = document.querySelector("#jobCustomerMatchHint");
+  if (!hint || !elements.jobForm) return;
+  const phone = elements.jobForm.elements.phone?.value || "";
+  const digits = phone.replace(/\D/g, "");
+  const match = digits.length >= 10 ? state.customers.find((customer) => customer.id === customerIdFromPhone(phone)) : null;
+  hint.hidden = !match;
+  if (!match) return;
+  const jobs = Number(match.jobCount) || 0;
+  hint.textContent = `This number belongs to ${match.name}${match.email ? ` (${match.email})` : ""}. The work item will be added to their record${jobs ? `, which has ${jobs} work item${jobs === 1 ? "" : "s"}` : ""}.`;
 }
 
 function createMaintenanceJobFromEquipment(sourceJobId, equipmentId) {
@@ -24125,6 +24152,11 @@ elements.jobForm.addEventListener("submit", (event) => {
   createJob(new FormData(elements.jobForm));
   elements.jobModal.close();
 });
+
+elements.jobForm.addEventListener("input", updateJobCustomerMatchHint);
+// reset() fires before the fields clear, so re-check on the next tick.
+elements.jobForm.addEventListener("reset", () => setTimeout(updateJobCustomerMatchHint));
+elements.jobModal.addEventListener("close", () => setTimeout(updateJobCustomerMatchHint));
 
 elements.pricebookForm?.addEventListener("submit", (event) => {
   event.preventDefault();
