@@ -11922,24 +11922,24 @@ function menuClippingBounds(element) {
   return { top, bottom };
 }
 
-// Open a dropdown toward whichever side has room. A fixed direction cut the
-// list off whenever the field sat near that edge of a dialog.
+// A usable dropdown shows at least about four options.
+const MIN_PICKER_MENU_ROOM = 160;
+
+// Dropdowns open downward, as people expect, and go upward only when there
+// is no usable room below. The rule depends only on where the field sits, not
+// on how long its list is, so dropdowns in the same row always open the same
+// way. (A fixed direction cut lists off near the edge of a dialog; choosing by
+// list length made neighbours open in opposite directions.)
 function placeBacklinePickerMenu(picker, menu) {
   if (!picker || !menu) return;
   const button = picker.querySelector(".backline-picker-button");
   if (!button) return;
-  if (!picker.dataset.preferredDirection) {
-    picker.dataset.preferredDirection = picker.classList.contains("opens-down") ? "down" : "up";
-  }
   menu.style.maxHeight = "";
   const gap = 8;
   const bounds = menuClippingBounds(picker);
   const rect = button.getBoundingClientRect();
   const room = { up: rect.top - bounds.top - gap, down: bounds.bottom - rect.bottom - gap };
-  const needed = menu.scrollHeight;
-  const preferred = picker.dataset.preferredDirection;
-  const other = preferred === "up" ? "down" : "up";
-  const direction = room[preferred] >= needed || room[preferred] >= room[other] ? preferred : other;
+  const direction = room.down >= MIN_PICKER_MENU_ROOM || room.down >= room.up ? "down" : "up";
   picker.classList.toggle("opens-down", direction === "down");
   // If even the roomier side cannot show every option, scroll within the menu.
   menu.style.maxHeight = `${Math.max(120, Math.floor(room[direction]))}px`;
