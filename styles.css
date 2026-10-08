@@ -5687,7 +5687,10 @@ button.metric-block {
   border-radius: 8px;
   background: var(--field);
   box-shadow: var(--shadow);
-  overflow: hidden;
+  /* The menu's height is capped to the room available when it opens. */
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .backline-picker.opens-down .backline-picker-menu {

@@ -11906,6 +11906,45 @@ function pricebookUnitOptions() {
     .sort((a, b) => a.localeCompare(b));
 }
 
+// The visible area a dropdown menu can use: the viewport, narrowed by every
+// ancestor that clips its contents (a dialog, a scrolling panel).
+function menuClippingBounds(element) {
+  let top = 0;
+  let bottom = window.innerHeight;
+  for (let ancestor = element.parentElement; ancestor && ancestor !== document.body; ancestor = ancestor.parentElement) {
+    const overflowY = getComputedStyle(ancestor).overflowY;
+    if (ancestor.tagName === "DIALOG" || ["auto", "scroll", "hidden", "clip"].includes(overflowY)) {
+      const rect = ancestor.getBoundingClientRect();
+      top = Math.max(top, rect.top);
+      bottom = Math.min(bottom, rect.bottom);
+    }
+  }
+  return { top, bottom };
+}
+
+// Open a dropdown toward whichever side has room. A fixed direction cut the
+// list off whenever the field sat near that edge of a dialog.
+function placeBacklinePickerMenu(picker, menu) {
+  if (!picker || !menu) return;
+  const button = picker.querySelector(".backline-picker-button");
+  if (!button) return;
+  if (!picker.dataset.preferredDirection) {
+    picker.dataset.preferredDirection = picker.classList.contains("opens-down") ? "down" : "up";
+  }
+  menu.style.maxHeight = "";
+  const gap = 8;
+  const bounds = menuClippingBounds(picker);
+  const rect = button.getBoundingClientRect();
+  const room = { up: rect.top - bounds.top - gap, down: bounds.bottom - rect.bottom - gap };
+  const needed = menu.scrollHeight;
+  const preferred = picker.dataset.preferredDirection;
+  const other = preferred === "up" ? "down" : "up";
+  const direction = room[preferred] >= needed || room[preferred] >= room[other] ? preferred : other;
+  picker.classList.toggle("opens-down", direction === "down");
+  // If even the roomier side cannot show every option, scroll within the menu.
+  menu.style.maxHeight = `${Math.max(120, Math.floor(room[direction]))}px`;
+}
+
 function backlineDropdown({ id, name, value = "", options = [], label = "", placeholder = "Select", direction = "up" }) {
   const normalizedOptions = options.map((option) => typeof option === "string"
     ? { value: option, label: option }
@@ -22997,6 +23036,7 @@ document.addEventListener("click", async (event) => {
     if (menu) {
       menu.hidden = !shouldOpen;
       backlinePickerToggle.setAttribute("aria-expanded", String(shouldOpen));
+      if (shouldOpen) placeBacklinePickerMenu(picker, menu);
     }
     return;
   }
