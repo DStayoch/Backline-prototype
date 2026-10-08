@@ -155,6 +155,35 @@ body {
   box-shadow: var(--shadow);
 }
 
+/* Doubled class: form labels are styled as stacked grids by a more specific rule. */
+.email-customer-field.email-customer-field {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-muted);
+  font-size: 0.92rem;
+}
+
+.email-customer-field input {
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+}
+
+.email-customer-field span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.email-customer-field.muted {
+  color: var(--muted);
+}
+
 .customer-match-hint {
   display: grid;
   gap: 8px;

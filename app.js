@@ -3410,7 +3410,14 @@ function canManageTeamRole(roleSlug = currentRole()) {
   return Boolean(definition?.manageTeam);
 }
 
+// Emailing something to a customer needs the same permission as creating it.
+const ACTION_PERMISSION_ALIASES = {
+  "portal-email": "portal",
+  "approval-email": "approval"
+};
+
 function can(action) {
+  action = ACTION_PERMISSION_ALIASES[action] || action;
   if (state.secureMode && !state.offlineMode && state.billingAccess?.mode === "read_only" && action !== "exportData") {
     return false;
   }
@@ -6709,6 +6716,89 @@ function teamInviteMessage(invite) {
     `Open Backline here: ${appEntryUrl()}`,
     "Create your Backline account with this email. Backline will connect you to the shop automatically."
   ].join("\n");
+}
+
+const CUSTOMER_EMAIL_LABELS = {
+  "portal-link": "Portal link",
+  "portal-update": "Portal update",
+  "approval-request": "Approval link",
+  "payment-request": "Payment request"
+};
+
+// The email for a job's customer: the one typed on the job, otherwise the one
+// on their customer profile.
+function jobCustomerEmail(job = {}) {
+  const profile = state.customers.find((customer) => customer.id === job.customerId);
+  return String(job.email || profile?.email || "").trim();
+}
+
+// Customer email is sent by a Supabase Edge Function, so it needs the secure workspace.
+function customerEmailAvailable() {
+  return Boolean(state.secureMode && state.organizationId && getSupabaseClient()?.functions?.invoke);
+}
+
+// A checkbox for forms whose result can also be emailed to the customer.
+// The form is redrawn from its saved draft while it is open, and a draft only
+// lists ticked boxes, so an existing draft decides; a fresh form starts ticked.
+function emailCustomerField(job, label, draft = {}) {
+  if (!customerEmailAvailable()) return "";
+  const checked = Object.keys(draft).length ? draft.emailCustomer === "on" : true;
+  const email = jobCustomerEmail(job);
+  if (!email) {
+    return `<p class="wide email-customer-field muted">To also send this by email, add an email address on ${escapeHtml(job.name)}'s customer profile.</p>`;
+  }
+  return `<label class="wide email-customer-field"><input type="checkbox" name="emailCustomer" ${checked ? "checked" : ""}><span>${escapeHtml(label)} <strong>${escapeHtml(email)}</strong></span></label>`;
+}
+
+// The Edge Function reads the job from the database, so let pending saves land first.
+async function waitForSecureSave() {
+  for (let attempt = 0; attempt < 5 && secureSavePromise; attempt += 1) {
+    try {
+      await secureSavePromise;
+    } catch {
+      return false;
+    }
+  }
+  return true;
+}
+
+async function emailCustomer(jobId, kind, { message = "" } = {}) {
+  const job = state.jobs.find((item) => item.id === jobId);
+  const label = CUSTOMER_EMAIL_LABELS[kind];
+  if (!job || !label) return false;
+  if (!customerEmailAvailable()) {
+    showToast("Email is not available here", "Customer email works in the secure Backline workspace. Copy the link for now.", "warning");
+    return false;
+  }
+  if (!jobCustomerEmail(job)) {
+    showToast("No email on file", `Add an email address on ${job.name}'s customer profile, then try again.`, "warning", { timeout: 7000 });
+    return false;
+  }
+
+  await waitForSecureSave();
+  let data = null;
+  let error = null;
+  try {
+    const result = await getSupabaseClient().functions.invoke("send-customer-email", {
+      body: { organizationId: state.organizationId, jobId, kind, ...(message ? { message } : {}) }
+    });
+    data = result.data;
+    error = result.error;
+  } catch (caughtError) {
+    error = caughtError;
+  }
+  if (error || data?.error || !data?.sent) {
+    const reason = await edgeFunctionErrorMessage(error, data, "The email could not be sent.");
+    showToast(`${label} was not emailed`, reason, "danger", { timeout: 9000 });
+    return false;
+  }
+
+  updateJobById(jobId, (nextJob) => {
+    addJobMessage(nextJob, { direction: "note", body: `${label} emailed to ${data.to}.`, createdBy: accountDisplayName() });
+    return nextJob;
+  });
+  showToast(`${label} emailed`, `Sent to ${data.to}.`, "success");
+  return true;
 }
 
 async function sendTeamInviteEmail(inviteId) {
@@ -12639,10 +12729,12 @@ function renderJobActions() {
     { action: "start", label: "Start", tone: "", group: "primary" },
     { action: "complete", label: `Complete ${terms.workItem}`, tone: "", group: "primary" },
     { action: "portal", label: canReviewLockedJob(job, "portal") ? "View customer portal" : "Portal link", tone: "", group: "Customer" },
+    ...(customerEmailAvailable() ? [{ action: "portal-email", label: "Email portal link", tone: "", group: "Customer" }] : []),
     { action: "portal-update", label: "Send portal update", tone: "", group: "Customer" },
     { action: "note", label: "View notes", tone: "", group: "Internal" },
     { action: "estimate", label: workspaceCards.estimate.title, tone: "", group: "Estimate" },
     { action: "approval", label: "Approval link", tone: "", group: "Estimate" },
+    ...(customerEmailAvailable() ? [{ action: "approval-email", label: "Email approval link", tone: "", group: "Estimate" }] : []),
     { action: "approve", label: "Mark approved", tone: "", group: "Estimate" },
     { action: "change", label: "Change order", tone: "", group: "Estimate" },
     { action: "payment-request", label: "Request payment", tone: "accent", group: "Billing" },
@@ -12759,6 +12851,7 @@ function renderPortalAccessPanel(job) {
       </div>
       <div class="portal-access-actions">
         ${can("portal") ? '<button class="action-button" type="button" data-action="portal">Copy portal link</button>' : ""}
+        ${can("portal") && customerEmailAvailable() ? '<button class="action-button" type="button" data-action="portal-email">Email portal link</button>' : ""}
         ${can("portal") ? '<button class="action-button" type="button" data-portal-preview>Preview as customer</button>' : ""}
         ${can("portal-update") ? '<button class="action-button accent" type="button" data-action="portal-update">Send portal update</button>' : ""}
       </div>
@@ -21760,7 +21853,8 @@ function actionModalConfig(action, job) {
         `<div class="schedule-context wide"><span>Current balance</span><strong>${escapeHtml(formatMoney(invoiceBalance(job)))} due on ${escapeHtml(formatMoney(invoice.amount))} invoice</strong></div>`,
         inputField({ label: "Requested amount", name: "amount", type: "number", value: actionDraft.amount ?? (invoiceBalance(job) || invoice.amount || ""), required: true, attrs: 'step="0.01" min="0"' }),
         inputField({ label: "Due date", name: "dueDate", type: "date", value: actionDraft.dueDate ?? addDaysISO(7), required: true }),
-        inputField({ label: "Customer note", name: "note", value: actionDraft.note ?? `Hi ${job.name}, your balance is ready for review. Please use this portal to confirm payment details with the office.`, rows: 4, wide: true })
+        inputField({ label: "Customer note", name: "note", value: actionDraft.note ?? `Hi ${job.name}, your balance is ready for review. Please use this portal to confirm payment details with the office.`, rows: 4, wide: true }),
+        emailCustomerField(job, "Also email this request to", actionDraft)
       ]
     },
     change: {
@@ -21808,7 +21902,8 @@ function actionModalConfig(action, job) {
           rows: 5,
           wide: true,
           required: true
-        })
+        }),
+        emailCustomerField(job, "Also email this update to", actionDraft)
       ]
     },
     complete: {
@@ -24110,6 +24205,42 @@ document.addEventListener("click", async (event) => {
     return;
   }
 
+  if (action === "portal-email") {
+    const job = selectedJob();
+    if (!job) return;
+    updateSelectedJob((nextJob) => {
+      ensureJobPortalToken(nextJob);
+      return nextJob;
+    });
+    await emailCustomer(job.id, "portal-link");
+    return;
+  }
+
+  if (action === "approval-email") {
+    const job = selectedJob();
+    if (!job) return;
+    if (!jobCustomerEmail(job)) {
+      showToast("No email on file", `Add an email address on ${job.name}'s customer profile, then try again.`, "warning", { timeout: 7000 });
+      return;
+    }
+    updateSelectedJob((nextJob) => {
+      nextJob.approvalStatus = "sent";
+      return nextJob;
+    });
+    try {
+      const url = await createApprovalLink(selectedJob() || job);
+      updateSelectedJob((nextJob) => {
+        queueJobNotification(nextJob, "approval_link", { url });
+        return nextJob;
+      });
+    } catch (error) {
+      showToast("Approval link failed", error?.message || "Could not create approval link.", "danger");
+      return;
+    }
+    await emailCustomer(job.id, "approval-request");
+    return;
+  }
+
   if (action === "portal") {
     const job = selectedJob();
     if (!job) return;
@@ -24517,7 +24648,13 @@ document.addEventListener("submit", async (event) => {
       showToast("Request amount needed", "Enter the amount to request before sending.", "warning");
       return;
     }
+    const emailJobId = state.selectedJobId;
+    const emailKind = data.get("emailCustomer") === "on" ? { "portal-update": "portal-update", "payment-request": "payment-request" }[action] : "";
     applyActionForm(action, data);
+    if (emailKind && emailJobId) {
+      // Sent after the form's own save; a failure is shown without undoing the update.
+      emailCustomer(emailJobId, emailKind, emailKind === "portal-update" ? { message: String(data.get("message") || "").trim() } : {});
+    }
     if (action === "note") {
       state.actionDraft = {
         action: "note",
