@@ -5693,6 +5693,13 @@ button.metric-block {
   overscroll-behavior: contain;
 }
 
+/* Rows and cards that sit on their own layer are painted in page order, so a
+   list opening downward would be covered by the next row. Lift everything
+   that contains an open list above its neighbours while it is open. */
+dialog *:has(.backline-picker-menu:not([hidden])) {
+  z-index: 40;
+}
+
 .backline-picker.opens-down .backline-picker-menu {
   top: calc(100% + 4px);
   bottom: auto;
