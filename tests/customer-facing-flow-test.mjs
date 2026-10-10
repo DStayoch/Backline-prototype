@@ -70,8 +70,11 @@ assert.match(app, /if \(customerChoice === NEW_CUSTOMER_CHOICE && sharedPhoneCus
 assert.match(app, /if \(box\.dataset\.matchKey === key\) return;/, "Typing in other fields must not reset the customer choice");
 assert.match(app, /functions\.invoke\("send-customer-email", \{\s+body: \{ organizationId: state\.organizationId, jobId, kind, \.\.\.\(message \? \{ message \} : \{\}\) \}/, "The app names the job and kind only; the server picks the recipient and link");
 assert.match(app, /"portal-email": "portal",\s+"approval-email": "approval"/, "Email actions use the permission of what they send");
-assert.match(app, /const checked = Object\.keys\(draft\)\.length \? draft\.emailCustomer === "on" : true;/, "An unticked email box must stay unticked when the form redraws");
+assert.match(app, /const checked = Object\.keys\(draft\)\.length \? draft\.emailCustomer === "on" : defaultChecked;/, "An unticked email box must stay unticked when the form redraws");
 assert.match(app, /await waitForSecureSave\(\);/, "Pending saves land before the server reads the job");
+assert.match(app, /"payment-request": "payment-request", invoice: "invoice-ready" \}\[action\]/, "Saving an invoice can email the customer that it is ready");
+assert.match(app, /\{ defaultChecked: !invoiceAlreadyEmailed\(job\) \}/, "An invoice already sent is not emailed again unless the shop ticks the box");
+assert.match(app, /startsWith\("Invoice emailed to "\)/, "The job's own note records that the invoice was emailed");
 assert.match(app, /return String\(profile \? profile\.email : job\.email \|\| ""\)\.trim\(\);/, "The customer profile holds the email that gets used");
 const saveProfile = app.slice(app.indexOf("function saveCustomerProfile("), app.indexOf("function openCustomerAction("));
 assert.match(saveProfile, /syncCustomersFromJobs\(\);[\s\S]*?edited\._remoteRevision = customer\._remoteRevision;[\s\S]*?edited\._remoteFingerprint = customer\._remoteFingerprint;/, "Editing a customer must keep the record's stored version, or the save is refused as a conflict");

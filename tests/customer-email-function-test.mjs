@@ -27,7 +27,7 @@ function world(overrides = {}) {
     approvalLink: { token: "approvaltoken123", expires_at: null },
     organization: { name: "Junk in Our Trunk", payload: { companySettings: { companyName: "Junk in Our Trunk", supportEmail: "office@junk.test", phone: "(813)555-0199" } } },
     sentToday: 0, sentThisHour: 0, resendStatus: 200,
-    calls: [], sent: null, logged: null,
+    calls: [], rpcArgs: [], sent: null, logged: null,
     ...overrides
   };
   w.fetch = async (url, options = {}) => {
@@ -38,6 +38,7 @@ function world(overrides = {}) {
     const rpc = u.match(/\/rest\/v1\/rpc\/(\w+)$/);
     if (rpc) {
       if (options.headers.apikey !== "anon-key" || options.headers.Authorization !== "Bearer user-token") return json({ message: "permission checks must run as the user" }, 500);
+      w.rpcArgs.push(JSON.parse(options.body));
       return json(w.permissions[rpc[1]] === true);
     }
     if (u === "https://api.resend.com/emails") { if (options.headers.Authorization !== "Bearer re_test") return json({ message: "bad resend key" }, 500); w.sent = JSON.parse(options.body); return json(w.resendStatus === 200 ? { id: "email_123" } : { message: "rejected" }, w.resendStatus); }
@@ -81,6 +82,24 @@ w = world(); r = await send(w, req({ kind: "approval-request" }));
 check("approval request links to the latest approval link", r.status === 200 && w.sent.text.includes("#approval-token=approvaltoken123") && !w.sent.text.includes("#portal="), w.sent?.subject);
 w = world(); r = await send(w, req({ kind: "payment-request" }));
 check("payment request states the amount and due date from the job", r.status === 200 && w.sent.text.includes("$225.00") && w.sent.text.includes("Wednesday, October 14"), w.sent?.text.split("\n")[2]);
+w = world(); w.job.payload.invoice = { number: "BL-1042", amount: 425, payments: [{ amount: 200, kind: "payment" }] };
+r = await send(w, req({ kind: "invoice-ready" }));
+check("invoice email states the number, the total, and what is still due", r.status === 200 && w.sent.subject === "Your invoice from Junk in Our Trunk" && w.sent.text.includes("invoice BL-1042 for $425.00.") && w.sent.text.includes("$225.00 is still due.") && w.sent.text.includes("#portal=portal-0123456789abcdef0123") && w.logged.kind === "invoice-ready", w.sent?.text.split("\n")[2]);
+check("invoice email needs the invoice permission", w.rpcArgs.some((a) => a.requested_permission === "invoice"), JSON.stringify(w.rpcArgs));
+w = world(); w.job.payload.invoice = { number: "BL-7", amount: 300, payments: [] };
+r = await send(w, req({ kind: "invoice-ready" }));
+check("an unpaid invoice does not repeat its total as a balance", r.status === 200 && w.sent.text.includes("invoice BL-7 for $300.00. You can view it") && !w.sent.text.includes("still due"), w.sent?.text.split("\n")[2]);
+w = world(); w.job.payload.invoice = { number: "BL-8", amount: 425, payments: [{ amount: 200, kind: "payment" }, { amount: 50, kind: "refund" }] };
+r = await send(w, req({ kind: "invoice-ready" }));
+check("refunds count back toward the balance", r.status === 200 && w.sent.text.includes("$275.00 is still due."), w.sent?.text.split("\n")[2]);
+w = world(); r = await send(w, req({ kind: "invoice-ready" }));
+check("a job with no invoice cannot be emailed as one", r.status === 409 && /Save an invoice/.test(r.body.error) && w.sent === null, r.body?.error);
+w = world(); w.job.payload.invoice = { number: "BL-9", amount: 100, payments: [{ amount: 100, kind: "payment" }] };
+r = await send(w, req({ kind: "invoice-ready" }));
+check("a fully paid invoice is not sent as a bill", r.status === 409 && /already paid in full/.test(r.body.error) && w.sent === null, r.body?.error);
+w = world(); w.job.payload.invoice = { number: 'BL-1"><script>x</script>', amount: 50, payments: [] };
+r = await send(w, req({ kind: "invoice-ready" }));
+check("an invoice number cannot inject markup", r.status === 200 && !w.sent.html.includes("<script>") && !w.sent.subject.includes("<"), w.sent?.text.split("\n")[2]);
 check("an outdated email on the job is ignored when the profile has one", !JSON.stringify(w.sent).includes("old-address@example.com"));
 w = world({ customerEmail: "" }); r = await send(w, req());
 check("an email removed from the profile is not replaced by the job's old one", r.status === 400 && /Add an email address/.test(r.body.error) && w.sent === null, r.body?.error);

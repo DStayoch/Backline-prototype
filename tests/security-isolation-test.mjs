@@ -185,4 +185,15 @@ for (const sql of [schema29, fullSchema]) {
 }
 assert.doesNotMatch(schema29, /on public\.customer_email_log\s+for (insert|update|delete|all)/i, "Clients must not be able to write the customer email log");
 
+// The email log must accept every kind the email function can send, or those
+// emails go out without being counted toward the sending limits.
+const schema30 = readFileSync("supabase-schema-30-invoice-email-kind.sql", "utf8");
+const emailFunction = readFileSync("supabase/functions/send-customer-email/index.ts", "utf8");
+const functionKinds = [...emailFunction.slice(emailFunction.indexOf("const KIND_PERMISSION"), emailFunction.indexOf("};", emailFunction.indexOf("const KIND_PERMISSION"))).matchAll(/"([a-z-]+)":/g)].map((match) => match[1]);
+assert.ok(functionKinds.length >= 5, "The email function's kinds should be readable");
+for (const kind of functionKinds) {
+  assert.match(schema30, new RegExp(`'${kind}'`), `The email log must allow the "${kind}" kind`);
+  assert.match(fullSchema.slice(fullSchema.lastIndexOf("customer_email_log_kind_check")), new RegExp(`'${kind}'`), `The combined schema must allow the "${kind}" kind`);
+}
+
 console.log("Security isolation test passed.");
