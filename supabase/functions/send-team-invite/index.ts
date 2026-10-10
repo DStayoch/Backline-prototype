@@ -47,6 +47,37 @@ function textFromRole(role: string) {
     .join(" ") || "Team member";
 }
 
+// Role names by business type, matching what the app shows on the Team page
+// (BUSINESS_ACCESS_TERMINOLOGY.coordinatorRole and BUSINESS_TERMINOLOGY.assignee
+// in app.js). Stored roles are slugs such as "dispatcher" and "tech".
+const BUSINESS_ROLE_NAMES: Record<string, { dispatcher: string; tech: string }> = {
+  trades: { dispatcher: "Dispatcher", tech: "Technician" },
+  appointments: { dispatcher: "Front desk", tech: "Team member" },
+  professional: { dispatcher: "Coordinator", tech: "Team member" },
+  automotive: { dispatcher: "Service advisor", tech: "Technician" },
+  general: { dispatcher: "Coordinator", tech: "Team member" }
+};
+
+function cleanRoleLabel(value: unknown) {
+  return String(value || "").replace(/[\u0000-\u001f<>]/g, "").trim().slice(0, 60);
+}
+
+function roleNameForShop(role: string, companySettings: Record<string, unknown>) {
+  const overrides = (companySettings.roleOverrides && typeof companySettings.roleOverrides === "object")
+    ? companySettings.roleOverrides as Record<string, { label?: unknown } | null>
+    : {};
+  const renamed = cleanRoleLabel(overrides[role]?.label);
+  if (renamed) return renamed;
+  if (role === "owner") return "Owner";
+  if (role === "admin") return "Admin";
+  const names = BUSINESS_ROLE_NAMES[String(companySettings.businessType || "")] || BUSINESS_ROLE_NAMES.general;
+  if (role === "dispatcher" || role === "tech") return names[role];
+  const customRoles = Array.isArray(companySettings.customRoles) ? companySettings.customRoles
+    : Array.isArray(companySettings.roles) ? companySettings.roles : [];
+  const custom = customRoles.find((item) => item && typeof item === "object" && String((item as { slug?: unknown }).slug || "") === role) as { label?: unknown; name?: unknown } | undefined;
+  return cleanRoleLabel(custom?.label || custom?.name) || textFromRole(role);
+}
+
 function displayPersonName(value: unknown) {
   const identity = String(value ?? "").trim();
   if (!identity) return "Your workspace";
@@ -161,7 +192,7 @@ Deno.serve(async (request) => {
     if (!inviteUrl) {
       return jsonResponse({ error: "Invite email is not configured. Set BACKLINE_APP_URL to your HTTPS Backline app URL." }, 500);
     }
-    const roleName = textFromRole(invite.role);
+    const roleName = roleNameForShop(invite.role, companySettings);
     const senderName = displayPersonName(member.display_name || member.email || "Your workspace");
     const replyTo = Deno.env.get("INVITE_REPLY_TO_EMAIL") || member.email || undefined;
     const subject = `${shopName} invited you to Backline`;
