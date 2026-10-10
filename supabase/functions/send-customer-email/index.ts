@@ -1,18 +1,19 @@
 // Emails a shop's customer about one of the shop's jobs: their portal link,
-// a portal update, an approval request, or a payment request.
+// a portal update, an approval request, a payment request, or a new invoice.
 //
 // The browser only says which job and which kind of email. The recipient, the
 // links, and the amounts are read from the database here, and the wording is
 // a fixed template, so a signed-in account cannot use Backline's sending
 // domain to email arbitrary people or arbitrary links.
 
-type EmailKind = "portal-link" | "portal-update" | "approval-request" | "payment-request";
+type EmailKind = "portal-link" | "portal-update" | "approval-request" | "payment-request" | "invoice-ready";
 
 const KIND_PERMISSION: Record<EmailKind, string> = {
   "portal-link": "portal",
   "portal-update": "portal-update",
   "approval-request": "approval",
-  "payment-request": "payment-request"
+  "payment-request": "payment-request",
+  "invoice-ready": "invoice"
 };
 
 // Sending limits protect the shared sending domain's reputation.
@@ -119,6 +120,8 @@ type EmailInput = {
   message: string;
   amountLabel: string;
   dueLabel: string;
+  invoiceNumber: string;
+  balanceLabel: string;
   shopContact: string;
 };
 
@@ -149,6 +152,16 @@ export function buildCustomerEmail(input: EmailInput) {
       subject = `Payment request from ${input.shopName}`;
       lead = `${input.shopName} sent you a payment request${amount}${due}. Your job page shows the details and how to pay.`;
       button = "View payment details";
+      break;
+    }
+    case "invoice-ready": {
+      const number = input.invoiceNumber ? ` ${input.invoiceNumber}` : "";
+      const total = input.amountLabel ? ` for ${input.amountLabel}` : "";
+      // Only mention a balance when part of the invoice has already been paid.
+      const balance = input.balanceLabel && input.balanceLabel !== input.amountLabel ? ` ${input.balanceLabel} is still due.` : "";
+      subject = `Your invoice from ${input.shopName}`;
+      lead = `${input.shopName} sent you invoice${number}${total}.${balance} You can view it and see how to pay on your job page.`;
+      button = "View invoice and pay";
       break;
     }
   }
@@ -303,6 +316,28 @@ Deno.serve(async (request) => {
 
     let amountLabel = "";
     let dueLabel = "";
+    let invoiceNumber = "";
+    let balanceLabel = "";
+    if (kind === "invoice-ready") {
+      const invoice = (payload.invoice && typeof payload.invoice === "object" ? payload.invoice : {}) as Record<string, unknown>;
+      const total = Number(invoice.amount);
+      if (!Number.isFinite(total) || total <= 0) {
+        return jsonResponse({ error: "Save an invoice with a total before emailing it." }, 409);
+      }
+      const payments = Array.isArray(invoice.payments) ? invoice.payments as Array<Record<string, unknown>> : [];
+      const collected = payments.reduce((sum, payment) => {
+        const amount = Number(payment?.amount);
+        if (!Number.isFinite(amount) || amount <= 0) return sum;
+        return sum + (payment.kind === "refund" ? -amount : amount);
+      }, 0);
+      if (total - collected <= 0) {
+        return jsonResponse({ error: "This invoice is already paid in full, so there is nothing to ask the customer for." }, 409);
+      }
+      amountLabel = formatMoney(total);
+      balanceLabel = formatMoney(total - collected);
+      // Letters, digits, and a few separators only; it appears in the subject-adjacent text.
+      invoiceNumber = String(invoice.number || "").replace(/[^A-Za-z0-9 .#_-]/g, "").trim().slice(0, 40);
+    }
     if (kind === "payment-request") {
       const requests = Array.isArray(payload.paymentRequests) ? payload.paymentRequests as Array<Record<string, unknown>> : [];
       const active = requests
@@ -320,6 +355,8 @@ Deno.serve(async (request) => {
       message,
       amountLabel,
       dueLabel,
+      invoiceNumber,
+      balanceLabel,
       shopContact: [shopPhone, shopEmail].filter(Boolean).join(" or ")
     });
 

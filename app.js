@@ -6759,7 +6759,8 @@ const CUSTOMER_EMAIL_LABELS = {
   "portal-link": "Portal link",
   "portal-update": "Portal update",
   "approval-request": "Approval link",
-  "payment-request": "Payment request"
+  "payment-request": "Payment request",
+  "invoice-ready": "Invoice"
 };
 
 // The email for a job's customer comes from their customer profile, which is
@@ -6775,12 +6776,19 @@ function customerEmailAvailable() {
   return Boolean(state.secureMode && state.organizationId && getSupabaseClient()?.functions?.invoke);
 }
 
+// Emailing a customer leaves a note on the job; that note is how the app
+// knows the invoice has already gone out.
+function invoiceAlreadyEmailed(job = {}) {
+  return (job.messages || []).some((message) => String(message?.body || "").startsWith("Invoice emailed to "));
+}
+
 // A checkbox for forms whose result can also be emailed to the customer.
 // The form is redrawn from its saved draft while it is open, and a draft only
-// lists ticked boxes, so an existing draft decides; a fresh form starts ticked.
-function emailCustomerField(job, label, draft = {}) {
+// lists ticked boxes, so an existing draft decides; a fresh form starts with
+// `defaultChecked`.
+function emailCustomerField(job, label, draft = {}, { defaultChecked = true } = {}) {
   if (!customerEmailAvailable()) return "";
-  const checked = Object.keys(draft).length ? draft.emailCustomer === "on" : true;
+  const checked = Object.keys(draft).length ? draft.emailCustomer === "on" : defaultChecked;
   const email = jobCustomerEmail(job);
   if (!email) {
     return `<p class="wide email-customer-field muted">To also send this by email, add an email address on ${escapeHtml(job.name)}'s customer profile.</p>`;
@@ -21923,7 +21931,10 @@ function actionModalConfig(action, job) {
           { value: "other", label: "Other" }
         ] }),
         inputField({ label: "Payment link", name: "paymentLink", type: "text", attrs: 'inputmode="url" autocomplete="url" spellcheck="false"', value: actionDraft.paymentLink ?? (invoice.paymentLink || ""), placeholder: companySettings().defaultPaymentLink ? "Leave blank to use your default payment link from Settings" : "Stripe, Square, PayPal, Venmo Business, or other hosted payment URL", wide: true }),
-        inputField({ label: "Invoice note", name: "note", value: actionDraft.note ?? (invoice.note || ""), placeholder: "Payment terms, deposit notes, or billing context", wide: true })
+        inputField({ label: "Invoice note", name: "note", value: actionDraft.note ?? (invoice.note || ""), placeholder: "Payment terms, deposit notes, or billing context", wide: true }),
+        invoice.amount > 0
+          ? emailCustomerField(job, invoiceAlreadyEmailed(job) ? "Email this invoice again to" : "Email this invoice to", actionDraft, { defaultChecked: !invoiceAlreadyEmailed(job) })
+          : ""
       ]
     },
     paid: {
@@ -24776,7 +24787,7 @@ document.addEventListener("submit", async (event) => {
       return;
     }
     const emailJobId = state.selectedJobId;
-    const emailKind = data.get("emailCustomer") === "on" ? { "portal-update": "portal-update", "payment-request": "payment-request" }[action] : "";
+    const emailKind = data.get("emailCustomer") === "on" ? { "portal-update": "portal-update", "payment-request": "payment-request", invoice: "invoice-ready" }[action] : "";
     applyActionForm(action, data);
     if (emailKind && emailJobId) {
       // Sent after the form's own save; a failure is shown without undoing the update.
